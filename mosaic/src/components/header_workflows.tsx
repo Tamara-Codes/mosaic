@@ -9,8 +9,7 @@ import {
 
 export default function Header() {
   const centerLinks = [
-    { label: "About mosAIc", href: "/about" },
-    { label: "Workflows", href: "/workflows" },
+    { label: "Home", href: "/" },
     { label: "Pricing", href: "/pricing" },
   ];
 

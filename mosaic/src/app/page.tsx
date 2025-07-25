@@ -1,3 +1,12 @@
+import Header from "@/components/header";
+
 export default function Home() {
-  return <h1>Welcome to mosAIc</h1>;
+  return (
+    <>
+      <Header />
+      <main className="...">
+        <h1>Welcome to mosAIc</h1>
+      </main>
+    </>
+  );
 }
