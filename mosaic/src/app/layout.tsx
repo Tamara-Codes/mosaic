@@ -1,5 +1,5 @@
 import "./global.css";
-
+import { FooterWithLogo } from "../components/footer";
 
 export const metadata = {
   title: 'mosAIc',
@@ -15,14 +15,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         {children}
-        <footer
-          style={{
-            backgroundColor: "ghostwhite",
-            padding: "1rem",
-          }}
-        >
-          <p>Footer</p>
-        </footer>
+        <FooterWithLogo />
       </body>
     </html>
   );
