@@ -34,7 +34,7 @@ export default function Header() {
               {centerLinks.map(({ label, href }) => (
                 <NavigationMenuItem key={href}>
                   <NavigationMenuLink asChild>
-                    <Link href={href} className={navigationMenuTriggerStyle()}>
+                    <Link href={href} className={navigationMenuTriggerStyle() + " text-xl"}>
                       {label}
                     </Link>
                   </NavigationMenuLink>
@@ -45,14 +45,14 @@ export default function Header() {
         </div>
 
         <div className="flex gap-4">
-          <Link href="/login" className={navigationMenuTriggerStyle()}>
+          <Link href="/login" className={navigationMenuTriggerStyle() + " text-xl"}>
             Log In
           </Link>
           <Link
             href="/register"
             className={
               navigationMenuTriggerStyle() +
-              " bg-black text-white hover:bg-gray-800-white"
+              " bg-black text-xl text-white hover:bg-gray-800-white"
             }
           >
             Get started for free
