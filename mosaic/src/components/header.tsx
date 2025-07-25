@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
   NavigationMenu,
@@ -16,8 +17,16 @@ export default function Header() {
 
   return (
     <header className="bg-white text-black shadow-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <div className="text-2xl font-semibold tracking-wide">mosAIc</div>
+      <div className="w-full flex items-center justify-between px-12 py-6">
+        <Link href="/">
+          <Image
+            src="/logo.png"
+            alt="mosAIc logo"
+            width={100}
+            height={40}
+            priority
+          />
+        </Link>
 
         <div className="flex-1 flex justify-center">
           <NavigationMenu>
@@ -41,7 +50,10 @@ export default function Header() {
           </Link>
           <Link
             href="/register"
-            className={navigationMenuTriggerStyle() + " bg-black text-white hover:bg-gray-800-white"}
+            className={
+              navigationMenuTriggerStyle() +
+              " bg-black text-white hover:bg-gray-800-white"
+            }
           >
             Get started for free
           </Link>
