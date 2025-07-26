@@ -48,7 +48,7 @@ export function LoginForm({
               />
             </div>
 
-            <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700">
+            <Button type="submit" className="w-full bg-sky-300 text-white hover:bg-blue-700">
               Login
             </Button>
           </div>
