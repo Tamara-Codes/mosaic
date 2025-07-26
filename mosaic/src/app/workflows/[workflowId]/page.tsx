@@ -1,12 +1,11 @@
+"use client";
 import { workflows } from "@/lib/workflows"
 import { notFound } from "next/navigation"
+import { useParams } from 'next/navigation'
 
-type Props = {
-  params: { workflowId: string }
-}
-
-export default async function WorkflowPage({ params }: Props) {
-  const { workflowId } = await params;
+export default async function WorkflowPage() {
+  const params = useParams();
+  const workflowId = params.workflowId as string;
   const workflow = workflows.find(w => w.id === workflowId)
   if (!workflow) return notFound()
 
