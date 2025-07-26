@@ -3,7 +3,7 @@ import { workflows } from "@/lib/workflows"
 import { notFound } from "next/navigation"
 import { useParams } from 'next/navigation'
 
-export default async function WorkflowPage() {
+export default function WorkflowPage() {
   const params = useParams();
   const workflowId = params.workflowId as string;
   const workflow = workflows.find(w => w.id === workflowId)
