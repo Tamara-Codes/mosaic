@@ -69,7 +69,7 @@ export default function Home() {
         </div>
 
         <p className="text-lg sm:text-xl text-black font-hand mb-8">
-          Realize the full potential of mosAIc's automated workflows
+          Realize the full potential of mosAIc&apos;s automated workflows
         </p>
 
         <Link href="/register">

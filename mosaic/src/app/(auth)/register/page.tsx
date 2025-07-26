@@ -23,7 +23,7 @@ export default function RegisterPage() {
           Streamline the essential.
         </h1>
         <p className="mt-6 max-w-md mx-auto text-center text-base text-gray-700 font-handwriting">
-          Whether you're a solo entrepreneur or scaling a business,<br />
+          Whether you are a solo entrepreneur or scaling a business,<br />
           mosAIc gives you the power to use custom workflows that work while you rest.
         </p>
       </div>
