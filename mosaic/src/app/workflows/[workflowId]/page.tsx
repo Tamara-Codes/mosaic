@@ -6,7 +6,8 @@ type Props = {
 }
 
 export default async function WorkflowPage({ params }: Props) {
-  const workflow = workflows.find(w => w.id === params.workflowId)
+  const workflowId = await Promise.resolve(params.workflowId) 
+  const workflow = workflows.find(w => w.id === workflowId)
   if (!workflow) return notFound()
 
   return (
