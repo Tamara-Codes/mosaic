@@ -1,5 +1,4 @@
 import "./global.css";
-import { FooterWithLogo } from "../components/footer";
 
 export const metadata = {
   title: 'mosAIc',
@@ -15,7 +14,11 @@ export default function RootLayout({
     <html lang="en">
       <body>
         {children}
-        <FooterWithLogo />
+       <footer className="bg-gray-800 text-white text-center py-4">
+          <p className="text-sm">
+            &copy; {new Date().getFullYear()} mosAIc. All rights reserved.
+          </p>
+        </footer>
       </body>
     </html>
   );
