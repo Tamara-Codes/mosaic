@@ -8,12 +8,8 @@ import {
   NavigationMenuLink,
   navigationMenuTriggerStyle,
 } from "@/components/navigation-menu";
-import { usePathname, useRouter } from "next/navigation";
 
 export default function Header() {
-  const pathname = usePathname();
-  const router = useRouter();
-
   const centerLinks = [
     { label: "About mosAIc", href: "/about" },
     { label: "Workflows", href: "/workflows" },
