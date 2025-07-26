@@ -9,7 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
-import { workflows } from "@/components/workflows";
+import { workflows } from "@/lib/workflows";
 
 
 export default function Home() {

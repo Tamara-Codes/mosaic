@@ -17,7 +17,7 @@ export default function Header() {
   const centerLinks = [
     { label: "About mosAIc", href: "/about" },
     { label: "Workflows", href: "/workflows" },
-    { label: "Pricing", href: "#pricing" }, // Use hash only
+    { label: "Pricing", href: "#pricing" }, 
   ];
 
   const handleNavClick = (href: string) => {
@@ -45,15 +45,14 @@ export default function Header() {
           />
         </Link>
 
-        <div className="flex-1 flex justify-center">
+        <div className="flex-1 flex justify-center ml-50">
           <NavigationMenu>
             <NavigationMenuList className="flex gap-4">
-              {centerLinks.map(({ label, href, scroll }) => (
+              {centerLinks.map(({ label, href,}) => (
                 <NavigationMenuItem key={href}>
                   <NavigationMenuLink asChild>
                     <Link
                       href={href}
-                      scroll={scroll ?? true}
                       className={navigationMenuTriggerStyle() + " text-xl"}
                     >
                       {label}

@@ -6,19 +6,28 @@ import {
   NavigationMenuLink,
   navigationMenuTriggerStyle,
 } from "@/components/navigation-menu";
+import Image from "next/image";
+
 
 export default function Header() {
   const centerLinks = [
     { label: "Home", href: "/" },
-    { label: "Pricing", href: "/pricing" },
+    { label: "Pricing", href: "/#pricing" },
   ];
 
   return (
     <header className="bg-white text-black shadow-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <div className="text-2xl font-semibold tracking-wide">mosAIc</div>
+      <div className="w-full flex items-center justify-between px-12 py-6">
+        <Link href="/">
+          <Image
+            src="/logo.png"        
+            alt="mosAIc logo"
+            width={100}            
+            height={40}           
+          />
+        </Link>
 
-        <div className="flex-1 flex justify-center">
+        <div className="flex-1 flex justify-center ml-50">
           <NavigationMenu>
             <NavigationMenuList className="flex gap-4">
               {centerLinks.map(({ label, href }) => (
