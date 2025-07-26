@@ -5,7 +5,7 @@ type Props = {
   params: { workflowId: string }
 }
 
-export default function WorkflowPage({ params }: Props) {
+export default async function WorkflowPage({ params }: Props) {
   const workflow = workflows.find(w => w.id === params.workflowId)
   if (!workflow) return notFound()
 
