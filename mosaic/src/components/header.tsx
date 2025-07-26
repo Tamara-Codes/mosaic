@@ -1,3 +1,4 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -7,13 +8,29 @@ import {
   NavigationMenuLink,
   navigationMenuTriggerStyle,
 } from "@/components/navigation-menu";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Header() {
+  const pathname = usePathname();
+  const router = useRouter();
+
   const centerLinks = [
     { label: "About mosAIc", href: "/about" },
     { label: "Workflows", href: "/workflows" },
-    { label: "Pricing", href: "/pricing" },
+    { label: "Pricing", href: "#pricing" }, // Use hash only
   ];
+
+  const handleNavClick = (href: string) => {
+    if (href.startsWith("#") && pathname === "/") {
+      const id = href.replace("#", "");
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+    } else {
+      router.push(href === "#pricing" ? "/#pricing" : href);
+    }
+  };
 
   return (
     <header className="bg-white text-black shadow-sm">
@@ -31,10 +48,14 @@ export default function Header() {
         <div className="flex-1 flex justify-center">
           <NavigationMenu>
             <NavigationMenuList className="flex gap-4">
-              {centerLinks.map(({ label, href }) => (
+              {centerLinks.map(({ label, href, scroll }) => (
                 <NavigationMenuItem key={href}>
                   <NavigationMenuLink asChild>
-                    <Link href={href} className={navigationMenuTriggerStyle() + " text-xl"}>
+                    <Link
+                      href={href}
+                      scroll={scroll ?? true}
+                      className={navigationMenuTriggerStyle() + " text-xl"}
+                    >
                       {label}
                     </Link>
                   </NavigationMenuLink>

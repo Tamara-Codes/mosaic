@@ -29,9 +29,10 @@ export default function Home() {
         </p>
 
         <Link href="/register">
-          <button className="mt-4 px-6 py-3 rounded-xl border-2 border-[#2377d8] text-[#1b1b1b] font-hand text-lg hover:bg-[#e9f2ff] transition">
-            Get started for free
+          <button className="px-6 py-3 bg-white text-black font-hand text-base font-semibold border-2 border-black rounded-2xl shadow-sm transition-all duration-200 ease-in-out hover:bg-[#2377d8] hover:text-white hover:shadow-lg hover:scale-105">
+            Get Started For Free
           </button>
+
         </Link>
       </main>
 
@@ -71,12 +72,73 @@ export default function Home() {
           Realize the full potential of mosAIc's automated workflows
         </p>
 
-        <Link href="/workflows">
-          <button className="px-6 py-3 rounded-xl border-2 border-[#2377d8] text-[#1b1b1b] font-hand text-lg hover:bg-[#e9f2ff] transition">
-            Browse Workflows
+        <Link href="/register">
+          <button className="px-6 py-3 bg-white text-black font-hand text-base font-semibold border-2 border-black rounded-2xl shadow-sm transition-all duration-200 ease-in-out hover:bg-[#2377d8] hover:text-white hover:shadow-lg hover:scale-105">
+            Get Started For Free
           </button>
         </Link>
       </section>
+
+      <section id="pricing" className="flex flex-col items-center px-6 py-20 bg-white text-center border-t border-gray-200">
+        <h2 className="text-4xl sm:text-5xl font-bold text-[#2377d8] font-hand mb-12">
+          Pricing
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl">
+        {[
+          {
+            title: "Free",
+            price: "0 € / month",
+            tagline: "For curious minds",
+            features: ["1 active workflow", "Customer support", "1 month trial"],
+            color: "bg-green-200",
+          },
+          {
+            title: "Basic",
+            price: "19 € / month",
+            tagline: "Efficiency, unlocked",
+            features: ["3 active workflows", "Customer support"],
+            color: "bg-yellow-200",
+          },
+          {
+            title: "Pro",
+            price: "29 € / month",
+            tagline: "Work smarter",
+            features: ["5 active workflows", "Customer support"],
+            color: "bg-purple-200",
+          },
+          {
+            title: "God",
+            price: "49 € / month",
+            tagline: "Achieve Omnipotence",
+            features: ["Infinite active workflows", "Customer support"],
+            color: "bg-blue-200",
+          },
+        ].map((plan, index) => (
+          <div
+            key={index}
+            className={`flex flex-col justify-between items-center rounded-2xl shadow-md p-8 ${plan.color} text-[#1b1b1b] border border-black/10 transition hover:shadow-xl`}
+          >
+            <h3 className="text-2xl font-bold font-hand tracking-wide mb-1">{plan.title}</h3>
+            <p className="text-lg font-hand font-medium mb-1">{plan.price}</p>
+            <p className="text-sm font-hand italic mb-4 opacity-90">{plan.tagline}</p>
+
+            <ul className="text-sm font-hand mb-6 space-y-1 leading-relaxed">
+              {plan.features.map((feature, i) => (
+                <li key={i}>{feature}</li>
+              ))}
+            </ul>
+
+            <Link href="/register">
+              <button className="px-4 py-2 bg-white text-black font-hand text-sm font-semibold border border-black rounded-xl shadow-sm transition-all duration-200 ease-in-out hover:bg-[#f2f2f2] hover:shadow-md hover:scale-105">
+                Get Started 
+              </button>
+            </Link>
+          </div>
+        ))}
+      </div>
+      </section>
+
     </>
   );
 }
