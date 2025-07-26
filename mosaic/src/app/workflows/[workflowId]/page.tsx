@@ -1,4 +1,4 @@
-import { workflows } from "@/lib/workflows";
+import { workflows } from "@/lib/workflows"
 import { notFound } from "next/navigation"
 
 type Props = {
@@ -6,9 +6,10 @@ type Props = {
 }
 
 export default async function WorkflowPage({ params }: Props) {
-  const workflowId = await Promise.resolve(params.workflowId) 
+  const { workflowId } = await params;
   const workflow = workflows.find(w => w.id === workflowId)
   if (!workflow) return notFound()
+
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-16 text-center font-handwriting">
