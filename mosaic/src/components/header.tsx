@@ -20,18 +20,6 @@ export default function Header() {
     { label: "Pricing", href: "#pricing" }, 
   ];
 
-  const handleNavClick = (href: string) => {
-    if (href.startsWith("#") && pathname === "/") {
-      const id = href.replace("#", "");
-      const el = document.getElementById(id);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
-      }
-    } else {
-      router.push(href === "#pricing" ? "/#pricing" : href);
-    }
-  };
-
   return (
     <header className="bg-white text-black shadow-sm">
       <div className="w-full flex items-center justify-between px-12 py-6">
