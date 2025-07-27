@@ -72,9 +72,9 @@ export default function Home() {
           Realize the full potential of mosAIc&apos;s automated workflows
         </p>
 
-        <Link href="/register">
+        <Link href="/workflows">
           <button className="px-6 py-3 bg-white text-black font-hand text-base font-semibold border-2 border-black rounded-2xl shadow-sm transition-all duration-200 ease-in-out hover:bg-[#2377d8] hover:text-white hover:shadow-lg hover:scale-105">
-            Get Started For Free
+            Browse Workflows
           </button>
         </Link>
       </section>
