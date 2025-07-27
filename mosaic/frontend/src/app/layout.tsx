@@ -1,16 +1,23 @@
 import "./global.css";
+import { ClerkProvider } from "@clerk/nextjs"
+import { Inter } from "next/font/google"
+import { ReactNode } from "react"
+
+const inter = Inter({ subsets: ["latin"] })
+
 
 export const metadata = {
   title: 'mosAIc',
   description: 'A mosaic of AI tools',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+interface RootLayoutProps {
+  children: ReactNode
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
+    <ClerkProvider>
     <html lang="en">
       <body>
         {children}
@@ -21,5 +28,6 @@ export default function RootLayout({
         </footer>
       </body>
     </html>
-  );
+  </ClerkProvider>
+);
 }
