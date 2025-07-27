@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: n8n
+      POSTGRES_PASSWORD: n8npass
+      POSTGRES_DB: n8ndb
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  n8n:
+    image: n8nio/n8n
+    restart: always
+    ports:
+      - "5678:5678"  
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: n8ndb
+      DB_POSTGRESDB_USER: n8n
+      DB_POSTGRESDB_PASSWORD: n8npass
+      GENERIC_TIMEZONE: Europe/London
+      N8N_BASIC_AUTH_ACTIVE: true
+      N8N_BASIC_AUTH_USER: tamaramartinovichr@gmail.com
+      N8N_BASIC_AUTH_PASSWORD: Osebine666
+      N8N_USER_MANAGEMENT_DISABLED: true
+      N8N_RUNNERS_ENABLED: true
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: false
+
+    volumes:
+      - n8n-data:/home/node/.n8n
+    depends_on:
+      - postgres
+
+  backend:
+    build: ./backend   
+    env_file:
+      - ./backend/.env 
+    ports:
+      - "8000:8000"    
+    depends_on:
+      - postgres       
+
+volumes:
+  db-data:
+  n8n-data:

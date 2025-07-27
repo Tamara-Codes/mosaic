@@ -2,11 +2,9 @@ mosAIc v1
 
 [] Add metadata to layouts and pages 
     -use generate metadata for [workflowId] 
-    -if client component, create a new file with the component and import import it 
+    -if client component, create a new file with the component and import it 
 [] Active links - nav bar links background different for the active link - do we even need this?
-[] Add a dashboard
-[] Navigate programatically to dashboard after LogIn
-    -use router and on handleClick to navigate programatically (click on login, end up on dashboard)
+[x] Add a dashboard
 [] Redirect wrong links to proper websites rather than 404 
 [] Add loading UI/spinner while routing after login - loading.tsx
 [] Handle backend errors on the UI - error.tsx 
@@ -24,6 +22,7 @@ mosAIc v1
 [] Frontend: Clerk Session Check
     []When a user clicks "Log in", show the Clerk Sign In modal or redirect to /sign-in.
     []If user is authenticated, automatically redirect to /dashboard.
+    -use router and on handleClick to navigate programatically (click on login, end up on dashboard)
 [] Routing Protection
     []Use middleware or route guards (App Router or Clerk components) to:
     [] Block access to /dashboard if not logged in.

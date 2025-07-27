@@ -1,0 +1,12 @@
+fastapi 
+uvicorn 
+requests 
+python-dotenv
+loguru
+pre-commit
+httpx
+pydantic
+supabase
+svix
+#pyjwt
+#cryptography
