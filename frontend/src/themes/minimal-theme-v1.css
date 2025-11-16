@@ -1,0 +1,84 @@
+/* Minimal Theme v1 - Clean and simple design */
+.theme-minimal-v1 {
+  --theme-primary: #2c3e50;
+  --theme-secondary: #ecf0f1;
+  --theme-accent: #3498db;
+  --theme-text: #2c3e50;
+  --theme-text-light: #7f8c8d;
+  --theme-background: #ffffff;
+  --theme-card: #ffffff;
+}
+
+.theme-minimal-v1 .menu-container {
+  background-color: var(--theme-background);
+  color: var(--theme-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.theme-minimal-v1 .menu-header {
+  text-align: center;
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--theme-secondary);
+  margin-bottom: 3rem;
+}
+
+.theme-minimal-v1 .menu-title {
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: 2px;
+  color: var(--theme-primary);
+  margin-bottom: 0.5rem;
+}
+
+.theme-minimal-v1 .menu-description {
+  font-size: 0.9rem;
+  color: var(--theme-text-light);
+  font-weight: 300;
+}
+
+.theme-minimal-v1 .menu-item {
+  background: transparent;
+  border-left: 3px solid var(--theme-accent);
+  padding: 1.5rem 1rem;
+  margin-bottom: 1rem;
+  transition: padding-left 0.2s;
+}
+
+.theme-minimal-v1 .menu-item:hover {
+  padding-left: 1.5rem;
+}
+
+.theme-minimal-v1 .menu-item-name {
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--theme-primary);
+  margin-bottom: 0.25rem;
+}
+
+.theme-minimal-v1 .menu-item-description {
+  font-size: 0.9rem;
+  color: var(--theme-text-light);
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.theme-minimal-v1 .menu-item-price {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--theme-accent);
+  margin-top: 0.5rem;
+}
+
+.theme-minimal-v1 .category-title {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--theme-primary);
+  margin: 3rem 0 1.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.9rem;
+}
+

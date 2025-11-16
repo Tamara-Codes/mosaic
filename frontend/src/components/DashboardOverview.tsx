@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
-import { api, type Analytics } from '@/lib/api'
+import { type Analytics } from '@/lib/api'
+import { useApiClient } from '@/lib/apiHelpers'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Utensils, Tag, CheckCircle, XCircle } from 'lucide-react'
 
 export function DashboardOverview() {
+  const apiClient = useApiClient()
   const [analytics, setAnalytics] = useState<Analytics | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -13,7 +15,8 @@ export function DashboardOverview() {
 
   const loadAnalytics = async () => {
     try {
-      const data = await api.getAnalytics()
+      const response = await apiClient.get('/api/analytics')
+      const data = response.data
       setAnalytics(data)
       setLoading(false)
     } catch (error) {

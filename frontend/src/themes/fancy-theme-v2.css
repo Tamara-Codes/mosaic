@@ -1,0 +1,129 @@
+/* Fancy Theme v2 - Elegant and sophisticated design */
+.theme-fancy-v2 {
+  --theme-primary: #1a1a1a;
+  --theme-secondary: #f8f8f8;
+  --theme-accent: #c9a961;
+  --theme-text: #2c2c2c;
+  --theme-text-light: #6b6b6b;
+  --theme-background: #fafafa;
+  --theme-card: #ffffff;
+}
+
+.theme-fancy-v2 .menu-container {
+  background-color: var(--theme-background);
+  color: var(--theme-text);
+  font-family: 'Playfair Display', 'Georgia', serif;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.theme-fancy-v2 .menu-header {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  color: white;
+  padding: 4rem 3rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-fancy-v2 .menu-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+  opacity: 0.3;
+}
+
+.theme-fancy-v2 .menu-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+  letter-spacing: 2px;
+}
+
+.theme-fancy-v2 .menu-description {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  font-style: italic;
+  position: relative;
+  z-index: 1;
+  margin-top: 1rem;
+}
+
+.theme-fancy-v2 .menu-content {
+  padding: 3rem;
+}
+
+.theme-fancy-v2 .menu-item {
+  background: var(--theme-card);
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8e8e8;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.theme-fancy-v2 .menu-item:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+}
+
+.theme-fancy-v2 .menu-item-content {
+  flex: 1;
+}
+
+.theme-fancy-v2 .menu-item-name {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--theme-primary);
+  margin-bottom: 0.75rem;
+  font-family: 'Playfair Display', serif;
+}
+
+.theme-fancy-v2 .menu-item-description {
+  font-size: 1rem;
+  color: var(--theme-text-light);
+  margin: 0.5rem 0;
+  line-height: 1.8;
+  font-style: italic;
+}
+
+.theme-fancy-v2 .menu-item-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--theme-accent);
+  white-space: nowrap;
+  font-family: 'Playfair Display', serif;
+}
+
+.theme-fancy-v2 .category-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--theme-primary);
+  margin: 3rem 0 2rem 0;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid var(--theme-accent);
+  text-align: center;
+  font-family: 'Playfair Display', serif;
+  letter-spacing: 1px;
+}
+
+.theme-fancy-v2 .menu-item-image {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+

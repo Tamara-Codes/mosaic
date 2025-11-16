@@ -8,15 +8,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import type { ReactNode } from "react"
+import { cn } from "@/lib/utils"
 
 interface ConfirmDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
-  description: string
+  description: string | ReactNode
   onConfirm: () => void
   confirmText?: string
   cancelText?: string
+  variant?: "default" | "destructive"
 }
 
 export function ConfirmDialog({
@@ -26,18 +29,32 @@ export function ConfirmDialog({
   description,
   onConfirm,
   confirmText = "Potvrdi",
-  cancelText = "Odustani"
+  cancelText = "Odustani",
+  variant = "default"
 }: ConfirmDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+          <AlertDialogDescription asChild>
+            {typeof description === 'string' ? (
+              <p>{description}</p>
+            ) : (
+              description
+            )}
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{cancelText}</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>{confirmText}</AlertDialogAction>
+          <AlertDialogAction 
+            onClick={onConfirm}
+            className={cn(
+              variant === "destructive" && "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            )}
+          >
+            {confirmText}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { api, type MenuItem } from '@/lib/api'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { type MenuItem } from '@/lib/api'
+import { useApiClient } from '@/lib/apiHelpers'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -15,6 +16,7 @@ interface CategoryDishesPageProps {
 }
 
 export function CategoryDishesPage({ categoryName, onBack }: CategoryDishesPageProps) {
+  const apiClient = useApiClient()
   const [items, setItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -28,9 +30,10 @@ export function CategoryDishesPage({ categoryName, onBack }: CategoryDishesPageP
 
   const loadItems = async () => {
     try {
-      const data = await api.getMenuItems()
+      const response = await apiClient.get('/api/menu-items')
+      const data = response.data
       // Filter items by category
-      const categoryItems = data.filter(item => item.category === categoryName)
+      const categoryItems = data.filter((item: MenuItem) => item.category === categoryName)
       setItems(categoryItems)
       setLoading(false)
     } catch (error) {
@@ -48,7 +51,7 @@ export function CategoryDishesPage({ categoryName, onBack }: CategoryDishesPageP
   const handleDelete = async () => {
     if (!itemToDelete) return
     try {
-      await api.deleteMenuItem(itemToDelete)
+      await apiClient.delete(`/api/menu-items/${itemToDelete}`)
       toast.success('Stavka je obrisana')
       loadItems()
       setDeleteConfirmOpen(false)

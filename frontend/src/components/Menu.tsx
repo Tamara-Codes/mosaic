@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { api, type MenuItem, type Category } from '@/lib/api'
+import { type MenuItem, type Category } from '@/lib/api'
+import { useApiClient } from '@/lib/apiHelpers'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -15,9 +16,10 @@ interface MenuProps {
 }
 
 export function Menu({ language, onLanguageChange }: MenuProps) {
+  const apiClient = useApiClient()
   const [items, setItems] = useState<MenuItem[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [supportedLanguages, setSupportedLanguages] = useState<{code: string, name: string}[]>([])
+  const [, setSupportedLanguages] = useState<{code: string, name: string}[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -27,12 +29,15 @@ export function Menu({ language, onLanguageChange }: MenuProps) {
 
   const loadItems = async () => {
     try {
-      const [itemsData, categoriesData, languagesData] = await Promise.all([
-        api.getMenuItemsWithTranslations(),
-        api.getCategoriesWithTranslations(),
-        fetch('http://localhost:8000/api/supported-languages').then(r => r.json())
+      const [itemsResponse, categoriesResponse, languagesResponse] = await Promise.all([
+        apiClient.get('/api/menu-items-with-translations'),
+        apiClient.get('/api/categories-with-translations'),
+        apiClient.get('/api/supported-languages')
       ])
-      setItems(itemsData.filter(item => item.is_available))
+      const itemsData = itemsResponse.data
+      const categoriesData = categoriesResponse.data
+      const languagesData = languagesResponse.data
+      setItems(itemsData.filter((item: MenuItem) => item.is_available))
       setCategories(categoriesData)
       setSupportedLanguages(languagesData.languages || [])
       setLoading(false)

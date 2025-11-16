@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { api } from '@/lib/api'
+import { useApiClient } from '@/lib/apiHelpers'
 
 export function QRCodePage() {
+  const apiClient = useApiClient()
   const [qrData, setQrData] = useState<{ qr_code: string; menu_url: string } | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -13,7 +14,8 @@ export function QRCodePage() {
 
   const loadQRCode = async () => {
     try {
-      const data = await api.getQrCode()
+      const response = await apiClient.get('/api/qr-code')
+      const data = response.data
       setQrData(data)
       setLoading(false)
     } catch (error) {

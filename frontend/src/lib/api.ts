@@ -1,6 +1,46 @@
-import axios from 'axios'
+import axios, { type AxiosInstance } from 'axios'
+import { useAuth } from '@clerk/clerk-react'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+
+/**
+ * Create an authenticated axios instance
+ * This will automatically include Clerk token in requests
+ */
+function createAuthenticatedClient(getToken: () => Promise<string | null>): AxiosInstance {
+  const client = axios.create({
+    baseURL: API_BASE_URL,
+  })
+
+  client.interceptors.request.use(
+    async (config) => {
+      const token = await getToken()
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
+      return config
+    },
+    (error) => Promise.reject(error)
+  )
+
+  return client
+}
+
+/**
+ * Hook to get authenticated API client
+ * Use this in components that need to make authenticated API calls
+ */
+export function useAuthenticatedApi() {
+  const { getToken } = useAuth()
+  
+  return createAuthenticatedClient(async () => {
+    try {
+      return await getToken()
+    } catch {
+      return null
+    }
+  })
+}
 
 export interface RestaurantInfo {
   id: number

@@ -5,9 +5,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { Building2, Lock } from 'lucide-react'
-import { api } from '@/lib/api'
+import { useApiClient } from '@/lib/apiHelpers'
+import { useUser } from '@clerk/clerk-react'
 
 export function SettingsPage() {
+  const apiClient = useApiClient()
+  const { user } = useUser()
   const [restaurantName, setRestaurantName] = useState('Restaurant Menu')
   const [restaurantDescription, setRestaurantDescription] = useState('')
   const [address, setAddress] = useState('')
@@ -17,6 +20,7 @@ export function SettingsPage() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [passwordLoading, setPasswordLoading] = useState(false)
 
   useEffect(() => {
     loadRestaurantInfo()
@@ -24,7 +28,8 @@ export function SettingsPage() {
 
   const loadRestaurantInfo = async () => {
     try {
-      const info = await api.getRestaurantInfo()
+      const response = await apiClient.get('/api/restaurant-info')
+      const info = response.data
       setRestaurantName(info.name || 'Restaurant Menu')
       setRestaurantDescription(info.description || '')
       setAddress(info.address || '')
@@ -43,13 +48,13 @@ export function SettingsPage() {
 
     setLoading(true)
     try {
-      await api.saveRestaurantInfo({
-        name: restaurantName,
-        description: restaurantDescription,
-        address: address,
-        phone: phone,
-        email: email
-      })
+      const formData = new FormData()
+      formData.append('name', restaurantName)
+      formData.append('description', restaurantDescription)
+      formData.append('address', address)
+      formData.append('phone', phone)
+      formData.append('email', email)
+      await apiClient.post('/api/restaurant-info', formData)
       toast.success('Informacije o restoranu su spremljene')
     } catch (error: any) {
       console.error('Failed to save restaurant info:', error)
@@ -59,20 +64,50 @@ export function SettingsPage() {
     }
   }
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
+    if (!user) {
+      toast.error('Korisnik nije prijavljen')
+      return
+    }
+
     if (newPassword !== confirmPassword) {
       toast.error('Lozinke se ne podudaraju')
       return
     }
-    if (newPassword.length < 6) {
-      toast.error('Lozinka mora imati najmanje 6 znakova')
+    
+    if (newPassword.length < 8) {
+      toast.error('Lozinka mora imati najmanje 8 znakova')
       return
     }
-    // TODO: Implement API call to change password
-    toast.success('Lozinka je promijenjena')
-    setCurrentPassword('')
-    setNewPassword('')
-    setConfirmPassword('')
+
+    setPasswordLoading(true)
+    try {
+      // Use Clerk's updatePassword method
+      await user.updatePassword({
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+        signOutOfOtherSessions: false,
+      })
+      
+      toast.success('Lozinka je promijenjena')
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (error: any) {
+      console.error('Failed to change password:', error)
+      
+      // Handle specific Clerk errors
+      if (error.errors) {
+        const errorMessage = error.errors[0]?.message || 'Greška pri promjeni lozinke'
+        toast.error(errorMessage)
+      } else if (error.message) {
+        toast.error(error.message)
+      } else {
+        toast.error('Greška pri promjeni lozinke. Provjerite da li je trenutna lozinka ispravna.')
+      }
+    } finally {
+      setPasswordLoading(false)
+    }
   }
 
   return (
@@ -186,8 +221,8 @@ export function SettingsPage() {
               placeholder="Potvrdite novu lozinku"
             />
           </div>
-          <Button onClick={handleChangePassword}>
-            Promijeni Lozinku
+          <Button onClick={handleChangePassword} disabled={passwordLoading}>
+            {passwordLoading ? 'Promjena...' : 'Promijeni Lozinku'}
           </Button>
         </CardContent>
       </Card>

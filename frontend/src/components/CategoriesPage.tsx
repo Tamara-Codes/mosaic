@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { api, type MenuItem, type Category } from '@/lib/api'
+import { type MenuItem, type Category } from '@/lib/api'
+import { useApiClient } from '@/lib/apiHelpers'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,6 +15,7 @@ interface CategoriesPageProps {
 }
 
 export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
+  const apiClient = useApiClient()
   const [categories, setCategories] = useState<Category[]>([])
   const [items, setItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -32,10 +34,12 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
 
   const loadData = async () => {
     try {
-      const [categoriesData, itemsData] = await Promise.all([
-        api.getCategoriesWithIds(),
-        api.getMenuItems()
+      const [categoriesResponse, itemsResponse] = await Promise.all([
+        apiClient.get('/api/categories'),
+        apiClient.get('/api/menu-items')
       ])
+      const categoriesData = categoriesResponse.data
+      const itemsData = itemsResponse.data
       setCategories(categoriesData)
       setItems(itemsData)
       setLoading(false)
@@ -90,7 +94,7 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
     setIsReordering(true)
 
     try {
-      await api.reorderCategories(newCategories)
+      await apiClient.put('/api/categories/reorder', newCategories)
       toast.success('Redoslijed kategorija je promijenjen')
     } catch (error) {
       console.error('Error reordering categories:', error)
@@ -125,12 +129,16 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
         // Find the category by name
         const categoryToUpdate = categories.find(c => c.name === editingCategory)
         if (categoryToUpdate) {
-          await api.updateCategory(categoryToUpdate.id, newCategoryName)
+          const formData = new FormData()
+          formData.append('name', newCategoryName)
+          await apiClient.put(`/api/categories/${categoryToUpdate.id}`, formData)
           toast.success('Kategorija je ažurirana')
         }
       } else {
         // Create new category via API
-        await api.createCategory(newCategoryName.trim())
+        const formData = new FormData()
+        formData.append('name', newCategoryName.trim())
+        await apiClient.post('/api/categories', formData)
         toast.success('Kategorija je dodana')
       }
 
@@ -157,7 +165,7 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
       // Find the category by name
       const categoryToDeleteObj = categories.find(c => c.name === categoryToDelete)
       if (categoryToDeleteObj) {
-        await api.deleteCategory(categoryToDeleteObj.id)
+        await apiClient.delete(`/api/categories/${categoryToDeleteObj.id}`)
         toast.success('Kategorija je obrisana')
       }
       

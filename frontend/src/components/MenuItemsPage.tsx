@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { api, type MenuItem } from '@/lib/api'
+import { type MenuItem } from '@/lib/api'
+import { useApiClient } from '@/lib/apiHelpers'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -9,7 +10,6 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Progress } from '@/components/ui/progress'
 import { ConfirmDialog } from './ConfirmDialog'
 import { toast } from 'sonner'
 import { Plus, Edit, Trash2, Search, Languages, Sparkles, Loader2, CheckCircle2, Flag, GripVertical, Move } from 'lucide-react'
@@ -35,6 +35,7 @@ interface Language {
 }
 
 export function MenuItemsPage() {
+  const apiClient = useApiClient()
   const [items, setItems] = useState<MenuItemWithTranslations[]>([])
   const [allCategories, setAllCategories] = useState<{id: number, name: string}[]>([])
   const [languages, setLanguages] = useState<Language[]>([])
@@ -67,16 +68,18 @@ export function MenuItemsPage() {
 
   // Language management state
   const [showLanguageManagementDialog, setShowLanguageManagementDialog] = useState(false)
+  const [languageToRemove, setLanguageToRemove] = useState<{code: string, name: string} | null>(null)
+  const [showRemoveLanguageConfirm, setShowRemoveLanguageConfirm] = useState(false)
   const [availableLanguages] = useState([
-    { code: 'en', name: 'English' },
-    { code: 'de', name: 'German' },
-    { code: 'it', name: 'Italian' },
-    { code: 'fr', name: 'French' },
-    { code: 'es', name: 'Spanish' },
-    { code: 'sl', name: 'Slovenian' },
-    { code: 'cs', name: 'Czech' },
-    { code: 'pl', name: 'Polish' },
-    { code: 'hu', name: 'Hungarian' },
+    { code: 'en', name: 'Engleski' },
+    { code: 'de', name: 'Njemački' },
+    { code: 'it', name: 'Talijanski' },
+    { code: 'fr', name: 'Francuski' },
+    { code: 'es', name: 'Španjolski' },
+    { code: 'sl', name: 'Slovenski' },
+    { code: 'cs', name: 'Češki' },
+    { code: 'pl', name: 'Poljski' },
+    { code: 'hu', name: 'Mađarski' },
   ])
 
   // Category reordering state
@@ -129,7 +132,7 @@ export function MenuItemsPage() {
     setIsReordering(true)
 
     try {
-      await api.reorderCategories(newCategories)
+      await apiClient.put('/api/categories/reorder', newCategories)
       toast.success('Redoslijed kategorija je promijenjen')
     } catch (error) {
       console.error('Error reordering categories:', error)
@@ -145,17 +148,29 @@ export function MenuItemsPage() {
     try {
       setLoading(true)
       const [itemsData, langsData, categoriesData] = await Promise.all([
-        fetch('http://localhost:8000/api/menu-items-with-translations').then(r => r.json()),
-        fetch('http://localhost:8000/api/supported-languages').then(r => r.json()),
-        fetch('http://localhost:8000/api/categories').then(r => r.json())
+        apiClient.get('/api/menu-items-with-translations').then(r => r.data),
+        apiClient.get('/api/supported-languages').then(r => r.data),
+        apiClient.get('/api/categories').then(r => r.data)
       ])
       setItems(itemsData)
       setLanguages(langsData.languages)
       setAllCategories(categoriesData.categories_with_ids || [])
       setLoading(false)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load items:', error)
-      toast.error('Greška pri učitavanju stavki')
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Unknown error'
+      
+      if (error?.response?.status === 404) {
+        if (errorMessage.includes('Restaurant not found')) {
+          toast.error('Restoran nije pronađen. Provjerite je li vaš račun povezan s restoranom u postavkama.')
+        } else {
+          toast.error('Restoran nije pronađen. Molimo kontaktirajte podršku.')
+        }
+      } else if (error?.response?.status === 401) {
+        toast.error('Neautorizirani pristup. Molimo se ponovno prijavite.')
+      } else {
+        toast.error(`Greška pri učitavanju stavki: ${errorMessage}`)
+      }
       setLoading(false)
     }
   }
@@ -168,7 +183,7 @@ export function MenuItemsPage() {
   const handleDelete = async () => {
     if (!itemToDelete) return
     try {
-      await api.deleteMenuItem(itemToDelete)
+      await apiClient.delete(`/api/menu-items/${itemToDelete}`)
       toast.success('Stavka je obrisana')
       loadItems()
       setDeleteConfirmOpen(false)
@@ -193,17 +208,17 @@ export function MenuItemsPage() {
     return `https://flagcdn.com/w40/${countryCode}.png`
   }
 
-  const getTranslationProgress = (item: MenuItemWithTranslations) => {
-    const total = languages.length
-    const completed = item.translations?.length || 0
-    return { completed, total, percentage: Math.round((completed / total) * 100) }
-  }
+  // Unused function - kept for potential future use
+  // const getTranslationProgress = (item: MenuItemWithTranslations) => {
+  //   const total = languages.length
+  //   const completed = item.translations?.length || 0
+  //   return { completed, total, percentage: Math.round((completed / total) * 100) }
+  // }
 
   const openTranslateDialog = (item: MenuItemWithTranslations) => {
     setSelectedItemForTranslation(item)
-    const existingLangs = item.translations?.map(t => t.language_code) || []
-    const availableLangs = languages.filter(l => !existingLangs.includes(l.code)).map(l => l.code)
-    setSelectedLanguages(availableLangs)
+    // Start with all languages unchecked - user must explicitly select which ones to translate
+    setSelectedLanguages([])
     setShowTranslateDialog(true)
   }
 
@@ -222,13 +237,8 @@ export function MenuItemsPage() {
 
     try {
       setGenerating(true)
-      const response = await fetch(`http://localhost:8000/api/translations/generate/${selectedItemForTranslation.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selectedLanguages)
-      })
-
-      const data = await response.json()
+      const response = await apiClient.post(`/api/translations/generate/${selectedItemForTranslation.id}`, selectedLanguages)
+      const data = response.data
       
       if (data.success) {
         toast.success(`Generirano ${data.translations.length} prijevoda`)
@@ -250,20 +260,14 @@ export function MenuItemsPage() {
     if (!selectedTranslation) return
 
     try {
-      const response = await fetch(`http://localhost:8000/api/translations/${selectedTranslation.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: editTranslationName,
-          description: editTranslationDescription
-        })
-      })
-
-      if (response.ok) {
-        toast.success("Prijevod je ažuriran")
-        loadItems()
-        setShowEditTranslationDialog(false)
-      }
+      const formData = new FormData()
+      formData.append('name', editTranslationName)
+      formData.append('description', editTranslationDescription)
+      
+      await apiClient.put(`/api/translations/${selectedTranslation.id}`, formData)
+      toast.success("Prijevod je ažuriran")
+      loadItems()
+      setShowEditTranslationDialog(false)
     } catch (error) {
       console.error('Error updating translation:', error)
       toast.error("Neuspješno ažuriranje prijevoda")
@@ -274,14 +278,9 @@ export function MenuItemsPage() {
     if (!confirm('Jeste li sigurni da želite obrisati ovaj prijevod?')) return
 
     try {
-      const response = await fetch(`http://localhost:8000/api/translations/${translationId}`, {
-        method: 'DELETE'
-      })
-
-      if (response.ok) {
-        toast.success("Prijevod je obrisan")
-        loadItems()
-      }
+      await apiClient.delete(`/api/translations/${translationId}`)
+      toast.success("Prijevod je obrisan")
+      loadItems()
     } catch (error) {
       console.error('Error deleting translation:', error)
       toast.error("Neuspješno brisanje prijevoda")
@@ -296,21 +295,14 @@ export function MenuItemsPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newCategoryName.trim() })
-      })
-
-      if (response.ok) {
-        toast.success("Kategorija je dodana")
-        setNewCategoryName('')
-        setShowAddCategoryDialog(false)
-        loadItems() // Reload to get updated categories
-      } else {
-        const data = await response.json()
-        toast.error(data.detail || "Greška pri dodavanju kategorije")
-      }
+      const formData = new FormData()
+      formData.append('name', newCategoryName.trim())
+      
+      await apiClient.post('/api/categories', formData)
+      toast.success("Kategorija je dodana")
+      setNewCategoryName('')
+      setShowAddCategoryDialog(false)
+      loadItems() // Reload to get updated categories
     } catch (error) {
       console.error('Error adding category:', error)
       toast.error("Neuspješno dodavanje kategorije")
@@ -321,23 +313,15 @@ export function MenuItemsPage() {
     if (!categoryToDelete) return
 
     try {
-      const response = await fetch(`http://localhost:8000/api/categories/${categoryToDelete.id}`, {
-        method: 'DELETE'
-      })
-
-      if (response.ok) {
-        toast.success("Kategorija je obrisana")
-        setShowDeleteCategoryDialog(false)
-        setCategoryToDelete(null)
-        // If we were viewing the deleted category, switch to "sve"
-        if (selectedCategory === categoryToDelete.name) {
-          setSelectedCategory('sve')
-        }
-        loadItems() // Reload to get updated categories
-      } else {
-        const data = await response.json()
-        toast.error(data.detail || "Greška pri brisanju kategorije")
+      await apiClient.delete(`/api/categories/${categoryToDelete.id}`)
+      toast.success("Kategorija je obrisana")
+      setShowDeleteCategoryDialog(false)
+      setCategoryToDelete(null)
+      // If we were viewing the deleted category, switch to "sve"
+      if (selectedCategory === categoryToDelete.name) {
+        setSelectedCategory('sve')
       }
+      loadItems() // Reload to get updated categories
     } catch (error) {
       console.error('Error deleting category:', error)
       toast.error("Neuspješno brisanje kategorije")
@@ -352,21 +336,20 @@ export function MenuItemsPage() {
   const openTranslateCategoryDialog = async (category: {id: number, name: string}) => {
     // Fetch category with translations
     try {
-      const response = await fetch(`http://localhost:8000/api/categories-with-translations`)
-      const categoriesData = await response.json()
+      const response = await apiClient.get('/api/categories-with-translations')
+      const categoriesData = response.data
       const fullCategory = categoriesData.find((c: any) => c.id === category.id)
       
       setSelectedCategoryForTranslation(fullCategory || category)
       
-      // Pre-select missing languages
-      const existingLangs = fullCategory?.translations?.map((t: any) => t.language_code) || []
-      const availableLangs = languages.filter(l => !existingLangs.includes(l.code)).map(l => l.code)
-      setSelectedLanguages(availableLangs)
+      // Start with all languages unchecked - user must explicitly select which ones to translate
+      setSelectedLanguages([])
       setShowTranslateCategoryDialog(true)
     } catch (error) {
       console.error('Error fetching category:', error)
       setSelectedCategoryForTranslation(category)
-      setSelectedLanguages(languages.map(l => l.code))
+      // Start with all languages unchecked
+      setSelectedLanguages([])
       setShowTranslateCategoryDialog(true)
     }
   }
@@ -379,13 +362,8 @@ export function MenuItemsPage() {
 
     try {
       setGenerating(true)
-      const response = await fetch(`http://localhost:8000/api/category-translations/generate/${selectedCategoryForTranslation.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selectedLanguages)
-      })
-
-      const data = await response.json()
+      const response = await apiClient.post(`/api/category-translations/generate/${selectedCategoryForTranslation.id}`, selectedLanguages)
+      const data = response.data
       
       if (data.success) {
         toast.success(`Generirano ${data.translations.length} prijevoda kategorije`)
@@ -403,8 +381,36 @@ export function MenuItemsPage() {
     }
   }
 
+  // Unused functions - kept for potential future use
+  // const handleEditCategoryTranslation = async (translationId: number, newName: string) => {
+  //   try {
+  //     const formData = new FormData()
+  //     formData.append('name', newName)
+  //     
+  //     await apiClient.put(`/api/category-translations/${translationId}`, formData)
+  //     toast.success("Prijevod kategorije je ažuriran")
+  //     loadItems()
+  //   } catch (error) {
+  //     console.error('Error updating category translation:', error)
+  //     toast.error("Neuspješno ažuriranje prijevoda")
+  //   }
+  // }
+
+  // const handleDeleteCategoryTranslation = async (translationId: number) => {
+  //   if (!confirm('Jeste li sigurni da želite obrisati ovaj prijevod kategorije?')) return
+
+  //   try {
+  //     await apiClient.delete(`/api/category-translations/${translationId}`)
+  //     toast.success("Prijevod kategorije je obrisan")
+  //     loadItems()
+  //   } catch (error) {
+  //     console.error('Error deleting category translation:', error)
+  //     toast.error("Neuspješno brisanje prijevoda")
+  //   }
+  // }
+
   // Use all categories from database
-  const categories = allCategories.map(c => c.name)
+  // const categories = allCategories.map(c => c.name) // Unused - kept for reference
   
   // Check if there are uncategorized items
   const uncategorizedCount = items.filter(item => !item.category || item.category === '').length
@@ -498,7 +504,7 @@ export function MenuItemsPage() {
             </Button>
           </div>
           <div className="space-y-2 max-w-2xl">
-            {allCategories.map((category, idx) => (
+            {allCategories.map((category) => (
               <Card 
                 key={category.id} 
                 draggable
@@ -604,7 +610,18 @@ export function MenuItemsPage() {
             </Card>
           )}
           
-          {filteredItems.length === 0 ? (
+          {filteredItems.length === 0 && items.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <div className="space-y-4">
+                  <p className="text-lg font-semibold">Dobrodošli! Vaš jelovnik je prazan.</p>
+                  <p className="text-muted-foreground">
+                    Dodajte svoju prvu stavku klikom na gumb "Dodaj Novu Stavku" iznad.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : filteredItems.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
                 <p className="text-muted-foreground">
@@ -1132,6 +1149,9 @@ export function MenuItemsPage() {
               <Languages className="h-6 w-6 text-primary" />
               Upravljanje jezicima
             </DialogTitle>
+            <DialogDescription className="text-base">
+              Omogućite ili onemogućite jezike za vaš restoran.
+            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-6">
@@ -1150,35 +1170,21 @@ export function MenuItemsPage() {
                     `}
                     onClick={async () => {
                       if (isActive) {
-                        // Remove language
-                        if (!confirm(`Ukloniti ${lang.name}? Svi prijevodi za taj jezik će biti obrisani!`)) {
-                          return
-                        }
-                        try {
-                          const response = await fetch(`http://localhost:8000/api/languages/remove/${lang.code}`, {
-                            method: 'DELETE'
-                          })
-                          if (response.ok) {
-                            toast.success(`Uklonjen: ${lang.name}`)
-                            loadItems()
-                          }
-                        } catch (error) {
-                          toast.error('Greška pri uklanjanju')
-                        }
+                        // Remove language - show confirmation dialog
+                        setLanguageToRemove(lang)
+                        setShowRemoveLanguageConfirm(true)
                       } else {
                         // Add language
                         try {
-                          const response = await fetch('http://localhost:8000/api/languages/add', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ code: lang.code, name: lang.name })
+                          await apiClient.post('/api/languages/add', {
+                            code: lang.code,
+                            name: lang.name
                           })
-                          if (response.ok) {
-                            toast.success(`Dodan: ${lang.name}`)
-                            loadItems()
-                          }
-                        } catch (error) {
-                          toast.error('Greška pri dodavanju')
+                          toast.success(`Dodan: ${lang.name}`)
+                          loadItems()
+                        } catch (error: any) {
+                          const errorMsg = error?.response?.data?.detail || 'Greška pri dodavanju'
+                          toast.error(errorMsg)
                         }
                       }
                     }}
@@ -1190,7 +1196,6 @@ export function MenuItemsPage() {
                     />
                     <div className="text-center">
                       <div className="font-semibold text-base">{lang.name}</div>
-                      <div className="text-xs text-muted-foreground">{lang.code.toUpperCase()}</div>
                     </div>
                     <div className={`
                       w-12 h-12 rounded-full flex items-center justify-center text-2xl font-bold shadow-sm
@@ -1211,6 +1216,43 @@ export function MenuItemsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Remove Language Confirmation Dialog */}
+      <ConfirmDialog
+        open={showRemoveLanguageConfirm}
+        onOpenChange={setShowRemoveLanguageConfirm}
+        title={`Ukloniti ${languageToRemove?.name}?`}
+        description={
+          <div className="space-y-2">
+            <p>
+              Jeste li sigurni da želite ukloniti jezik <strong>{languageToRemove?.name}</strong>?
+            </p>
+            <p className="text-destructive font-semibold">
+              ⚠️ Svi prijevodi za ovaj jezik će biti trajno obrisani za sve stavke menija i kategorije!
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Ova akcija se ne može poništiti.
+            </p>
+          </div>
+        }
+        onConfirm={async () => {
+          if (languageToRemove) {
+            try {
+              await apiClient.delete(`/api/languages/remove/${languageToRemove.code}`)
+              toast.success(`Jezik ${languageToRemove.name} je uklonjen`)
+              loadItems()
+              setShowRemoveLanguageConfirm(false)
+              setLanguageToRemove(null)
+            } catch (error: any) {
+              const errorMsg = error?.response?.data?.detail || 'Greška pri uklanjanju'
+              toast.error(errorMsg)
+            }
+          }
+        }}
+        confirmText="Da, ukloni"
+        cancelText="Odustani"
+        variant="destructive"
+      />
     </div>
   )
 }

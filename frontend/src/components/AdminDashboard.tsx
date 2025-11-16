@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useAuth } from '@clerk/clerk-react'
+import { useNavigate } from 'react-router-dom'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/app-sidebar'
 import { SiteHeader } from '@/components/site-header'
@@ -7,14 +9,21 @@ import { SettingsPage } from './SettingsPage'
 import { QRCodePage } from './QRCodePage'
 
 interface AdminDashboardProps {
-  onViewChange: (view: 'menu' | 'admin' | 'login' | 'qr') => void
+  onViewChange?: (view: 'menu' | 'admin' | 'login' | 'qr') => void
 }
 
-export function AdminDashboard({ onViewChange }: AdminDashboardProps) {
+export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardProps) {
   const [currentView, setCurrentView] = useState<'menu-items' | 'qr' | 'settings'>('menu-items')
+  const { signOut } = useAuth()
+  const navigate = useNavigate()
 
   const handleViewChange = (view: 'menu-items' | 'qr' | 'settings') => {
     setCurrentView(view)
+  }
+
+  const handleLogout = async () => {
+    await signOut()
+    navigate('/login')
   }
 
   const renderContent = () => {
@@ -35,7 +44,7 @@ export function AdminDashboard({ onViewChange }: AdminDashboardProps) {
       <AppSidebar 
         currentView={currentView} 
         onViewChange={handleViewChange}
-        onLogout={() => onViewChange('menu')}
+        onLogout={handleLogout}
       />
       <SidebarInset>
         <SiteHeader currentView={currentView} />

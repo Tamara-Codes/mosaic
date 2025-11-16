@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { api, type MenuItem } from '@/lib/api'
+import { type MenuItem } from '@/lib/api'
+import { useApiClient } from '@/lib/apiHelpers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,6 +17,7 @@ interface MenuItemFormProps {
 }
 
 export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: MenuItemFormProps) {
+  const apiClient = useApiClient()
   const [formData, setFormData] = useState({
     name_hr: item?.name_hr || '',
     description_hr: item?.description_hr || '',
@@ -51,7 +53,8 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
 
   const loadCategories = async () => {
     try {
-      const cats = await api.getCategories()
+      const response = await apiClient.get('/api/categories')
+      const cats = response.data
       setCategories(cats || [])
     } catch (error) {
       console.error('Failed to load categories:', error)
@@ -76,7 +79,9 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
       // If creating a new category, save it first
       if (!presetCategory && useCustomCategory && categoryInput.trim() && formData.category.trim()) {
         try {
-          await api.createCategory(formData.category.trim())
+          const formDataCategory = new FormData()
+          formDataCategory.append('name', formData.category.trim())
+          await apiClient.post('/api/categories', formDataCategory)
           await loadCategories() // Reload categories list
           toast.success('Nova kategorija je dodana')
         } catch (error: any) {
@@ -108,10 +113,14 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
       }
 
       if (item) {
-        await api.updateMenuItem(item.id, formDataToSend)
+        await apiClient.put(`/api/menu-items/${item.id}`, formDataToSend, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
         toast.success('Stavka je ažurirana')
       } else {
-        await api.createMenuItem(formDataToSend)
+        await apiClient.post('/api/menu-items', formDataToSend, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
         toast.success('Stavka je dodana')
       }
 
@@ -241,7 +250,9 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
                 onClick={async () => {
                   if (categoryInput.trim()) {
                     try {
-                      await api.createCategory(categoryInput.trim())
+                      const formDataCategory = new FormData()
+                      formDataCategory.append('name', categoryInput.trim())
+                      await apiClient.post('/api/categories', formDataCategory)
                       await loadCategories()
                       setFormData({ ...formData, category: categoryInput.trim() })
                       setUseCustomCategory(false)
