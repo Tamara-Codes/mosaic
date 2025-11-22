@@ -7,5 +7,27 @@
       "source": "/api/(.*)",
       "destination": "/api/index.py"
     }
+  ],
+  "routes": [
+    {
+      "src": "/dashboard",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/login",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/sign-in",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/sign-up",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/menu/(.*)",
+      "dest": "/index.html"
+    }
   ]
 }
