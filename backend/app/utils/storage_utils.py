@@ -4,7 +4,7 @@ Supabase Storage utilities for image uploads
 import os
 import uuid
 from typing import Optional
-from app.core.supabase_client import get_supabase_client
+from core.supabase_client import get_supabase_client
 from fastapi import UploadFile, HTTPException
 
 BUCKET_NAME = "menu-images"

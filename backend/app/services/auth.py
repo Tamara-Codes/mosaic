@@ -6,7 +6,7 @@ from fastapi import Header, HTTPException
 import os
 import jwt
 import httpx
-from app.core.supabase_client import get_supabase_client
+from core.supabase_client import get_supabase_client
 
 CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
 

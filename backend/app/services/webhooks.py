@@ -90,7 +90,7 @@ def verify_signature(headers: dict, body: bytes) -> bool:
 
 async def handle_user_created(data: Dict[str, Any]) -> Dict[str, Any]:
     """Link new user to restaurant by email"""
-    from app.core.supabase_client import get_supabase_client
+    from core.supabase_client import get_supabase_client
     
     user_id = data.get("id")
     emails = data.get("email_addresses", [])
@@ -128,7 +128,7 @@ async def handle_user_created(data: Dict[str, Any]) -> Dict[str, Any]:
 
 async def handle_user_deleted(data: Dict[str, Any]) -> Dict[str, Any]:
     """Delete restaurant when user is deleted"""
-    from app.core.supabase_client import get_supabase_client
+    from core.supabase_client import get_supabase_client
     
     user_id = data.get("id")
     if not user_id:

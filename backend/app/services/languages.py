@@ -3,7 +3,7 @@ Language management services
 """
 import os
 import json
-from app.core.config import DEFAULT_SUPPORTED_LANGUAGES, LANGUAGES_FILE
+from core.config import DEFAULT_SUPPORTED_LANGUAGES, LANGUAGES_FILE
 
 def load_supported_languages():
     """Load supported languages from file or use default"""

@@ -13,17 +13,17 @@ from io import BytesIO
 import base64
 from dotenv import load_dotenv
 from openai import OpenAI
-from app.core.supabase_client import get_supabase_client, get_supabase_anon_client
+from core.supabase_client import get_supabase_client, get_supabase_anon_client
 from slugify import slugify
-from app.utils.storage_utils import upload_image_to_storage, delete_image_from_storage, get_image_url
+from utils.storage_utils import upload_image_to_storage, delete_image_from_storage, get_image_url
 
 # Load environment variables
 load_dotenv()
 
-from app.core.config import CORS_ORIGINS, OPENAI_API_KEY, MENU_URL
-from app.services.languages import load_supported_languages, save_supported_languages
-from app.services.auth import get_clerk_user_id, get_restaurant_by_clerk_user, require_auth
-from app.services.webhooks import verify_signature, handle_user_created, handle_user_deleted
+from core.config import CORS_ORIGINS, OPENAI_API_KEY, MENU_URL
+from services.languages import load_supported_languages, save_supported_languages
+from services.auth import get_clerk_user_id, get_restaurant_by_clerk_user, require_auth
+from services.webhooks import verify_signature, handle_user_created, handle_user_deleted
 
 app = FastAPI(
     title="Restaurant Menu API",
