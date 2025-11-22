@@ -2,11 +2,18 @@
 FastAPI application using Supabase for data persistence
 This replaces the old SQLite-based main.py
 """
+import sys
+import os
+from pathlib import Path
+
+# Add the api directory to Python path for Vercel
+api_dir = Path(__file__).parent
+sys.path.insert(0, str(api_dir))
+
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Header, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
-import os
 import json
 import qrcode
 from io import BytesIO
