@@ -35,7 +35,8 @@ from services.webhooks import verify_signature, handle_user_created, handle_user
 app = FastAPI(
     title="Restaurant Menu API",
     description="Multi-tenant restaurant menu management system",
-    version="1.0.0"
+    version="1.0.0",
+    root_path="/api"
 )
 
 # CORS middleware
