@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { Mail, Phone, MapPin, Clock, CheckCircle2, Loader2 } from 'lucide-react'
+import { Mail, Phone, Clock, CheckCircle2, Loader2 } from 'lucide-react'
 // Date formatting helper
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
