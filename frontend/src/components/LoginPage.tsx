@@ -22,9 +22,9 @@ export function LoginPage() {
           {/* Punchline */}
           <div className="space-y-4">
             <h2 className="text-3xl font-semibold leading-tight">
-              Vaš Elektronski Jelovnik,
+              Vaš elektronski jelovnik,
               <br />
-              <span className="text-indigo-300">Preveden Globalno</span>
+              <span className="text-indigo-300">Preveden globalno</span>
             </h2>
           </div>
 

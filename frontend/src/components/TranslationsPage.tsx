@@ -63,8 +63,8 @@ export function TranslationsPage() {
     try {
       setLoading(true)
       const [itemsRes, langsRes] = await Promise.all([
-        fetch('http://localhost:8000/api/menu-items-with-translations'),
-        fetch('http://localhost:8000/api/supported-languages')
+        fetch('/api/menu-items-with-translations'),
+        fetch('/api/supported-languages')
       ])
       
       const itemsData = await itemsRes.json()
@@ -88,7 +88,7 @@ export function TranslationsPage() {
 
     try {
       setGenerating(true)
-      const response = await fetch(`http://localhost:8000/api/translations/generate/${selectedItem.id}`, {
+      const response = await fetch(`/api/translations/generate/${selectedItem.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +122,7 @@ export function TranslationsPage() {
 
     try {
       setGenerating(true)
-      const response = await fetch('http://localhost:8000/api/translations/batch-generate', {
+      const response = await fetch('/api/translations/batch-generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +148,7 @@ export function TranslationsPage() {
     if (!selectedTranslation) return
 
     try {
-      const response = await fetch(`http://localhost:8000/api/translations/${selectedTranslation.id}`, {
+      const response = await fetch(`/api/translations/${selectedTranslation.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -174,7 +174,7 @@ export function TranslationsPage() {
     if (!confirm('Jeste li sigurni da želite obrisati ovaj prijevod?')) return
 
     try {
-      const response = await fetch(`http://localhost:8000/api/translations/${translationId}`, {
+      const response = await fetch(`/api/translations/${translationId}`, {
         method: 'DELETE'
       })
 

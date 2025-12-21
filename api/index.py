@@ -35,8 +35,7 @@ from services.webhooks import verify_signature, handle_user_created, handle_user
 app = FastAPI(
     title="Restaurant Menu API",
     description="Multi-tenant restaurant menu management system",
-    version="1.0.0",
-    root_path="/api"
+    version="1.0.0"
 )
 
 # CORS middleware
@@ -44,8 +43,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Initialize OpenAI client
@@ -53,6 +53,12 @@ openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Load supported languages
 SUPPORTED_LANGUAGES = load_supported_languages()
+
+# Catch-all OPTIONS handler for CORS preflight
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    """Handle all OPTIONS requests for CORS preflight"""
+    return JSONResponse(content={}, status_code=200)
 
 @app.get("/")
 async def root():
@@ -89,41 +95,69 @@ async def clerk_webhook(request: Request):
 @app.get("/v1/menu/{restaurant_slug}")
 async def get_public_menu(restaurant_slug: str):
     """
-    Public endpoint to get menu data for a restaurant
+    Public endpoint to get today's daily menu for a restaurant
     Returns: menu items, restaurant info, and theme_identifier
     """
+    from datetime import date
+    
     supabase = get_supabase_anon_client()
     
     # Get restaurant by slug
     restaurant_result = supabase.table('restaurants').select('*').eq('slug', restaurant_slug).execute()
     
     if not restaurant_result.data:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     restaurant = restaurant_result.data[0]
     
-    # Get active menu (for now, get the first active menu)
-    menu_result = supabase.table('menus').select('*').eq('restaurant_id', restaurant['id']).eq('is_active', True).limit(1).execute()
+    # Get today's daily menu
+    today = date.today()
+    daily_menu_result = supabase.table('daily_menus').select('*').eq('restaurant_id', restaurant['id']).eq('menu_date', str(today)).eq('is_active', True).eq('is_preview', False).limit(1).execute()
     
-    if not menu_result.data:
-        raise HTTPException(status_code=404, detail="No active menu found")
+    daily_menu = None
+    menu_items = []
     
-    menu = menu_result.data[0]
+    if daily_menu_result.data:
+        # Use daily menu if it exists
+        daily_menu = daily_menu_result.data[0]
+        
+        # Get menu items for this daily menu
+        daily_menu_items_result = supabase.table('daily_menu_items').select('*, menu_items(*)').eq('daily_menu_id', daily_menu['id']).order('order_index').execute()
+        
+        # Extract menu items and ensure image URLs are public URLs
+        for dmi in daily_menu_items_result.data:
+            item = dmi.get('menu_items')
+            if item and item.get('is_available', True):
+                # Get translations
+                translations_result = supabase.table('translations').select('*').eq('menu_item_id', item['id']).execute()
+                item['translations'] = translations_result.data
+                # Ensure image_path is a full public URL if it exists
+                if item.get('image_path'):
+                    item['image_path'] = get_image_url(item['image_path'])
+                menu_items.append(item)
+    else:
+        # Fallback: if no daily menu exists, return all available menu items
+        menu_items_result = supabase.table('menu_items').select('*').eq('restaurant_id', restaurant['id']).eq('is_available', True).order('name_hr').execute()
+        
+        for item in menu_items_result.data:
+            # Get translations
+            translations_result = supabase.table('translations').select('*').eq('menu_item_id', item['id']).execute()
+            item['translations'] = translations_result.data
+            # Ensure image_path is a full public URL if it exists
+            if item.get('image_path'):
+                item['image_path'] = get_image_url(item['image_path'])
+            menu_items.append(item)
+        
+        # Create a default menu object for the response
+        daily_menu = {
+            'id': None,
+            'name': 'Jelovnik',
+            'menu_date': str(today),
+            'description': None
+        }
     
-    # Get menu items
-    items_result = supabase.table('menu_items').select('*').eq('restaurant_id', restaurant['id']).eq('menu_id', menu['id']).eq('is_available', True).execute()
-    
-    # Get categories
+    # Get categories (all categories for the restaurant)
     categories_result = supabase.table('categories').select('*').eq('restaurant_id', restaurant['id']).order('order_index').execute()
-    
-    # Get translations for menu items and ensure image URLs are public URLs
-    menu_items = items_result.data
-    for item in menu_items:
-        translations_result = supabase.table('translations').select('*').eq('menu_item_id', item['id']).execute()
-        item['translations'] = translations_result.data
-        # Ensure image_path is a full public URL if it exists
-        if item.get('image_path'):
-            item['image_path'] = get_image_url(item['image_path'])
     
     # Get category translations
     categories = categories_result.data
@@ -143,13 +177,411 @@ async def get_public_menu(restaurant_slug: str):
             "theme_identifier": restaurant['theme_identifier']
         },
         "menu": {
-            "id": menu['id'],
-            "name": menu['name'],
-            "slug": menu['slug'],
-            "description": menu['description']
+            "id": daily_menu['id'] if daily_menu else None,
+            "name": daily_menu['name'] if daily_menu else 'Jelovnik',
+            "menu_date": daily_menu['menu_date'] if daily_menu else str(today),
+            "description": daily_menu.get('description') if daily_menu else None
         },
         "menu_items": menu_items,
         "categories": categories
+    })
+
+# Preview Menu Endpoint - Get menu for a specific date (for preview)
+@app.get("/v1/menu/{restaurant_slug}/preview/{date}")
+async def preview_menu(restaurant_slug: str, date: str):
+    """
+    Public endpoint to preview menu for a specific date
+    Returns: menu items, restaurant info for the specified date
+    """
+    supabase = get_supabase_anon_client()
+    
+    # Get restaurant by slug
+    restaurant_result = supabase.table('restaurants').select('*').eq('slug', restaurant_slug).execute()
+    
+    if not restaurant_result.data:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    restaurant = restaurant_result.data[0]
+    
+    # Get daily menu for the specified date
+    daily_menu_result = supabase.table('daily_menus').select('*').eq('restaurant_id', restaurant['id']).eq('menu_date', date).limit(1).execute()
+    
+    if not daily_menu_result.data:
+        raise HTTPException(status_code=404, detail=f"Jelovnik nije pronađen za datum {date}")
+    
+    daily_menu = daily_menu_result.data[0]
+    
+    # Get menu items for this daily menu
+    daily_menu_items_result = supabase.table('daily_menu_items').select('*, menu_items(*)').eq('daily_menu_id', daily_menu['id']).order('order_index').execute()
+    
+    # Extract menu items and ensure image URLs are public URLs
+    menu_items = []
+    for dmi in daily_menu_items_result.data:
+        item = dmi.get('menu_items')
+        if item and item.get('is_available', True):
+            # Get translations
+            translations_result = supabase.table('translations').select('*').eq('menu_item_id', item['id']).execute()
+            item['translations'] = translations_result.data
+            # Ensure image_path is a full public URL if it exists
+            if item.get('image_path'):
+                item['image_path'] = get_image_url(item['image_path'])
+            menu_items.append(item)
+    
+    # Get categories
+    categories_result = supabase.table('categories').select('*').eq('restaurant_id', restaurant['id']).order('order_index').execute()
+    
+    # Get category translations
+    categories = categories_result.data
+    for category in categories:
+        cat_translations_result = supabase.table('category_translations').select('*').eq('category_id', category['id']).execute()
+        category['translations'] = cat_translations_result.data
+    
+    return JSONResponse({
+        "restaurant": {
+            "id": restaurant['id'],
+            "name": restaurant['name'],
+            "slug": restaurant['slug'],
+            "description": restaurant['description'],
+            "address": restaurant['address'],
+            "phone": restaurant['phone'],
+            "email": restaurant['email'],
+            "theme_identifier": restaurant['theme_identifier']
+        },
+        "menu": {
+            "id": daily_menu['id'],
+            "name": daily_menu['name'],
+            "menu_date": daily_menu['menu_date'],
+            "description": daily_menu['description'],
+            "is_preview": daily_menu['is_preview']
+        },
+        "menu_items": menu_items,
+        "categories": categories
+    })
+
+# Public Restaurant Info Endpoint
+@app.get("/v1/restaurant/{restaurant_slug}")
+async def get_restaurant_public(restaurant_slug: str):
+    """Get restaurant information (public)"""
+    supabase = get_supabase_anon_client()
+    
+    restaurant_result = supabase.table('restaurants').select('*').eq('slug', restaurant_slug).execute()
+    
+    if not restaurant_result.data:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    restaurant = restaurant_result.data[0]
+    
+    return JSONResponse({
+        "id": restaurant['id'],
+        "name": restaurant['name'],
+        "slug": restaurant['slug'],
+        "description": restaurant['description'],
+        "address": restaurant['address'],
+        "phone": restaurant['phone'],
+        "email": restaurant['email'],
+        "theme_identifier": restaurant['theme_identifier']
+    })
+
+# Public Contact Form Endpoint
+@app.post("/v1/contact")
+async def submit_contact_form(request: Request):
+    """
+    Public endpoint to submit contact form
+    Request body should include:
+    - restaurant_slug: str
+    - name: str
+    - email: str
+    - phone: str (optional)
+    - message: str
+    """
+    body = await request.json()
+    
+    restaurant_slug = body.get('restaurant_slug')
+    name = body.get('name')
+    email = body.get('email')
+    phone = body.get('phone', '')
+    message = body.get('message')
+    
+    if not restaurant_slug or not name or not email or not message:
+        raise HTTPException(status_code=400, detail="Nedostaju obavezna polja")
+    
+    supabase = get_supabase_anon_client()
+    
+    # Get restaurant ID
+    restaurant_result = supabase.table('restaurants').select('id').eq('slug', restaurant_slug).execute()
+    
+    if not restaurant_result.data:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    restaurant_id = restaurant_result.data[0]['id']
+    
+    # Insert contact message
+    contact_result = supabase.table('contact_messages').insert({
+        'restaurant_id': restaurant_id,
+        'name': name,
+        'email': email,
+        'phone': phone,
+        'message': message
+    }).execute()
+    
+    if not contact_result.data:
+        raise HTTPException(status_code=500, detail="Greška pri slanju poruke")
+    
+    return JSONResponse({
+        "success": True,
+        "message": "Poruka je uspješno poslana"
+    })
+
+# Admin Endpoints for Orders and Messages
+@app.get("/orders")
+async def get_orders(clerk_user_id: str = Depends(require_auth)):
+    """Get all orders for authenticated restaurant"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    supabase = get_supabase_client()
+    
+    # Get orders with order items
+    orders_result = supabase.table('orders').select('*').eq('restaurant_id', restaurant['id']).order('created_at', desc=True).execute()
+    
+    orders = []
+    for order in orders_result.data:
+        # Get order items with menu item details
+        items_result = supabase.table('order_items').select('*, menu_items(name_hr, description_hr)').eq('order_id', order['id']).execute()
+        
+        # Format items with item names
+        formatted_items = []
+        for item in items_result.data:
+            menu_item = item.get('menu_items', {})
+            formatted_items.append({
+                'id': item['id'],
+                'menu_item_id': item['menu_item_id'],
+                'quantity': item['quantity'],
+                'unit_price': float(item['unit_price']),
+                'subtotal': float(item['subtotal']),
+                'customization': item.get('customization'),
+                'item_name': menu_item.get('name_hr', 'Nepoznata stavka') if menu_item else 'Nepoznata stavka',
+                'item_description': menu_item.get('description_hr') if menu_item else None,
+                'menu_items': menu_item
+            })
+        
+        orders.append({
+            **order,
+            'total_amount': float(order['total_price']),  # Alias for frontend compatibility
+            'items': formatted_items
+        })
+    
+    return JSONResponse(orders)
+
+@app.put("/orders/{order_id}/status")
+async def update_order_status(order_id: str, request: Request, clerk_user_id: str = Depends(require_auth)):
+    """Update order status"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    body = await request.json()
+    new_status = body.get('status')
+    
+    if not new_status:
+        raise HTTPException(status_code=400, detail="status is required")
+    
+    valid_statuses = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled']
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    supabase = get_supabase_client()
+    
+    # Verify order belongs to restaurant
+    order_result = supabase.table('orders').select('restaurant_id').eq('id', order_id).execute()
+    if not order_result.data or order_result.data[0]['restaurant_id'] != restaurant['id']:
+        raise HTTPException(status_code=404, detail="Narudžba nije pronađena")
+    
+    # Update status
+    update_result = supabase.table('orders').update({
+        'status': new_status,
+        'updated_at': 'now()'
+    }).eq('id', order_id).execute()
+    
+    if update_result.data:
+        order = update_result.data[0]
+        order['total_amount'] = float(order['total_price'])  # Alias for frontend compatibility
+        return JSONResponse({"success": True, "order": order})
+    return JSONResponse({"success": True, "order": None})
+
+@app.get("/contact-messages")
+async def get_contact_messages(clerk_user_id: str = Depends(require_auth)):
+    """Get all contact messages for authenticated restaurant"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    supabase = get_supabase_client()
+    
+    messages_result = supabase.table('contact_messages').select('*').eq('restaurant_id', restaurant['id']).order('created_at', desc=True).execute()
+    
+    return JSONResponse(messages_result.data)
+
+@app.put("/contact-messages/{message_id}/read")
+async def mark_message_read(message_id: str, clerk_user_id: str = Depends(require_auth)):
+    """Mark a contact message as read"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    supabase = get_supabase_client()
+    
+    # Verify message belongs to restaurant
+    message_result = supabase.table('contact_messages').select('restaurant_id').eq('id', message_id).execute()
+    if not message_result.data or message_result.data[0]['restaurant_id'] != restaurant['id']:
+        raise HTTPException(status_code=404, detail="Poruka nije pronađena")
+    
+    # Update read status
+    update_result = supabase.table('contact_messages').update({'read': True}).eq('id', message_id).execute()
+    
+    return JSONResponse({"success": True, "message": update_result.data[0] if update_result.data else None})
+
+# Public Order Creation Endpoint
+@app.post("/v1/orders")
+async def create_order(request: Request):
+    """
+    Public endpoint to create an order
+    Request body should include:
+    - restaurant_slug: str
+    - customer_name: str
+    - customer_phone: str
+    - customer_email: str (optional)
+    - delivery_address: str (optional, required if order_type is 'delivery')
+    - order_type: 'delivery' | 'pickup'
+    - items: [{"menu_item_id": str, "quantity": int}]
+    - notes: str (optional)
+    """
+    from datetime import date
+    
+    body = await request.json()
+    
+    restaurant_slug = body.get('restaurant_slug')
+    customer_name = body.get('customer_name')
+    customer_phone = body.get('customer_phone')
+    customer_email = body.get('customer_email')
+    delivery_address = body.get('delivery_address')
+    order_type = body.get('order_type')
+    items = body.get('items', [])
+    notes = body.get('notes')
+    
+    # Validation
+    if not restaurant_slug:
+        raise HTTPException(status_code=400, detail="restaurant_slug je obavezan")
+    if not customer_name:
+        raise HTTPException(status_code=400, detail="Ime kupca je obavezno")
+    if not customer_phone:
+        raise HTTPException(status_code=400, detail="Telefon kupca je obavezan")
+    if order_type not in ['delivery', 'pickup']:
+        raise HTTPException(status_code=400, detail="order_type mora biti 'delivery' ili 'pickup'")
+    if order_type == 'delivery' and not delivery_address:
+        raise HTTPException(status_code=400, detail="Adresa dostave je obavezna za narudžbe s dostavom")
+    if not items or len(items) == 0:
+        raise HTTPException(status_code=400, detail="Potrebna je barem jedna stavka")
+    
+    supabase = get_supabase_anon_client()
+    
+    # Get restaurant
+    restaurant_result = supabase.table('restaurants').select('*').eq('slug', restaurant_slug).execute()
+    if not restaurant_result.data:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    restaurant = restaurant_result.data[0]
+    restaurant_id = restaurant['id']
+    
+    # Use service role client for order creation (to bypass RLS)
+    supabase_admin = get_supabase_client()
+    
+    # Generate order number
+    today = date.today()
+    year = today.strftime('%Y')
+    # Get last order number for this year
+    last_order = supabase_admin.table('orders').select('order_number').eq('restaurant_id', restaurant_id).like('order_number', f'ORD-{year}-%').order('order_number', desc=True).limit(1).execute()
+    
+    if last_order.data:
+        last_num = last_order.data[0]['order_number'].split('-')[-1]
+        try:
+            next_num = int(last_num) + 1
+        except ValueError:
+            next_num = 1
+    else:
+        next_num = 1
+    
+    order_number = f"ORD-{year}-{str(next_num).zfill(3)}"
+    
+    # Calculate total price
+    total_price = 0.0
+    order_items_data = []
+    
+    for item in items:
+        menu_item_id = item.get('menu_item_id')
+        quantity = item.get('quantity', 1)
+        
+        if not menu_item_id or quantity < 1:
+            continue
+        
+        # Get menu item with price
+        item_result = supabase.table('menu_items').select('*').eq('id', menu_item_id).eq('restaurant_id', restaurant_id).execute()
+        if not item_result.data:
+            continue
+        
+        menu_item = item_result.data[0]
+        unit_price = float(menu_item['price'])
+        subtotal = unit_price * quantity
+        total_price += subtotal
+        
+        # Get customization if provided
+        customization = item.get('customization')
+        
+        order_items_data.append({
+            'menu_item_id': menu_item_id,
+            'quantity': quantity,
+            'unit_price': unit_price,
+            'subtotal': subtotal,
+            'customization': customization if customization else None
+        })
+    
+    if total_price == 0:
+        raise HTTPException(status_code=400, detail="Nevažeća narudžba: ukupna cijena je 0")
+    
+    # Create order
+    order_data = {
+        'restaurant_id': restaurant_id,
+        'order_number': order_number,
+        'customer_name': customer_name,
+        'customer_phone': customer_phone,
+        'customer_email': customer_email,
+        'delivery_address': delivery_address if order_type == 'delivery' else None,
+        'order_type': order_type,
+        'status': 'pending',
+        'total_price': total_price,
+        'notes': notes
+    }
+    
+    order_result = supabase_admin.table('orders').insert(order_data).execute()
+    if not order_result.data:
+        raise HTTPException(status_code=500, detail="Greška pri kreiranju narudžbe")
+    
+    order = order_result.data[0]
+    order_id = order['id']
+    
+    # Create order items
+    for item_data in order_items_data:
+        item_data['order_id'] = order_id
+        supabase_admin.table('order_items').insert(item_data).execute()
+    
+    # Return created order
+    return JSONResponse({
+        "id": order['id'],
+        "order_number": order['order_number'],
+        "status": order['status'],
+        "total_price": float(order['total_price']),
+        "created_at": order['created_at']
     })
 
 # Restaurant Info Endpoints (Authenticated)
@@ -158,7 +590,7 @@ async def get_restaurant_info(clerk_user_id: str = Depends(require_auth)):
     """Get restaurant information for authenticated user"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     return JSONResponse({
         "id": restaurant['id'],
@@ -201,6 +633,13 @@ async def save_restaurant_info(
                 # Already linked to this user
                 restaurant = restaurant_by_email
     
+    # Restaurant must exist - users cannot create restaurants
+    if not restaurant:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No restaurant found for your account. Please contact administrator to create a restaurant for email: {email or 'your email'}"
+        )
+    
     slug = slugify(name)
     
     # If restaurant exists, only update slug if it's different and available
@@ -231,44 +670,12 @@ async def save_restaurant_info(
             raise HTTPException(status_code=500, detail="Failed to update restaurant")
         return JSONResponse(result.data[0])
     else:
-        # Check if slug already exists before creating
-        existing = supabase.table('restaurants').select('id, name, email').eq('slug', slug).execute()
-        if existing.data:
-            existing_restaurant = existing.data[0]
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Restaurant with name '{name}' (slug: '{slug}') already exists. "
-                       f"If this is your restaurant, please ensure you're using the email '{existing_restaurant.get('email', 'N/A')}' "
-                       f"or contact support to link your account."
-            )
-        
-        # Create new (shouldn't happen if auth is set up correctly)
-        update_data = {
-            "name": name,
-            "slug": slug,
-            "description": description or "",
-            "address": address or "",
-            "phone": phone or "",
-            "email": email or "",
-            "clerk_user_id": clerk_user_id
-        }
-        
-        if theme_identifier:
-            update_data["theme_identifier"] = theme_identifier
-        
-        try:
-            result = supabase.table('restaurants').insert(update_data).execute()
-            if not result.data:
-                raise HTTPException(status_code=500, detail="Failed to create restaurant")
-            return JSONResponse(result.data[0])
-        except Exception as e:
-            error_msg = str(e)
-            if "duplicate key" in error_msg.lower() or "23505" in error_msg:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Restaurant with this name or slug already exists. Please contact support to link your account."
-                )
-            raise HTTPException(status_code=500, detail=f"Error creating restaurant: {error_msg}")
+        # This should never happen - restaurant should exist at this point
+        # Restaurants must be created manually in Supabase by admin
+        raise HTTPException(
+            status_code=404,
+            detail=f"No restaurant found for your account. Please contact administrator to create a restaurant for email: {email or 'your email'}"
+        )
 
 # Menu Items Endpoints (Authenticated)
 @app.get("/menu-items")
@@ -276,7 +683,7 @@ async def get_menu_items(clerk_user_id: str = Depends(require_auth)):
     """Get all menu items for authenticated user's restaurant"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     result = supabase.table('menu_items').select('*').eq('restaurant_id', restaurant['id']).execute()
@@ -304,7 +711,7 @@ async def create_menu_item(
     """Create a new menu item"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     # Get default menu, or create one if it doesn't exist
     supabase = get_supabase_client()
@@ -407,7 +814,7 @@ async def update_menu_item(
     """Update a menu item"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     
@@ -480,7 +887,7 @@ async def delete_menu_item(item_id: str, clerk_user_id: str = Depends(require_au
     """Delete a menu item"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     
@@ -502,7 +909,7 @@ async def get_menu_items_with_translations(clerk_user_id: str = Depends(require_
     """Get all menu items with their translations"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     items_result = supabase.table('menu_items').select('*').eq('restaurant_id', restaurant['id']).execute()
@@ -514,13 +921,398 @@ async def get_menu_items_with_translations(clerk_user_id: str = Depends(require_
     
     return JSONResponse(menu_items)
 
+# Daily Menus Endpoints (Authenticated)
+@app.get("/daily-menus")
+async def get_daily_menus(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    clerk_user_id: str = Depends(require_auth)
+):
+    """
+    Get all daily menus for authenticated user's restaurant
+    Optional query params: start_date, end_date (YYYY-MM-DD) for filtering
+    """
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    supabase = get_supabase_client()
+    query = supabase.table('daily_menus').select('*').eq('restaurant_id', restaurant['id'])
+    
+    if start_date:
+        query = query.gte('menu_date', start_date)
+    if end_date:
+        query = query.lte('menu_date', end_date)
+    
+    result = query.order('menu_date', desc=False).execute()
+    
+    # Get menu items for each daily menu
+    daily_menus = result.data if result.data else []
+    for daily_menu in daily_menus:
+        # Get item count
+        items_result = supabase.table('daily_menu_items').select('id').eq('daily_menu_id', daily_menu['id']).execute()
+        daily_menu['item_count'] = len(items_result.data) if items_result.data else 0
+    
+    return JSONResponse(daily_menus)
+
+@app.get("/daily-menus/{menu_id}")
+async def get_daily_menu(menu_id: str, clerk_user_id: str = Depends(require_auth)):
+    """Get a specific daily menu with its items"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    supabase = get_supabase_client()
+    
+    # Get daily menu
+    menu_result = supabase.table('daily_menus').select('*').eq('id', menu_id).eq('restaurant_id', restaurant['id']).execute()
+    if not menu_result.data:
+        raise HTTPException(status_code=404, detail="Daily menu not found")
+    
+    daily_menu = menu_result.data[0]
+    
+    # Get menu items
+    items_result = supabase.table('daily_menu_items').select('*, menu_items(*)').eq('daily_menu_id', menu_id).order('order_index').execute()
+    
+    menu_items = []
+    for dmi in items_result.data:
+        item = dmi.get('menu_items')
+        if item:
+            # Get translations
+            translations_result = supabase.table('translations').select('*').eq('menu_item_id', item['id']).execute()
+            item['translations'] = translations_result.data
+            # Add order_index from junction table
+            item['order_index'] = dmi.get('order_index', 0)
+            menu_items.append(item)
+    
+    daily_menu['menu_items'] = menu_items
+    
+    return JSONResponse(daily_menu)
+
+@app.post("/daily-menus")
+async def create_daily_menu(
+    name: str = Form(...),
+    menu_date: str = Form(...),  # Format: YYYY-MM-DD
+    description: Optional[str] = Form(None),
+    clerk_user_id: str = Depends(require_auth)
+):
+    """Create a new daily menu for a specific date"""
+    from datetime import datetime
+    
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    # Validate date format
+    try:
+        date_obj = datetime.strptime(menu_date, '%Y-%m-%d').date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    
+    supabase = get_supabase_client()
+    
+    # Check if menu for this date already exists
+    existing = supabase.table('daily_menus').select('*').eq('restaurant_id', restaurant['id']).eq('menu_date', str(date_obj)).execute()
+    if existing.data:
+        raise HTTPException(status_code=400, detail=f"Daily menu for {menu_date} already exists")
+    
+    menu_data = {
+        'restaurant_id': restaurant['id'],
+        'name': name,
+        'menu_date': str(date_obj),
+        'description': description or f"Daily menu for {menu_date}",
+        'is_active': False,  # Will be activated automatically on the date
+        'is_preview': False
+    }
+    
+    result = supabase.table('daily_menus').insert(menu_data).execute()
+    if not result.data:
+        raise HTTPException(status_code=500, detail="Failed to create daily menu")
+    
+    return JSONResponse(result.data[0])
+
+@app.put("/daily-menus/{menu_id}")
+async def update_daily_menu(
+    menu_id: str,
+    name: Optional[str] = Form(None),
+    menu_date: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    clerk_user_id: str = Depends(require_auth)
+):
+    """Update a daily menu"""
+    from datetime import datetime
+    
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    supabase = get_supabase_client()
+    
+    # Verify menu belongs to restaurant
+    menu_result = supabase.table('daily_menus').select('*').eq('id', menu_id).eq('restaurant_id', restaurant['id']).execute()
+    if not menu_result.data:
+        raise HTTPException(status_code=404, detail="Daily menu not found")
+    
+    update_data = {}
+    
+    if name is not None:
+        update_data['name'] = name
+    if description is not None:
+        update_data['description'] = description
+    if menu_date is not None:
+        try:
+            date_obj = datetime.strptime(menu_date, '%Y-%m-%d').date()
+            # Check if another menu exists for this date
+            existing = supabase.table('daily_menus').select('*').eq('restaurant_id', restaurant['id']).eq('menu_date', str(date_obj)).neq('id', menu_id).execute()
+            if existing.data:
+                raise HTTPException(status_code=400, detail=f"Daily menu for {menu_date} already exists")
+            update_data['menu_date'] = str(date_obj)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    
+    if update_data:
+        result = supabase.table('daily_menus').update(update_data).eq('id', menu_id).execute()
+        return JSONResponse(result.data[0])
+    
+    return JSONResponse(menu_result.data[0])
+
+@app.delete("/daily-menus/{menu_id}")
+async def delete_daily_menu(menu_id: str, clerk_user_id: str = Depends(require_auth)):
+    """Delete a daily menu"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    supabase = get_supabase_client()
+    
+    # Verify menu belongs to restaurant
+    menu_result = supabase.table('daily_menus').select('*').eq('id', menu_id).eq('restaurant_id', restaurant['id']).execute()
+    if not menu_result.data:
+        raise HTTPException(status_code=404, detail="Daily menu not found")
+    
+    # Delete menu (cascade will delete menu items)
+    supabase.table('daily_menus').delete().eq('id', menu_id).execute()
+    return JSONResponse({"message": "Daily menu deleted"})
+
+# Daily Menu Items Management
+@app.post("/daily-menus/{menu_id}/items")
+async def add_item_to_daily_menu(
+    menu_id: str,
+    menu_item_id: str = Form(...),
+    order_index: Optional[int] = Form(0),
+    clerk_user_id: str = Depends(require_auth)
+):
+    """Add an item to a daily menu"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    supabase = get_supabase_client()
+    
+    # Verify menu belongs to restaurant
+    menu_result = supabase.table('daily_menus').select('*').eq('id', menu_id).eq('restaurant_id', restaurant['id']).execute()
+    if not menu_result.data:
+        raise HTTPException(status_code=404, detail="Daily menu not found")
+    
+    # Verify menu item belongs to restaurant
+    item_result = supabase.table('menu_items').select('*').eq('id', menu_item_id).eq('restaurant_id', restaurant['id']).execute()
+    if not item_result.data:
+        raise HTTPException(status_code=404, detail="Menu item not found")
+    
+    # Check if item already in menu
+    existing = supabase.table('daily_menu_items').select('*').eq('daily_menu_id', menu_id).eq('menu_item_id', menu_item_id).execute()
+    if existing.data:
+        raise HTTPException(status_code=400, detail="Item already in this menu")
+    
+    # Add item to menu
+    item_data = {
+        'daily_menu_id': menu_id,
+        'menu_item_id': menu_item_id,
+        'order_index': order_index or 0
+    }
+    
+    result = supabase.table('daily_menu_items').insert(item_data).execute()
+    if not result.data:
+        raise HTTPException(status_code=500, detail="Failed to add item to menu")
+    
+    return JSONResponse(result.data[0])
+
+@app.delete("/daily-menus/{menu_id}/items/{item_id}")
+async def remove_item_from_daily_menu(
+    menu_id: str,
+    item_id: str,
+    clerk_user_id: str = Depends(require_auth)
+):
+    """Remove an item from a daily menu"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    supabase = get_supabase_client()
+    
+    # Verify menu belongs to restaurant
+    menu_result = supabase.table('daily_menus').select('*').eq('id', menu_id).eq('restaurant_id', restaurant['id']).execute()
+    if not menu_result.data:
+        raise HTTPException(status_code=404, detail="Daily menu not found")
+    
+    # Remove item from menu
+    supabase.table('daily_menu_items').delete().eq('daily_menu_id', menu_id).eq('menu_item_id', item_id).execute()
+    return JSONResponse({"message": "Item removed from menu"})
+
+@app.put("/daily-menus/{menu_id}/items/reorder")
+async def reorder_daily_menu_items(
+    menu_id: str,
+    request: Request,
+    clerk_user_id: str = Depends(require_auth)
+):
+    """Reorder items in a daily menu"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    supabase = get_supabase_client()
+    
+    # Verify menu belongs to restaurant
+    menu_result = supabase.table('daily_menus').select('*').eq('id', menu_id).eq('restaurant_id', restaurant['id']).execute()
+    if not menu_result.data:
+        raise HTTPException(status_code=404, detail="Daily menu not found")
+    
+    # Parse JSON body: [{"menu_item_id": "uuid", "order_index": 0}, ...]
+    body = await request.json()
+    items_order = body if isinstance(body, list) else []
+    
+    for idx, item in enumerate(items_order):
+        if not isinstance(item, dict) or "menu_item_id" not in item:
+            continue
+        supabase.table('daily_menu_items').update({"order_index": idx}).eq('daily_menu_id', menu_id).eq('menu_item_id', item["menu_item_id"]).execute()
+    
+    return JSONResponse({"message": "Items reordered"})
+
+# Copy Menu Functionality
+@app.post("/daily-menus/{menu_id}/copy")
+async def copy_daily_menu(
+    menu_id: str,
+    target_date: str = Form(...),  # Format: YYYY-MM-DD
+    clerk_user_id: str = Depends(require_auth)
+):
+    """Copy a daily menu to another date"""
+    from datetime import datetime
+    
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    # Validate date format
+    try:
+        date_obj = datetime.strptime(target_date, '%Y-%m-%d').date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    
+    supabase = get_supabase_client()
+    
+    # Verify source menu belongs to restaurant
+    source_menu_result = supabase.table('daily_menus').select('*').eq('id', menu_id).eq('restaurant_id', restaurant['id']).execute()
+    if not source_menu_result.data:
+        raise HTTPException(status_code=404, detail="Source daily menu not found")
+    
+    source_menu = source_menu_result.data[0]
+    
+    # Check if target date already has a menu
+    existing = supabase.table('daily_menus').select('*').eq('restaurant_id', restaurant['id']).eq('menu_date', str(date_obj)).execute()
+    if existing.data:
+        raise HTTPException(status_code=400, detail=f"Daily menu for {target_date} already exists")
+    
+    # Create new daily menu
+    new_menu_data = {
+        'restaurant_id': restaurant['id'],
+        'name': source_menu['name'] + f" (Copy for {target_date})",
+        'menu_date': str(date_obj),
+        'description': source_menu.get('description'),
+        'is_active': False,
+        'is_preview': False
+    }
+    
+    new_menu_result = supabase.table('daily_menus').insert(new_menu_data).execute()
+    if not new_menu_result.data:
+        raise HTTPException(status_code=500, detail="Failed to create copied menu")
+    
+    new_menu_id = new_menu_result.data[0]['id']
+    
+    # Copy menu items
+    source_items_result = supabase.table('daily_menu_items').select('*').eq('daily_menu_id', menu_id).execute()
+    
+    if source_items_result.data:
+        items_to_insert = []
+        for item in source_items_result.data:
+            items_to_insert.append({
+                'daily_menu_id': new_menu_id,
+                'menu_item_id': item['menu_item_id'],
+                'order_index': item.get('order_index', 0)
+            })
+        
+        if items_to_insert:
+            supabase.table('daily_menu_items').insert(items_to_insert).execute()
+    
+    return JSONResponse({
+        "message": "Menu copied successfully",
+        "new_menu": new_menu_result.data[0]
+    })
+
+# Preview Mode Toggle
+@app.post("/daily-menus/{menu_id}/toggle-preview")
+async def toggle_preview_mode(
+    menu_id: str,
+    is_preview: str = Form(...),  # "true" or "false"
+    clerk_user_id: str = Depends(require_auth)
+):
+    """Toggle preview mode for a daily menu"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    supabase = get_supabase_client()
+    
+    # Verify menu belongs to restaurant
+    menu_result = supabase.table('daily_menus').select('*').eq('id', menu_id).eq('restaurant_id', restaurant['id']).execute()
+    if not menu_result.data:
+        raise HTTPException(status_code=404, detail="Daily menu not found")
+    
+    preview_value = is_preview.lower() in ("true", "on", "1")
+    
+    result = supabase.table('daily_menus').update({'is_preview': preview_value}).eq('id', menu_id).execute()
+    return JSONResponse(result.data[0] if result.data else menu_result.data[0])
+
+# Calendar/Weekly View Endpoint
+@app.get("/daily-menus/calendar")
+async def get_calendar_view(
+    start_date: str,  # YYYY-MM-DD
+    end_date: str,    # YYYY-MM-DD
+    clerk_user_id: str = Depends(require_auth)
+):
+    """Get daily menus for a date range (calendar view)"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    supabase = get_supabase_client()
+    
+    result = supabase.table('daily_menus').select('*').eq('restaurant_id', restaurant['id']).gte('menu_date', start_date).lte('menu_date', end_date).order('menu_date', desc=False).execute()
+    
+    # Get item count for each menu
+    daily_menus = result.data if result.data else []
+    for daily_menu in daily_menus:
+        items_result = supabase.table('daily_menu_items').select('id').eq('daily_menu_id', daily_menu['id']).execute()
+        daily_menu['item_count'] = len(items_result.data) if items_result.data else 0
+    
+    return JSONResponse(daily_menus)
+
 # Categories Endpoints
 @app.get("/categories")
 async def get_categories(clerk_user_id: str = Depends(require_auth)):
     """Get all categories for authenticated user's restaurant"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     result = supabase.table('categories').select('*').eq('restaurant_id', restaurant['id']).order('order_index').execute()
@@ -538,7 +1330,7 @@ async def get_categories_with_translations(clerk_user_id: str = Depends(require_
     """Get all categories with their translations"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     categories_result = supabase.table('categories').select('*').eq('restaurant_id', restaurant['id']).order('order_index').execute()
@@ -559,7 +1351,7 @@ async def create_category(
     """Create a new category"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     
@@ -590,7 +1382,7 @@ async def reorder_categories(
     """Reorder categories"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     # Parse JSON body
     body = await request.json()
@@ -610,7 +1402,7 @@ async def delete_category(category_id: str, clerk_user_id: str = Depends(require
     """Delete a category"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     
@@ -635,7 +1427,7 @@ async def get_translations(menu_item_id: str, clerk_user_id: str = Depends(requi
     """Get all translations for a menu item"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     
@@ -656,7 +1448,7 @@ async def generate_translations(
     """Generate AI translations for a menu item"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     
@@ -736,7 +1528,7 @@ async def update_translation(
     """Update a translation"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     
@@ -766,7 +1558,7 @@ async def delete_translation(translation_id: str, clerk_user_id: str = Depends(r
     """Delete a translation"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     supabase.table('translations').delete().eq('id', translation_id).execute()
@@ -782,7 +1574,7 @@ async def generate_category_translations(
     """Generate AI translations for a category"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     
@@ -858,7 +1650,7 @@ async def update_category_translation(
     """Update a category translation"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     result = supabase.table('category_translations').update({"name": name}).eq('id', translation_id).execute()
@@ -869,7 +1661,7 @@ async def delete_category_translation(translation_id: str, clerk_user_id: str = 
     """Delete a category translation"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     supabase.table('category_translations').delete().eq('id', translation_id).execute()
@@ -881,7 +1673,7 @@ async def get_analytics(clerk_user_id: str = Depends(require_auth)):
     """Get analytics data for dashboard"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
     all_items_result = supabase.table('menu_items').select('*').eq('restaurant_id', restaurant['id']).execute()
@@ -921,15 +1713,14 @@ async def get_analytics(clerk_user_id: str = Depends(require_auth)):
 
 # QR Code Endpoint
 @app.get("/qr-code")
-async def generate_qr_code_api(clerk_user_id: Optional[str] = Depends(get_clerk_user_id)):
-    """Generate QR code for the menu"""
-    menu_url = MENU_URL
+async def generate_qr_code_api(clerk_user_id: str = Depends(require_auth)):
+    """Generate QR code for the menu - requires authentication"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
-    # If authenticated, get restaurant slug for specific menu URL
-    if clerk_user_id:
-        restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
-        if restaurant:
-            menu_url = f"{menu_url}/menu/{restaurant['slug']}"
+    # Get restaurant slug for menu URL
+    menu_url = f"{MENU_URL}/menu/{restaurant['slug']}"
     
     # Generate QR code
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
@@ -990,7 +1781,7 @@ async def remove_language(language_code: str, clerk_user_id: str = Depends(requi
     global SUPPORTED_LANGUAGES
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     SUPPORTED_LANGUAGES = load_supported_languages()
     

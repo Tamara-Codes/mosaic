@@ -10,6 +10,7 @@ load_dotenv()
 CORS_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:5174",
+    "http://localhost:5175",
     "http://localhost:3000",
     "https://mos-a-ic-livid.vercel.app",
     "https://mos-a-ic-git-main-tamaras-projects-5517455e.vercel.app",
@@ -20,7 +21,7 @@ CORS_ORIGINS = [
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Menu URL for QR codes
-MENU_URL = os.getenv("MENU_URL", "http://localhost:5173")
+MENU_URL = os.getenv("MENU_URL", "http://localhost:5181")
 
 # Supported languages
 DEFAULT_SUPPORTED_LANGUAGES = {

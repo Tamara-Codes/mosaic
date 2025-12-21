@@ -5,58 +5,66 @@ from typing import Optional
 from fastapi import Header, HTTPException
 import os
 import jwt
-import httpx
+from jwt import PyJWKClient
 from core.supabase_client import get_supabase_client
 
 CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
 
 async def verify_clerk_token(token: str) -> Optional[str]:
     """
-    Verify Clerk JWT token and return user ID
+    Verify Clerk JWT token and return user ID.
+    Uses Clerk's JWKS endpoint for proper token verification.
     """
-    if not CLERK_SECRET_KEY:
-        # If no secret key is set, skip verification (for development)
-        # In production, this should always be set
-        return None
-    
     try:
-        # Get Clerk JWKS (JSON Web Key Set) to verify the token
-        # Clerk uses RS256 algorithm, so we need to fetch the public keys
-        async with httpx.AsyncClient() as client:
-            # Extract the issuer from the token to get the correct JWKS URL
-            # For now, we'll use a simpler approach: decode without verification for development
-            # In production, you should properly verify with Clerk's JWKS
-            
-            # For development/testing: decode token to get user ID
-            # WARNING: This doesn't verify the token signature
-            decoded = jwt.decode(token, options={"verify_signature": False})
-            return decoded.get("sub")  # 'sub' is the user ID in Clerk tokens
-            
+        # First, decode token without verification to get issuer
+        unverified = jwt.decode(token, options={"verify_signature": False})
+        issuer = unverified.get("iss", "")
+        
+        if not issuer or not issuer.startswith("https://"):
+            print("Invalid token issuer")
+            return None
+        
+        # Extract domain from issuer (format: https://<domain>)
+        domain = issuer.replace("https://", "").split("/")[0]
+        jwks_url = f"https://{domain}/.well-known/jwks.json"
+        
+        # Use JWKS to verify token
+        jwks_client = PyJWKClient(jwks_url)
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
+        
+        # Verify token with proper key
+        decoded = jwt.decode(
+            token,
+            signing_key.key,
+            algorithms=["RS256"],
+            options={"verify_exp": True}
+        )
+        return decoded.get("sub")
+    except jwt.ExpiredSignatureError:
+        print("Token has expired")
+        return None
+    except jwt.InvalidTokenError as e:
+        print(f"Invalid token: {e}")
+        return None
     except Exception as e:
         print(f"Error verifying Clerk token: {e}")
         return None
 
 async def get_clerk_user_id(authorization: Optional[str] = Header(None)) -> Optional[str]:
     """
-    Extract and verify Clerk user ID from authorization header
+    Extract and verify Clerk user ID from authorization header.
+    Returns None if authentication is missing or invalid.
     """
     if not authorization:
         return None
     
     parts = authorization.split()
-    if len(parts) == 2 and parts[0].lower() == "bearer":
-        token = parts[1]
-        
-        # If CLERK_SECRET_KEY is set, verify the token
-        if CLERK_SECRET_KEY:
-            user_id = await verify_clerk_token(token)
-            return user_id
-        else:
-            # Development mode: accept token as-is (not secure, for testing only)
-            # In production, always verify tokens
-            return token
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        return None
     
-    return None
+    token = parts[1]
+    user_id = await verify_clerk_token(token)
+    return user_id
 
 async def get_restaurant_by_clerk_user(clerk_user_id: str):
     """Get restaurant for a Clerk user"""
@@ -69,6 +77,7 @@ async def get_restaurant_by_clerk_user(clerk_user_id: str):
 async def require_auth(authorization: Optional[str] = Header(None)):
     """Dependency to require authentication"""
     clerk_user_id = await get_clerk_user_id(authorization)
+    
     if not clerk_user_id:
         raise HTTPException(status_code=401, detail="Authentication required")
     return clerk_user_id

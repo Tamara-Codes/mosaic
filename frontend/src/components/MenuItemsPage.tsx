@@ -132,7 +132,7 @@ export function MenuItemsPage() {
     setIsReordering(true)
 
     try {
-      await apiClient.put('/api/categories/reorder', newCategories)
+      await apiClient.put('/categories/reorder', newCategories)
       toast.success('Redoslijed kategorija je promijenjen')
     } catch (error) {
       console.error('Error reordering categories:', error)
@@ -148,9 +148,9 @@ export function MenuItemsPage() {
     try {
       setLoading(true)
       const [itemsData, langsData, categoriesData] = await Promise.all([
-        apiClient.get('/api/menu-items-with-translations').then(r => r.data),
-        apiClient.get('/api/supported-languages').then(r => r.data),
-        apiClient.get('/api/categories').then(r => r.data)
+        apiClient.get('/menu-items-with-translations').then(r => r.data),
+        apiClient.get('/supported-languages').then(r => r.data),
+        apiClient.get('/categories').then(r => r.data)
       ])
       setItems(itemsData)
       setLanguages(langsData.languages)
@@ -298,7 +298,7 @@ export function MenuItemsPage() {
       const formData = new FormData()
       formData.append('name', newCategoryName.trim())
       
-      await apiClient.post('/api/categories', formData)
+      await apiClient.post('/categories', formData)
       toast.success("Kategorija je dodana")
       setNewCategoryName('')
       setShowAddCategoryDialog(false)
@@ -313,7 +313,7 @@ export function MenuItemsPage() {
     if (!categoryToDelete) return
 
     try {
-      await apiClient.delete(`/api/categories/${categoryToDelete.id}`)
+      await apiClient.delete(`/categories/${categoryToDelete.id}`)
       toast.success("Kategorija je obrisana")
       setShowDeleteCategoryDialog(false)
       setCategoryToDelete(null)
@@ -336,7 +336,7 @@ export function MenuItemsPage() {
   const openTranslateCategoryDialog = async (category: {id: number, name: string}) => {
     // Fetch category with translations
     try {
-      const response = await apiClient.get('/api/categories-with-translations')
+      const response = await apiClient.get('/categories-with-translations')
       const categoriesData = response.data
       const fullCategory = categoriesData.find((c: any) => c.id === category.id)
       

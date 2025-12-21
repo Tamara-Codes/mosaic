@@ -4,6 +4,8 @@ import {
   QrCodeIcon,
   SettingsIcon,
   LogOut,
+  ShoppingCart,
+  Mail,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -17,7 +19,7 @@ import {
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   currentView?: string
-  onViewChange?: (view: 'menu-items' | 'qr' | 'settings') => void
+  onViewChange?: (view: 'menu-items' | 'orders' | 'messages' | 'qr' | 'settings') => void
   onLogout?: () => void
 }
 
@@ -26,11 +28,20 @@ function RestaurantLogo() {
   return (
     <div className="flex items-center justify-center h-24">
       <img 
-        src="https://www.bracera-malinska.com/wp-content/uploads/2025/06/Banner-B.svg" 
-        alt="Restoran Logo"
+        src="/logo.png" 
+        alt="Bistro Popeye Logo"
         className="h-full w-auto max-w-[200px] object-contain"
         onError={(e) => {
           console.error('Failed to load logo:', e);
+          // Fallback to text if image fails
+          e.currentTarget.style.display = 'none';
+          const fallback = e.currentTarget.parentElement;
+          if (fallback && !fallback.querySelector('.logo-fallback')) {
+            const textFallback = document.createElement('div');
+            textFallback.className = 'logo-fallback text-xl font-bold';
+            textFallback.innerHTML = '<span class="text-yellow-500">Bistro</span> <span class="text-red-500">Popeye</span>';
+            fallback.appendChild(textFallback);
+          }
         }}
       />
     </div>
@@ -44,6 +55,18 @@ const data = {
       url: "#",
       icon: UtensilsIcon,
       action: "menu-items",
+    },
+    {
+      title: "Narudžbe",
+      url: "#",
+      icon: ShoppingCart,
+      action: "orders",
+    },
+    {
+      title: "Poruke",
+      url: "#",
+      icon: Mail,
+      action: "messages",
     },
   ],
   navSettings: [

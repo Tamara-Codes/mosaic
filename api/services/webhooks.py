@@ -89,7 +89,7 @@ def verify_signature(headers: dict, body: bytes) -> bool:
 
 
 async def handle_user_created(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Link new user to restaurant by email"""
+    """Link new user to restaurant by email. Restaurant must be created manually in Supabase by admin."""
     from core.supabase_client import get_supabase_client
     
     user_id = data.get("id")
@@ -119,11 +119,19 @@ async def handle_user_created(data: Dict[str, Any]) -> Dict[str, Any]:
     available = [r for r in (restaurants.data or []) if not r.get('clerk_user_id')]
     
     if available:
+        # Link existing restaurant to this user
         result = supabase.table('restaurants').update({'clerk_user_id': user_id}).eq('id', available[0]['id']).execute()
         if result.data:
-            return {"message": "User linked", "restaurant": result.data[0]}
+            return {"message": "User linked to existing restaurant", "restaurant": result.data[0]}
     
-    return {"message": "No restaurant found for email", "user_id": user_id, "email": primary_email}
+    # No restaurant found with this email
+    # Restaurant must be created manually in Supabase by admin
+    return {
+        "message": "No restaurant found for email. Please contact administrator to create a restaurant for your email address.",
+        "user_id": user_id,
+        "email": primary_email,
+        "action_required": "contact_admin"
+    }
 
 
 async def handle_user_deleted(data: Dict[str, Any]) -> Dict[str, Any]:

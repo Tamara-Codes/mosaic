@@ -14,13 +14,19 @@ export function QRCodePage() {
 
   const loadQRCode = async () => {
     try {
-      const response = await apiClient.get('/api/qr-code')
+      const response = await apiClient.get('/qr-code')
       const data = response.data
       setQrData(data)
       setLoading(false)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load QR code:', error)
       setLoading(false)
+      // Show error message
+      if (error?.response?.status === 404) {
+        // Restaurant not found
+      } else {
+        // Other error
+      }
     }
   }
 
@@ -45,10 +51,7 @@ export function QRCodePage() {
 
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
-          <CardTitle>QR Kod za Jelovnik</CardTitle>
-          <CardDescription>
-            Ispišite ovaj QR kod i postavite ga na stolove. Gosti će moći skenirati kod i vidjeti jelovnik na svojim telefonima.
-          </CardDescription>
+          <CardTitle>QR kod za jelovnik</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex justify-center p-4 bg-muted rounded-lg">

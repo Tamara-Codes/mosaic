@@ -8,7 +8,11 @@ import { Building2, Lock } from 'lucide-react'
 import { useApiClient } from '@/lib/apiHelpers'
 import { useUser } from '@clerk/clerk-react'
 
-export function SettingsPage() {
+interface SettingsPageProps {
+  onRestaurantCreated?: () => void
+}
+
+export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
   const apiClient = useApiClient()
   const { user } = useUser()
   const [restaurantName, setRestaurantName] = useState('Restaurant Menu')
@@ -28,15 +32,25 @@ export function SettingsPage() {
 
   const loadRestaurantInfo = async () => {
     try {
-      const response = await apiClient.get('/api/restaurant-info')
+      const response = await apiClient.get('/restaurant-info')
       const info = response.data
       setRestaurantName(info.name || 'Restaurant Menu')
       setRestaurantDescription(info.description || '')
       setAddress(info.address || '')
       setPhone(info.phone || '')
       setEmail(info.email || '')
-    } catch (error) {
-      console.error('Failed to load restaurant info:', error)
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        const errorMessage = error?.response?.data?.detail || 'Restaurant not found'
+        toast.error(
+          errorMessage.includes('contact') 
+            ? errorMessage 
+            : 'Restoran nije pronađen. Molimo kontaktirajte administratora.'
+        )
+      } else {
+        console.error('Failed to load restaurant info:', error)
+        toast.error('Greška pri učitavanju informacija o restoranu')
+      }
     }
   }
 
@@ -54,8 +68,12 @@ export function SettingsPage() {
       formData.append('address', address)
       formData.append('phone', phone)
       formData.append('email', email)
-      await apiClient.post('/api/restaurant-info', formData)
+      await apiClient.post('/restaurant-info', formData)
       toast.success('Informacije o restoranu su spremljene')
+      // Notify parent that restaurant was created/updated
+      if (onRestaurantCreated) {
+        onRestaurantCreated()
+      }
     } catch (error: any) {
       console.error('Failed to save restaurant info:', error)
       toast.error('Greška pri spremanju informacija')

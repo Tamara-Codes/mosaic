@@ -5,7 +5,9 @@
 import { useAuth } from '@clerk/clerk-react'
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+// Use proxy in dev - always use '/api' which goes through Vite proxy to backend
+// In production, use full URL if VITE_API_BASE_URL is set
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 /**
  * Get axios instance with Clerk token automatically included
@@ -13,9 +15,15 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 export function useApiClient() {
   const { getToken } = useAuth()
 
+  // Create axios client with baseURL
   const client = axios.create({
     baseURL: API_BASE_URL,
   })
+  
+  // Debug: log the baseURL (remove in production)
+  if (import.meta.env.DEV) {
+    console.log('API Base URL:', API_BASE_URL)
+  }
 
   // Add token interceptor
   client.interceptors.request.use(
