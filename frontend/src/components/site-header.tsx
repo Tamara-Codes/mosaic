@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button"
 import { Eye } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useApiClient } from "@/lib/apiHelpers"
+import { NotificationBell } from "@/components/NotificationBell"
 
 interface SiteHeaderProps {
-  currentView?: 'dashboard' | 'menu-items' | 'categories' | 'qr' | 'settings'
+  currentView?: 'dashboard' | 'menu-items' | 'categories' | 'qr' | 'settings' | 'orders' | 'messages'
 }
 
 const viewTitles: Record<string, string> = {
@@ -14,7 +15,9 @@ const viewTitles: Record<string, string> = {
   'menu-items': 'Jelovnik',
   categories: 'Kategorije',
   qr: 'QR Kod',
-  settings: 'Postavke'
+  settings: 'Postavke',
+  orders: 'Narudžbe',
+  messages: 'Poruke'
 }
 
 export function SiteHeader({ currentView = 'menu-items' }: SiteHeaderProps) {
@@ -55,15 +58,18 @@ export function SiteHeader({ currentView = 'menu-items' }: SiteHeaderProps) {
           className="mx-2 data-[orientation=vertical]:h-4"
         />
         <h1 className="flex-1 text-base font-medium">{title}</h1>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={handlePreviewClick}
-          disabled={!restaurantSlug}
-        >
-          <Eye className="w-4 h-4 mr-2" />
-          Pregled Menija
-        </Button>
+        <div className="flex items-center gap-2">
+          <NotificationBell />
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handlePreviewClick}
+            disabled={!restaurantSlug}
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            Pregled Menija
+          </Button>
+        </div>
       </div>
     </header>
   )

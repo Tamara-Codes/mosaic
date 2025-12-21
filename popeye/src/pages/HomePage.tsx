@@ -23,8 +23,9 @@ export function HomePage() {
             </h1>
 
             <p className="text-xl text-gray-600 mb-16 max-w-2xl mx-auto">
-              Svježa hrana, dnevni jelovnik i nezaboravni okusi. 
-              Doživite pravi užitak u hrani.
+              Online narudžba i besplatna dostava.
+              <br />
+              Svježa hrana i dobar okus svaki dan.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -71,7 +72,7 @@ export function HomePage() {
 
             <div className="text-center">
               <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg transform hover:scale-105 transition-transform">
-                <Truck className="w-10 h-10 text-red-900" strokeWidth={2} />
+                <Truck className="w-10 h-10 text-white" strokeWidth={2} />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">Dostava</h3>
               <p className="text-gray-600">

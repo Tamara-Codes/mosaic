@@ -1,11 +1,22 @@
 import { useState, useEffect } from 'react'
 import { useApiClient } from '@/lib/apiHelpers'
+import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
-import { Mail, Phone, Clock, CheckCircle2, Loader2 } from 'lucide-react'
+import { Mail, Phone, Clock, CheckCircle2, Loader2, Trash2 } from 'lucide-react'
 // Date formatting helper
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -28,12 +39,18 @@ interface ContactMessage {
   read: boolean
 }
 
-export function MessagesPage() {
+interface MessagesPageProps {
+  initialMessageId?: string
+}
+
+export function MessagesPage({ initialMessageId }: MessagesPageProps = {}) {
   const apiClient = useApiClient()
   const [messages, setMessages] = useState<ContactMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null)
   const [markingRead, setMarkingRead] = useState<string | null>(null)
+  const [deletingMessage, setDeletingMessage] = useState<string | null>(null)
+  const [messageToDelete, setMessageToDelete] = useState<ContactMessage | null>(null)
 
   const loadMessages = async () => {
     try {
@@ -51,22 +68,112 @@ export function MessagesPage() {
   useEffect(() => {
     loadMessages()
     
-    // Poll for new messages every 30 seconds
-    const interval = setInterval(loadMessages, 30000)
-    return () => clearInterval(interval)
+    // Set up Supabase real-time subscription
+    let restaurantId: string | null = null
+    let messageChannel: any = null
+
+    const setupRealtime = async () => {
+      if (!supabase) {
+        console.warn('Supabase not available')
+        return
+      }
+
+      try {
+        // Get restaurant ID
+        const restaurantResponse = await apiClient.get('/restaurant-info')
+        restaurantId = restaurantResponse.data?.id
+
+        if (!restaurantId) {
+          console.warn('No restaurant ID found')
+          return
+        }
+
+        // Subscribe to contact_messages changes
+        messageChannel = supabase
+          .channel(`messages_page_${restaurantId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'contact_messages',
+              filter: `restaurant_id=eq.${restaurantId}`
+            },
+            (payload) => {
+              console.log('[REALTIME] Message change:', payload.eventType)
+              loadMessages()
+            }
+          )
+          .subscribe((status, err) => {
+            if (err) {
+              console.error('Real-time subscription error:', err)
+            }
+            if (status === 'SUBSCRIBED') {
+              console.log('✅ Real-time: Subscribed to contact_messages')
+            }
+          })
+      } catch (error) {
+        console.error('Failed to set up real-time subscription:', error)
+      }
+    }
+
+    setupRealtime()
+
+    return () => {
+      if (messageChannel && supabase) {
+        supabase.removeChannel(messageChannel)
+      }
+    }
   }, [])
 
-  const handleMarkAsRead = async (messageId: string) => {
+  // Open specific message if initialMessageId is provided
+  useEffect(() => {
+    if (initialMessageId && messages.length > 0) {
+      const message = messages.find(m => m.id === initialMessageId)
+      if (message && !selectedMessage) {
+        setSelectedMessage(message)
+      }
+    }
+  }, [initialMessageId, messages])
+
+  const handleMarkAsRead = async (messageId: string, silent = false) => {
     try {
       setMarkingRead(messageId)
       await apiClient.put(`/contact-messages/${messageId}/read`)
-      toast.success('Poruka označena kao pročitana')
+      if (!silent) {
+        toast.success('Poruka označena kao pročitana')
+      }
       await loadMessages()
+      // Dispatch event to notify NotificationBell
+      window.dispatchEvent(new CustomEvent('message:markedRead', { detail: { messageId } }))
     } catch (error: any) {
       console.error('Failed to mark message as read:', error)
-      toast.error('Greška pri označavanju poruke')
+      if (!silent) {
+        toast.error('Greška pri označavanju poruke')
+      }
     } finally {
       setMarkingRead(null)
+    }
+  }
+
+  const handleDeleteMessage = async () => {
+    if (!messageToDelete) return
+
+    try {
+      setDeletingMessage(messageToDelete.id)
+      await apiClient.delete(`/contact-messages/${messageToDelete.id}`)
+      toast.success('Poruka je obrisana')
+      setMessageToDelete(null)
+      await loadMessages()
+      // Close detail dialog if it was open
+      if (selectedMessage?.id === messageToDelete.id) {
+        setSelectedMessage(null)
+      }
+    } catch (error: any) {
+      console.error('Failed to delete message:', error)
+      toast.error('Greška pri brisanju poruke')
+    } finally {
+      setDeletingMessage(null)
     }
   }
 
@@ -84,8 +191,7 @@ export function MessagesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Poruke</h1>
-          <p className="text-gray-500 mt-1">Upravljajte porukama kupaca</p>
+          <p className="text-gray-500">Upravljajte porukama kupaca</p>
         </div>
         {unreadCount > 0 && (
           <Badge variant="destructive" className="text-sm">
@@ -137,26 +243,39 @@ export function MessagesPage() {
                       </span>
                     </CardDescription>
                   </div>
-                  {!message.read && (
+                  <div className="flex items-center gap-2">
+                    {!message.read && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleMarkAsRead(message.id)
+                        }}
+                        disabled={markingRead === message.id}
+                      >
+                        {markingRead === message.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-4 h-4 mr-1" />
+                            Označi kao pročitano
+                          </>
+                        )}
+                      </Button>
+                    )}
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation()
-                        handleMarkAsRead(message.id)
+                        setMessageToDelete(message)
                       }}
-                      disabled={markingRead === message.id}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
-                      {markingRead === message.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <>
-                          <CheckCircle2 className="w-4 h-4 mr-1" />
-                          Označi kao pročitano
-                        </>
-                      )}
+                      <Trash2 className="w-4 h-4" />
                     </Button>
-                  )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -167,7 +286,13 @@ export function MessagesPage() {
         </div>
       )}
 
-      <Dialog open={!!selectedMessage} onOpenChange={() => setSelectedMessage(null)}>
+      <Dialog open={!!selectedMessage} onOpenChange={(open) => {
+        if (!open && selectedMessage && !selectedMessage.read) {
+          // Auto-mark as read when closing dialog
+          handleMarkAsRead(selectedMessage.id, true)
+        }
+        setSelectedMessage(null)
+      }}>
         <DialogContent className="max-w-2xl">
           {selectedMessage && (
             <>
@@ -198,8 +323,18 @@ export function MessagesPage() {
                   <p className="text-gray-700 whitespace-pre-wrap">{selectedMessage.message}</p>
                 </div>
               </div>
-              {!selectedMessage.read && (
-                <div className="mt-4 flex justify-end">
+              <DialogFooter className="mt-4 flex justify-between">
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    setMessageToDelete(selectedMessage)
+                    setSelectedMessage(null)
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Obriši poruku
+                </Button>
+                {!selectedMessage.read && (
                   <Button
                     onClick={() => {
                       handleMarkAsRead(selectedMessage.id)
@@ -214,12 +349,41 @@ export function MessagesPage() {
                     )}
                     Označi kao pročitano
                   </Button>
-                </div>
-              )}
+                )}
+              </DialogFooter>
             </>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!messageToDelete} onOpenChange={(open) => !open && setMessageToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Obriši poruku?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Jeste li sigurni da želite obrisati ovu poruku? Ova radnja se ne može poništiti.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Odustani</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteMessage}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={!!deletingMessage}
+            >
+              {deletingMessage ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Brisanje...
+                </>
+              ) : (
+                'Obriši'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

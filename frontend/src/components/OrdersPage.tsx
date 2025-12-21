@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useApiClient } from '@/lib/apiHelpers'
+import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -80,9 +81,62 @@ export function OrdersPage() {
   useEffect(() => {
     loadOrders()
     
-    // Poll for new orders every 30 seconds
-    const interval = setInterval(loadOrders, 30000)
-    return () => clearInterval(interval)
+    // Set up Supabase real-time subscription
+    let restaurantId: string | null = null
+    let orderChannel: any = null
+
+    const setupRealtime = async () => {
+      if (!supabase) {
+        console.warn('Supabase not available')
+        return
+      }
+
+      try {
+        // Get restaurant ID
+        const restaurantResponse = await apiClient.get('/restaurant-info')
+        restaurantId = restaurantResponse.data?.id
+
+        if (!restaurantId) {
+          console.warn('No restaurant ID found')
+          return
+        }
+
+        // Subscribe to orders changes
+        orderChannel = supabase
+          .channel(`orders_page_${restaurantId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'orders',
+              filter: `restaurant_id=eq.${restaurantId}`
+            },
+            (payload) => {
+              console.log('[REALTIME] Order change:', payload.eventType)
+              loadOrders()
+            }
+          )
+          .subscribe((status, err) => {
+            if (err) {
+              console.error('Real-time subscription error:', err)
+            }
+            if (status === 'SUBSCRIBED') {
+              console.log('✅ Real-time: Subscribed to orders')
+            }
+          })
+      } catch (error) {
+        console.error('Failed to set up real-time subscription:', error)
+      }
+    }
+
+    setupRealtime()
+
+    return () => {
+      if (orderChannel && supabase) {
+        supabase.removeChannel(orderChannel)
+      }
+    }
   }, [])
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
@@ -117,8 +171,7 @@ export function OrdersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Narudžbe</h1>
-          <p className="text-gray-500 mt-1">Upravljajte narudžbama kupaca</p>
+          <p className="text-gray-500">Upravljajte narudžbama kupaca</p>
         </div>
         <Badge variant="outline" className="text-sm">
           {orders.length} {orders.length === 1 ? 'narudžba' : 'narudžbi'}
@@ -195,7 +248,6 @@ export function OrdersPage() {
                       </div>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-3">Stavke</h3>
                       <div className="space-y-2">
                         {order.items.map((item) => (
                           <div key={item.id} className="flex justify-between items-start text-sm border-b pb-2">

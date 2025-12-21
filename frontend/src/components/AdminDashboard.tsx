@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@clerk/clerk-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/app-sidebar'
 import { SiteHeader } from '@/components/site-header'
@@ -17,11 +17,54 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardProps) {
+  const location = useLocation()
   const [currentView, setCurrentView] = useState<'menu-items' | 'orders' | 'messages' | 'qr' | 'settings'>('menu-items')
   const [hasRestaurant, setHasRestaurant] = useState<boolean | null>(null) // null = checking
   const { signOut } = useAuth()
   const navigate = useNavigate()
   const apiClient = useApiClient()
+
+  // State for message ID to open
+  const [messageId, setMessageId] = useState<string | undefined>(undefined)
+
+  // Check for view in location state (from notifications)
+  useEffect(() => {
+    if (location.state?.view) {
+      setCurrentView(location.state.view)
+      if (location.state?.messageId) {
+        setMessageId(location.state.messageId)
+      }
+      // Clear the state so it doesn't persist
+      window.history.replaceState({}, document.title)
+    }
+  }, [location.state])
+
+  // Listen for custom events from notification bell
+  useEffect(() => {
+    const handleViewChange = (event: CustomEvent) => {
+      if (event.detail?.view) {
+        setCurrentView(event.detail.view)
+        if (event.detail?.messageId) {
+          setMessageId(event.detail.messageId)
+        } else {
+          setMessageId(undefined)
+        }
+      }
+    }
+
+    window.addEventListener('dashboard:changeView', handleViewChange as EventListener)
+    
+    // Also check URL params on mount
+    const params = new URLSearchParams(window.location.search)
+    const urlMessageId = params.get('messageId')
+    if (urlMessageId) {
+      setMessageId(urlMessageId)
+    }
+    
+    return () => {
+      window.removeEventListener('dashboard:changeView', handleViewChange as EventListener)
+    }
+  }, [])
 
   // Check if user has a restaurant on mount
   useEffect(() => {
@@ -45,6 +88,10 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
 
   const handleViewChange = (view: 'menu-items' | 'orders' | 'messages' | 'qr' | 'settings') => {
     setCurrentView(view)
+    // Clear messageId when switching away from messages
+    if (view !== 'messages') {
+      setMessageId(undefined)
+    }
   }
 
   // Handle restaurant creation from settings
@@ -92,7 +139,7 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
       case 'orders':
         return hasRestaurant ? <OrdersPage /> : null
       case 'messages':
-        return hasRestaurant ? <MessagesPage /> : null
+        return hasRestaurant ? <MessagesPage initialMessageId={messageId} /> : null
       case 'qr':
         return hasRestaurant ? <QRCodePage /> : null
       case 'settings':
@@ -115,7 +162,7 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
         onLogout={handleLogout}
       />
       <SidebarInset>
-        <SiteHeader currentView={currentView === 'menu-items' ? 'menu-items' : currentView === 'settings' ? 'settings' : currentView === 'qr' ? 'qr' : 'dashboard'} />
+        <SiteHeader currentView={currentView} />
         <div className="flex flex-1 flex-col gap-4 p-4 lg:p-6">
           {renderContent()}
         </div>

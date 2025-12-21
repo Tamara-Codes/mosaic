@@ -316,6 +316,8 @@ async def submit_contact_form(request: Request):
     restaurant_id = restaurant_result.data[0]['id']
     
     # Insert contact message
+    print(f"[REALTIME DEBUG] Creating contact message for restaurant_id: {restaurant_id}")
+    print(f"[REALTIME DEBUG] Message data: name={name}, email={email}, phone={phone}")
     contact_result = supabase.table('contact_messages').insert({
         'restaurant_id': restaurant_id,
         'name': name,
@@ -323,6 +325,14 @@ async def submit_contact_form(request: Request):
         'phone': phone,
         'message': message
     }).execute()
+    
+    print(f"[REALTIME DEBUG] Contact message insert result: {contact_result}")
+    if contact_result.data:
+        message_id = contact_result.data[0].get('id')
+        print(f"[REALTIME DEBUG] ✅ Contact message created successfully with id: {message_id}")
+        print(f"[REALTIME DEBUG] Full message data: {contact_result.data[0]}")
+    else:
+        print(f"[REALTIME DEBUG] ❌ Contact message insert failed: {contact_result}")
     
     if not contact_result.data:
         raise HTTPException(status_code=500, detail="Greška pri slanju poruke")
@@ -399,10 +409,16 @@ async def update_order_status(order_id: str, request: Request, clerk_user_id: st
         raise HTTPException(status_code=404, detail="Narudžba nije pronađena")
     
     # Update status
+    print(f"[REALTIME DEBUG] Updating order status: order_id={order_id}, restaurant_id={restaurant['id']}, new_status={new_status}")
     update_result = supabase.table('orders').update({
         'status': new_status,
         'updated_at': 'now()'
     }).eq('id', order_id).execute()
+    print(f"[REALTIME DEBUG] Order update result: {update_result}")
+    if update_result.data:
+        print(f"[REALTIME DEBUG] ✅ Order status updated: {update_result.data[0]}")
+    else:
+        print(f"[REALTIME DEBUG] ❌ Failed to update order status")
     
     if update_result.data:
         order = update_result.data[0]
@@ -438,9 +454,40 @@ async def mark_message_read(message_id: str, clerk_user_id: str = Depends(requir
         raise HTTPException(status_code=404, detail="Poruka nije pronađena")
     
     # Update read status
+    print(f"[REALTIME DEBUG] Marking message as read: message_id={message_id}, restaurant_id={restaurant['id']}")
     update_result = supabase.table('contact_messages').update({'read': True}).eq('id', message_id).execute()
+    print(f"[REALTIME DEBUG] Update result: {update_result}")
+    if update_result.data:
+        print(f"[REALTIME DEBUG] ✅ Message marked as read: {update_result.data[0]}")
+    else:
+        print(f"[REALTIME DEBUG] ❌ Failed to mark message as read")
     
     return JSONResponse({"success": True, "message": update_result.data[0] if update_result.data else None})
+
+@app.delete("/contact-messages/{message_id}")
+async def delete_contact_message(message_id: str, clerk_user_id: str = Depends(require_auth)):
+    """Delete a contact message"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+    
+    supabase = get_supabase_client()
+    
+    # Verify message belongs to restaurant
+    message_result = supabase.table('contact_messages').select('restaurant_id').eq('id', message_id).execute()
+    if not message_result.data or message_result.data[0]['restaurant_id'] != restaurant['id']:
+        raise HTTPException(status_code=404, detail="Poruka nije pronađena")
+    
+    # Delete message
+    print(f"[REALTIME DEBUG] Deleting message: message_id={message_id}, restaurant_id={restaurant['id']}")
+    delete_result = supabase.table('contact_messages').delete().eq('id', message_id).execute()
+    print(f"[REALTIME DEBUG] Delete result: {delete_result}")
+    if delete_result.data:
+        print(f"[REALTIME DEBUG] ✅ Message deleted successfully")
+    else:
+        print(f"[REALTIME DEBUG] ❌ Failed to delete message")
+    
+    return JSONResponse({"success": True, "message": "Poruka je obrisana"})
 
 # Public Order Creation Endpoint
 @app.post("/v1/orders")
@@ -563,17 +610,29 @@ async def create_order(request: Request):
         'notes': notes
     }
     
+    print(f"[REALTIME DEBUG] Creating order for restaurant_id: {restaurant_id}")
+    print(f"[REALTIME DEBUG] Order data: order_number={order_number}, customer={customer_name}, total={total_price}")
     order_result = supabase_admin.table('orders').insert(order_data).execute()
+    print(f"[REALTIME DEBUG] Order insert result: {order_result}")
+    
     if not order_result.data:
+        print(f"[REALTIME DEBUG] ❌ Order creation failed")
         raise HTTPException(status_code=500, detail="Greška pri kreiranju narudžbe")
     
     order = order_result.data[0]
     order_id = order['id']
+    print(f"[REALTIME DEBUG] ✅ Order created successfully with id: {order_id}")
+    print(f"[REALTIME DEBUG] Full order data: {order}")
     
     # Create order items
-    for item_data in order_items_data:
+    print(f"[REALTIME DEBUG] Creating {len(order_items_data)} order items for order_id: {order_id}")
+    for idx, item_data in enumerate(order_items_data):
         item_data['order_id'] = order_id
-        supabase_admin.table('order_items').insert(item_data).execute()
+        item_result = supabase_admin.table('order_items').insert(item_data).execute()
+        if item_result.data:
+            print(f"[REALTIME DEBUG] ✅ Order item {idx + 1} created: {item_result.data[0].get('id')}")
+        else:
+            print(f"[REALTIME DEBUG] ❌ Failed to create order item {idx + 1}")
     
     # Return created order
     return JSONResponse({

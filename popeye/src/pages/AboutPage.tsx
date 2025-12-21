@@ -22,8 +22,7 @@ export function AboutPage() {
               Naša strast je pripremanje svježih, kvalitetnih jela koja zadovoljavaju sva Vaša osjetila.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              Svaki dan pripremamo <span className="text-red-500 font-semibold">dnevni jelovnik</span> s pažljivo odabranim jelima, koristeći samo najsvježije 
-              namirnice i lokalne proizvode. Naša filozofija je jednostavna - <span className="text-red-500 font-semibold">kvaliteta, svježina i 
+              Svaki dan pripremamo <span className="text-red-500 font-semibold">dnevni jelovnik</span> s pažljivo odabranim jelima. Naša filozofija je jednostavna - <span className="text-red-500 font-semibold">kvaliteta, svježina i 
               ljubav prema hrani</span>.
             </p>
           </section>
@@ -31,7 +30,7 @@ export function AboutPage() {
           <section className="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Naša misija</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              Naša misija je pružiti vam <span className="text-red-500 font-semibold">nezaboravno kulinarsko iskustvo</span> u prijateljskoj i opuštenoj 
+              Naša misija je pružiti vam <span className="text-red-500 font-semibold">ugodno kulinarsko iskustvo</span> u prijateljskoj i opuštenoj 
               atmosferi. Vjerujemo da dobra hrana spaja ljude i stvara uspomene koje traju zauvijek.
             </p>
             <p className="text-gray-700 leading-relaxed">
@@ -49,7 +48,7 @@ export function AboutPage() {
               </li>
               <li className="flex items-start">
                 <span className="text-red-500 mr-3">✓</span>
-                <span>Kvalitetni lokalni proizvodi</span>
+                <span>Besplatna dostava i online naručivanje</span>
               </li>
               <li className="flex items-start">
                 <span className="text-red-500 mr-3">✓</span>
@@ -58,10 +57,6 @@ export function AboutPage() {
               <li className="flex items-start">
                 <span className="text-red-500 mr-3">✓</span>
                 <span>Prijateljsko osoblje i ugodna atmosfera</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-red-500 mr-3">✓</span>
-                <span>Dostava i preuzimanje narudžbi</span>
               </li>
             </ul>
           </section>
