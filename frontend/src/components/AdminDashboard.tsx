@@ -32,12 +32,7 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
       } catch (error: any) {
         if (error?.response?.status === 404) {
           setHasRestaurant(false)
-          const errorMessage = error?.response?.data?.detail || 'Restaurant not found'
-          toast.error(
-            errorMessage.includes('contact') 
-              ? errorMessage 
-              : 'Restoran nije pronađen. Molimo kontaktirajte administratora da kreira restoran za vaš email.'
-          )
+          toast.error('Restoran nije pronađen')
         } else {
           console.error('Error checking restaurant:', error)
           setHasRestaurant(false)
@@ -77,26 +72,15 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
       )
     }
 
-    // If no restaurant, show message
+    // If no restaurant, show message (without sidebar)
     if (!hasRestaurant) {
       return (
-        <div className="flex items-center justify-center min-h-[400px]">
+        <div className="min-h-screen flex items-center justify-center bg-background">
           <div className="text-center max-w-md p-6">
             <h2 className="text-2xl font-semibold mb-4">Restoran nije pronađen</h2>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-muted-foreground">
               Vaš račun nije povezan s restoranom. Restorani se kreiraju ručno od strane administratora.
             </p>
-            <p className="text-sm text-muted-foreground mb-6">
-              Molimo kontaktirajte administratora da kreira restoran za vaš email adresu.
-            </p>
-            <div className="bg-muted p-4 rounded-lg text-left">
-              <p className="text-sm font-medium mb-2">Što trebate:</p>
-              <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                <li>Email adresa koju koristite za prijavu</li>
-                <li>Naziv restorana</li>
-                <li>Slug (URL-friendly naziv)</li>
-              </ul>
-            </div>
           </div>
         </div>
       )
@@ -116,6 +100,11 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
       default:
         return hasRestaurant ? <MenuItemsPage /> : null
     }
+  }
+
+  // If no restaurant, don't show sidebar/header
+  if (!hasRestaurant) {
+    return <>{renderContent()}</>
   }
 
   return (
