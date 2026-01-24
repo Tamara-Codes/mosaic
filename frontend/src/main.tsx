@@ -1,11 +1,10 @@
-import { StrictMode } from 'react'
+import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { ClerkProvider } from '@clerk/clerk-react'
 import { Toaster } from '@/components/ui/sonner'
 import './index.css'
 import App from './App.tsx'
-import { PublicMenuPage } from './components/PublicMenuPage'
 import { LoginPage } from './components/LoginPage'
 
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
@@ -14,10 +13,22 @@ if (!clerkPublishableKey) {
   console.error('VITE_CLERK_PUBLISHABLE_KEY is required but not set. Please configure Clerk.')
 }
 
+// Redirect component for menu pages to popeye frontend
+function MenuRedirect() {
+  const { restaurantSlug } = useParams<{ restaurantSlug: string }>()
+  
+  useEffect(() => {
+    const popeyeUrl = `http://localhost:5181/menu/${restaurantSlug || ''}`
+    window.location.href = popeyeUrl
+  }, [restaurantSlug])
+  
+  return <div>Redirecting to menu...</div>
+}
+
 const routes = (
   <BrowserRouter>
     <Routes>
-      <Route path="/menu/:restaurantSlug" element={<PublicMenuPage />} />
+      <Route path="/menu/:restaurantSlug" element={<MenuRedirect />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/sign-in" element={<LoginPage />} />
       <Route path="/sign-up" element={<LoginPage />} />
