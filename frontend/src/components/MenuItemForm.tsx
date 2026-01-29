@@ -22,7 +22,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
     name_hr: item?.name_hr || '',
     description_hr: item?.description_hr || '',
     price: item?.price || 0,
-    category: presetCategory || item?.category || '',
+    category_id: presetCategory || item?.category_id || '',
     is_available: item?.is_available ?? true,
     is_vegetarian: item?.is_vegetarian ?? false,
     is_vegan: item?.is_vegan ?? false,
@@ -36,7 +36,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
   })
   const [image, setImage] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
-  const [categories, setCategories] = useState<string[]>([])
+  const [categories, setCategories] = useState<{id: number, name: string}[]>([])
   const [categoryInput, setCategoryInput] = useState('')
   const [useCustomCategory, setUseCustomCategory] = useState(false)
 
@@ -54,8 +54,8 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
   const loadCategories = async () => {
     try {
       const response = await apiClient.get('/api/categories')
-      const cats = response.data
-      setCategories(cats || [])
+      const data = response.data
+      setCategories(data.categories_with_ids || [])
     } catch (error) {
       console.error('Failed to load categories:', error)
       toast.error('Greška pri učitavanju kategorija')
@@ -68,7 +68,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
     setLoading(true)
 
     // Validate category
-    const categoryValue = presetCategory || formData.category.trim()
+    const categoryValue = presetCategory || formData.category_id
     if (!categoryValue) {
       toast.error('Molimo odaberite kategoriju')
       setLoading(false)
@@ -77,18 +77,20 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
 
     try {
       // If creating a new category, save it first
-      if (!presetCategory && useCustomCategory && categoryInput.trim() && formData.category.trim()) {
+      let finalCategoryId = categoryValue
+      if (!presetCategory && useCustomCategory && categoryInput.trim()) {
         try {
           const formDataCategory = new FormData()
-          formDataCategory.append('name', formData.category.trim())
-          await apiClient.post('/api/categories', formDataCategory)
+          formDataCategory.append('name', categoryInput.trim())
+          const response = await apiClient.post('/api/categories', formDataCategory)
+          finalCategoryId = response.data.id
           await loadCategories() // Reload categories list
           toast.success('Nova kategorija je dodana')
         } catch (error: any) {
-          // Category might already exist, that's okay
-          if (error.response?.status !== 400) {
-            console.error('Failed to create category:', error)
-          }
+          console.error('Failed to create category:', error)
+          toast.error('Greška pri kreiranju kategorije')
+          setLoading(false)
+          return
         }
       }
 
@@ -96,7 +98,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
       formDataToSend.append('name_hr', formData.name_hr)
       formDataToSend.append('description_hr', formData.description_hr)
       formDataToSend.append('price', formData.price.toString())
-      formDataToSend.append('category', categoryValue)
+      formDataToSend.append('category_id', finalCategoryId.toString())
       formDataToSend.append('is_available', formData.is_available.toString())
       formDataToSend.append('is_vegetarian', formData.is_vegetarian.toString())
       formDataToSend.append('is_vegan', formData.is_vegan.toString())
@@ -178,34 +180,34 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
           <Label htmlFor="category">Kategorija <span className="text-destructive">*</span></Label>
           {presetCategory ? (
             <Input
-              value={presetCategory}
+              value={categories.find(c => c.id.toString() === presetCategory)?.name || presetCategory}
               disabled
               className="bg-muted"
             />
           ) : !useCustomCategory ? (
             <div className="space-y-2">
               <Select
-                value={formData.category || undefined}
+                value={formData.category_id || undefined}
                 onValueChange={(value) => {
                   if (value === "__custom__") {
                     setUseCustomCategory(true)
                     setCategoryInput('')
-                    setFormData({ ...formData, category: '' })
+                    setFormData({ ...formData, category_id: '' })
                   } else {
-                    setFormData({ ...formData, category: value })
+                    setFormData({ ...formData, category_id: value })
                   }
                 }}
                 required
               >
-                <SelectTrigger id="category" className={`w-full ${!formData.category ? 'border-destructive' : ''}`}>
+                <SelectTrigger id="category" className={`w-full ${!formData.category_id ? 'border-destructive' : ''}`}>
                   <SelectValue placeholder={categories.length > 0 ? "Odaberi kategoriju" : "Kliknite za dodavanje kategorije"} />
                 </SelectTrigger>
                 <SelectContent className="z-[100]">
                   {categories.length > 0 ? (
                     <>
                       {categories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
+                        <SelectItem key={cat.id} value={cat.id.toString()}>
+                          {cat.name}
                         </SelectItem>
                       ))}
                       <SelectItem value="__custom__">
@@ -237,7 +239,6 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
                 value={categoryInput}
                 onChange={(e) => {
                   setCategoryInput(e.target.value)
-                  setFormData({ ...formData, category: e.target.value })
                 }}
                 placeholder="Unesite novu kategoriju"
                 required
@@ -252,9 +253,12 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
                     try {
                       const formDataCategory = new FormData()
                       formDataCategory.append('name', categoryInput.trim())
-                      await apiClient.post('/api/categories', formDataCategory)
+                      const response = await apiClient.post('/api/categories', formDataCategory)
                       await loadCategories()
-                      setFormData({ ...formData, category: categoryInput.trim() })
+                      // Set the newly created category ID
+                      if (response.data?.id) {
+                        setFormData({ ...formData, category_id: String(response.data.id) })
+                      }
                       setUseCustomCategory(false)
                       setCategoryInput('')
                       toast.success('Kategorija je dodana')

@@ -12,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConfirmDialog } from './ConfirmDialog'
 import { toast } from 'sonner'
-import { Plus, Edit, Trash2, Search, Languages, Sparkles, Loader2, CheckCircle2, Flag, GripVertical, Move } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, Languages, Sparkles, Loader2, CheckCircle2, GripVertical, Move } from 'lucide-react'
 import { MenuItemForm } from './MenuItemForm'
 
 interface Translation {
@@ -46,7 +46,6 @@ export function MenuItemsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<number | null>(null)
-  const [showFlags, setShowFlags] = useState(true)
   
   // Translation state
   const [showTranslateDialog, setShowTranslateDialog] = useState(false)
@@ -71,15 +70,43 @@ export function MenuItemsPage() {
   const [languageToRemove, setLanguageToRemove] = useState<{code: string, name: string} | null>(null)
   const [showRemoveLanguageConfirm, setShowRemoveLanguageConfirm] = useState(false)
   const [availableLanguages] = useState([
-    { code: 'en', name: 'Engleski' },
-    { code: 'de', name: 'Njemački' },
-    { code: 'it', name: 'Talijanski' },
-    { code: 'fr', name: 'Francuski' },
-    { code: 'es', name: 'Španjolski' },
-    { code: 'sl', name: 'Slovenski' },
+    { code: 'sq', name: 'Albanski' },
+    { code: 'ar', name: 'Arapski' },
+    { code: 'by', name: 'Bjeloruski' },
+    { code: 'bs', name: 'Bosanski' },
+    { code: 'bg', name: 'Bugarski' },
     { code: 'cs', name: 'Češki' },
-    { code: 'pl', name: 'Poljski' },
+    { code: 'da', name: 'Danski' },
+    { code: 'en', name: 'Engleski' },
+    { code: 'et', name: 'Estonski' },
+    { code: 'fi', name: 'Finski' },
+    { code: 'fr', name: 'Francuski' },
+    { code: 'el', name: 'Grčki' },
+    { code: 'ga', name: 'Irski' },
+    { code: 'is', name: 'Islandski' },
+    { code: 'ja', name: 'Japanski' },
+    { code: 'zh', name: 'Kineski' },
+    { code: 'ko', name: 'Korejski' },
+    { code: 'lv', name: 'Latvijski' },
+    { code: 'lt', name: 'Litavski' },
     { code: 'hu', name: 'Mađarski' },
+    { code: 'mk', name: 'Makedonski' },
+    { code: 'mt', name: 'Malteški' },
+    { code: 'de', name: 'Njemački' },
+    { code: 'nl', name: 'Nizozemski' },
+    { code: 'no', name: 'Norveški' },
+    { code: 'pl', name: 'Poljski' },
+    { code: 'pt', name: 'Portugalski' },
+    { code: 'ro', name: 'Rumunjski' },
+    { code: 'ru', name: 'Ruski' },
+    { code: 'sk', name: 'Slovački' },
+    { code: 'sl', name: 'Slovenski' },
+    { code: 'sr', name: 'Srpski' },
+    { code: 'es', name: 'Španjolski' },
+    { code: 'sv', name: 'Švedski' },
+    { code: 'it', name: 'Talijanski' },
+    { code: 'tr', name: 'Turski' },
+    { code: 'uk', name: 'Ukrajinski' },
   ])
 
   // Category reordering state
@@ -132,7 +159,7 @@ export function MenuItemsPage() {
     setIsReordering(true)
 
     try {
-      await apiClient.put('/categories/reorder', newCategories)
+      await apiClient.put('/api/categories/reorder', newCategories)
       toast.success('Redoslijed kategorija je promijenjen')
     } catch (error) {
       console.error('Error reordering categories:', error)
@@ -148,9 +175,9 @@ export function MenuItemsPage() {
     try {
       setLoading(true)
       const [itemsData, langsData, categoriesData] = await Promise.all([
-        apiClient.get('/menu-items-with-translations').then(r => r.data),
-        apiClient.get('/supported-languages').then(r => r.data),
-        apiClient.get('/categories').then(r => r.data)
+        apiClient.get('/api/menu-items-with-translations').then(r => r.data),
+        apiClient.get('/api/supported-languages').then(r => r.data),
+        apiClient.get('/api/categories').then(r => r.data)
       ])
       setItems(itemsData)
       setLanguages(langsData.languages)
@@ -204,7 +231,26 @@ export function MenuItemsPage() {
 
   // Translation handlers
   const getLanguageFlag = (code: string) => {
-    const countryCode = code === 'en' ? 'gb' : code === 'cs' ? 'cz' : code === 'sl' ? 'si' : code
+    const flagMap: Record<string, string> = {
+      'en': 'gb',
+      'cs': 'cz',
+      'sl': 'si',
+      'el': 'gr',
+      'zh': 'cn',
+      'ja': 'jp',
+      'ko': 'kr',
+      'ar': 'sa',
+      'sv': 'se',
+      'da': 'dk',
+      'uk': 'ua',
+      'by': 'by',
+      'sq': 'al',
+      'sr': 'rs',
+      'bs': 'ba',
+      'ga': 'ie',
+      'et': 'ee',  // Estonia flag
+    }
+    const countryCode = flagMap[code] || code
     return `https://flagcdn.com/w40/${countryCode}.png`
   }
 
@@ -298,7 +344,7 @@ export function MenuItemsPage() {
       const formData = new FormData()
       formData.append('name', newCategoryName.trim())
       
-      await apiClient.post('/categories', formData)
+      await apiClient.post('/api/categories', formData)
       toast.success("Kategorija je dodana")
       setNewCategoryName('')
       setShowAddCategoryDialog(false)
@@ -328,31 +374,8 @@ export function MenuItemsPage() {
     }
   }
 
-  const openDeleteCategoryDialog = (category: {id: number, name: string}) => {
-    setCategoryToDelete(category)
-    setShowDeleteCategoryDialog(true)
-  }
-
-  const openTranslateCategoryDialog = async (category: {id: number, name: string}) => {
-    // Fetch category with translations
-    try {
-      const response = await apiClient.get('/categories-with-translations')
-      const categoriesData = response.data
-      const fullCategory = categoriesData.find((c: any) => c.id === category.id)
-      
-      setSelectedCategoryForTranslation(fullCategory || category)
-      
-      // Start with all languages unchecked - user must explicitly select which ones to translate
-      setSelectedLanguages([])
-      setShowTranslateCategoryDialog(true)
-    } catch (error) {
-      console.error('Error fetching category:', error)
-      setSelectedCategoryForTranslation(category)
-      // Start with all languages unchecked
-      setSelectedLanguages([])
-      setShowTranslateCategoryDialog(true)
-    }
-  }
+  // Removed unused functions openDeleteCategoryDialog and openTranslateCategoryDialog
+  // If needed in the future, they can be restored from git history
 
   const handleGenerateCategoryTranslations = async () => {
     if (!selectedCategoryForTranslation || selectedLanguages.length === 0) {
@@ -413,15 +436,15 @@ export function MenuItemsPage() {
   // const categories = allCategories.map(c => c.name) // Unused - kept for reference
   
   // Check if there are uncategorized items
-  const uncategorizedCount = items.filter(item => !item.category || item.category === '').length
+  const uncategorizedCount = items.filter(item => !item.category_id).length
   const hasUncategorized = uncategorizedCount > 0
 
   // Filter items
   const filteredItems = items.filter(item => {
-    const matchesCategory = selectedCategory === 'sve' 
-      || (selectedCategory === 'uncategorized' && (!item.category || item.category === ''))
-      || item.category === selectedCategory
-    const matchesSearch = searchQuery === '' || 
+    const matchesCategory = selectedCategory === 'sve'
+      || (selectedCategory === 'uncategorized' && !item.category_id)
+      || item.category_id === selectedCategory
+    const matchesSearch = searchQuery === '' ||
       item.name_hr.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (item.description_hr && item.description_hr.toLowerCase().includes(searchQuery.toLowerCase()))
     return matchesCategory && matchesSearch
@@ -439,14 +462,6 @@ export function MenuItemsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setShowFlags(!showFlags)}
-            className="gap-2"
-          >
-            <Flag className="h-4 w-4" />
-            {showFlags ? 'Prikaži oznake' : 'Prikaži zastave'}
-          </Button>
           <Button
             variant="outline"
             onClick={() => setShowLanguageManagementDialog(true)}
@@ -525,7 +540,7 @@ export function MenuItemsPage() {
                       <span className="truncate font-medium">{category.name}</span>
                     </div>
                     <p className="text-sm text-muted-foreground flex-shrink-0">
-                      {items.filter(item => item.category === category.name).length} stavki
+                      {items.filter(item => item.category_id === String(category.id)).length} stavki
                     </p>
                   </CardTitle>
                 </CardHeader>
@@ -539,33 +554,9 @@ export function MenuItemsPage() {
             <TabsList>
               <TabsTrigger value="sve">Sve</TabsTrigger>
               {allCategories.map(category => (
-                <div key={category.id} className="relative group">
-                  <TabsTrigger value={category.name}>
-                    {category.name}
-                  </TabsTrigger>
-                  <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5 z-10">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        openTranslateCategoryDialog(category)
-                      }}
-                      className="bg-blue-500 text-white rounded-full p-0.5 hover:bg-blue-600 shadow-md"
-                      title="Prijevodi kategorije"
-                    >
-                      <Languages className="h-3 w-3" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        openDeleteCategoryDialog(category)
-                      }}
-                      className="bg-destructive text-destructive-foreground rounded-full p-0.5 hover:bg-destructive/90 shadow-md"
-                      title="Obriši kategoriju"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
+                <TabsTrigger key={category.id} value={category.id.toString()}>
+                  {category.name}
+                </TabsTrigger>
               ))}
               {hasUncategorized && (
                 <TabsTrigger value="uncategorized" className="border-2 border-amber-400 border-dashed">
@@ -662,8 +653,10 @@ export function MenuItemsPage() {
                       <div className="flex items-center justify-between">
                         <span className="text-2xl font-semibold">{item.price.toFixed(2)} €</span>
                       </div>
-                      {item.category && (
-                        <p className="text-sm text-muted-foreground">Kategorija: {item.category}</p>
+                      {item.category_id && (
+                        <p className="text-sm text-muted-foreground">
+                          Kategorija: {allCategories.find(c => c.id.toString() === item.category_id)?.name || 'N/A'}
+                        </p>
                       )}
 
                       {/* Allergen & Dietary Tags */}
@@ -695,26 +688,16 @@ export function MenuItemsPage() {
                                 className="relative group/flag"
                                 title={trans.language_name}
                               >
-                                {showFlags ? (
-                                  <div 
-                                    className="relative rounded-full overflow-hidden border-2 border-green-500 w-10 h-10 bg-white cursor-pointer hover:border-green-600 hover:scale-105 transition-all"
-                                    onClick={() => openEditTranslationDialog(trans)}
-                                  >
-                                    <img
-                                      src={getLanguageFlag(trans.language_code)}
-                                      alt={trans.language_code}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  </div>
-                                ) : (
-                                  <Badge 
-                                    variant="secondary" 
-                                    className="text-sm font-semibold cursor-pointer hover:bg-secondary/80 px-3 py-1"
-                                    onClick={() => openEditTranslationDialog(trans)}
-                                  >
-                                    {trans.language_code.toUpperCase()}
-                                  </Badge>
-                                )}
+                                <div
+                                  className="relative rounded-full overflow-hidden border-2 border-green-500 w-10 h-10 bg-white cursor-pointer hover:border-green-600 hover:scale-105 transition-all"
+                                  onClick={() => openEditTranslationDialog(trans)}
+                                >
+                                  <img
+                                    src={getLanguageFlag(trans.language_code)}
+                                    alt={trans.language_code}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation()
@@ -1143,28 +1126,28 @@ export function MenuItemsPage() {
 
       {/* Language Management Dialog */}
       <Dialog open={showLanguageManagementDialog} onOpenChange={setShowLanguageManagementDialog}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader className="mb-8">
-            <DialogTitle className="flex items-center gap-2 text-2xl">
-              <Languages className="h-6 w-6 text-primary" />
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Languages className="h-5 w-5" />
               Upravljanje jezicima
             </DialogTitle>
-            <DialogDescription className="text-base">
+            <DialogDescription className="text-sm">
               Omogućite ili onemogućite jezike za vaš restoran.
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="space-y-6">
-            <div className="grid grid-cols-3 gap-5">
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-5 gap-3">
               {availableLanguages.map((lang) => {
                 const isActive = languages.some(l => l.code === lang.code)
                 return (
                   <div
                     key={lang.code}
                     className={`
-                      relative flex flex-col items-center gap-3 p-5 rounded-xl border-2 transition-all cursor-pointer
-                      ${isActive 
-                        ? 'border-green-500 bg-green-50 hover:bg-green-100 hover:border-green-600 shadow-md' 
+                      relative flex flex-col items-center gap-2 p-3 rounded-lg border transition-all cursor-pointer group
+                      ${isActive
+                        ? 'border-blue-200 bg-blue-50/50 hover:bg-blue-100/50 hover:border-blue-300'
                         : 'border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300'
                       }
                     `}
@@ -1189,19 +1172,18 @@ export function MenuItemsPage() {
                       }
                     }}
                   >
+                    {isActive && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                        <CheckCircle2 className="w-3 h-3 text-white" />
+                      </div>
+                    )}
                     <img
                       src={getLanguageFlag(lang.code)}
                       alt={lang.code}
-                      className="w-16 h-11 object-cover rounded-lg border-2 shadow-sm"
+                      className="w-12 h-8 object-cover rounded border"
                     />
                     <div className="text-center">
-                      <div className="font-semibold text-base">{lang.name}</div>
-                    </div>
-                    <div className={`
-                      w-12 h-12 rounded-full flex items-center justify-center text-2xl font-bold shadow-sm
-                      ${isActive ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'}
-                    `}>
-                      {isActive ? '✓' : '+'}
+                      <div className="text-xs font-medium">{lang.name}</div>
                     </div>
                   </div>
                 )
@@ -1209,8 +1191,8 @@ export function MenuItemsPage() {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button onClick={() => setShowLanguageManagementDialog(false)} size="lg">
+          <DialogFooter className="mt-4">
+            <Button onClick={() => setShowLanguageManagementDialog(false)} variant="outline">
               Zatvori
             </Button>
           </DialogFooter>
@@ -1238,7 +1220,7 @@ export function MenuItemsPage() {
         onConfirm={async () => {
           if (languageToRemove) {
             try {
-              await apiClient.delete(`/api/languages/remove/${languageToRemove.code}`)
+              await apiClient.delete(`/languages/remove/${languageToRemove.code}`)
               toast.success(`Jezik ${languageToRemove.name} je uklonjen`)
               loadItems()
               setShowRemoveLanguageConfirm(false)

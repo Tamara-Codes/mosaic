@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Eye } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useApiClient } from "@/lib/apiHelpers"
-import { NotificationBell } from "@/components/NotificationBell"
 
 interface SiteHeaderProps {
-  currentView?: 'dashboard' | 'menu-items' | 'categories' | 'qr' | 'settings' | 'orders' | 'messages'
+  currentView?: 'dashboard' | 'menu-items' | 'categories' | 'qr' | 'settings'
 }
 
 const viewTitles: Record<string, string> = {
@@ -15,9 +14,7 @@ const viewTitles: Record<string, string> = {
   'menu-items': 'Jelovnik',
   categories: 'Kategorije',
   qr: 'QR Kod',
-  settings: 'Postavke',
-  orders: 'Narudžbe',
-  messages: 'Poruke'
+  settings: 'Postavke'
 }
 
 export function SiteHeader({ currentView = 'menu-items' }: SiteHeaderProps) {
@@ -29,7 +26,7 @@ export function SiteHeader({ currentView = 'menu-items' }: SiteHeaderProps) {
     // Fetch restaurant info to get the slug
     const fetchRestaurantInfo = async () => {
       try {
-        const response = await apiClient.get('/restaurant-info')
+        const response = await apiClient.get('/api/restaurant-info')
         if (response.data?.slug) {
           setRestaurantSlug(response.data.slug)
         }
@@ -59,9 +56,8 @@ export function SiteHeader({ currentView = 'menu-items' }: SiteHeaderProps) {
         />
         <h1 className="flex-1 text-base font-medium">{title}</h1>
         <div className="flex items-center gap-2">
-          <NotificationBell />
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={handlePreviewClick}
             disabled={!restaurantSlug}

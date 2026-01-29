@@ -7,8 +7,6 @@ import { SiteHeader } from '@/components/site-header'
 import { MenuItemsPage } from './MenuItemsPage'
 import { SettingsPage } from './SettingsPage'
 import { QRCodePage } from './QRCodePage'
-import { OrdersPage } from './OrdersPage'
-import { MessagesPage } from './MessagesPage'
 import { useApiClient } from '@/lib/apiHelpers'
 import { toast } from 'sonner'
 
@@ -18,59 +16,26 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardProps) {
   const location = useLocation()
-  const [currentView, setCurrentView] = useState<'menu-items' | 'orders' | 'messages' | 'qr' | 'settings'>('menu-items')
+  const [currentView, setCurrentView] = useState<'menu-items' | 'qr' | 'settings'>('menu-items')
   const [hasRestaurant, setHasRestaurant] = useState<boolean | null>(null) // null = checking
   const { signOut } = useAuth()
   const navigate = useNavigate()
   const apiClient = useApiClient()
 
-  // State for message ID to open
-  const [messageId, setMessageId] = useState<string | undefined>(undefined)
-
-  // Check for view in location state (from notifications)
+  // Check for view in location state
   useEffect(() => {
     if (location.state?.view) {
       setCurrentView(location.state.view)
-      if (location.state?.messageId) {
-        setMessageId(location.state.messageId)
-      }
       // Clear the state so it doesn't persist
       window.history.replaceState({}, document.title)
     }
   }, [location.state])
 
-  // Listen for custom events from notification bell
-  useEffect(() => {
-    const handleViewChange = (event: CustomEvent) => {
-      if (event.detail?.view) {
-        setCurrentView(event.detail.view)
-        if (event.detail?.messageId) {
-          setMessageId(event.detail.messageId)
-        } else {
-          setMessageId(undefined)
-        }
-      }
-    }
-
-    window.addEventListener('dashboard:changeView', handleViewChange as EventListener)
-    
-    // Also check URL params on mount
-    const params = new URLSearchParams(window.location.search)
-    const urlMessageId = params.get('messageId')
-    if (urlMessageId) {
-      setMessageId(urlMessageId)
-    }
-    
-    return () => {
-      window.removeEventListener('dashboard:changeView', handleViewChange as EventListener)
-    }
-  }, [])
-
   // Check if user has a restaurant on mount
   useEffect(() => {
     const checkRestaurant = async () => {
       try {
-        await apiClient.get('/restaurant-info')
+        await apiClient.get('/api/restaurant-info')
         setHasRestaurant(true)
       } catch (error: any) {
         if (error?.response?.status === 404) {
@@ -86,12 +51,8 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
     checkRestaurant()
   }, [])
 
-  const handleViewChange = (view: 'menu-items' | 'orders' | 'messages' | 'qr' | 'settings') => {
+  const handleViewChange = (view: 'menu-items' | 'qr' | 'settings') => {
     setCurrentView(view)
-    // Clear messageId when switching away from messages
-    if (view !== 'messages') {
-      setMessageId(undefined)
-    }
   }
 
   // Handle restaurant creation from settings
@@ -122,12 +83,43 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
     // If no restaurant, show message (without sidebar)
     if (!hasRestaurant) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="text-center max-w-md p-6">
-            <h2 className="text-2xl font-semibold mb-4">Restoran nije pronađen</h2>
-            <p className="text-muted-foreground">
-              Vaš račun nije povezan s restoranom. Restorani se kreiraju ručno od strane administratora.
-            </p>
+        <div className="min-h-screen flex items-center justify-center bg-background p-6">
+          <div className="text-center max-w-lg">
+            <div className="mb-6">
+              <h2 className="text-3xl font-bold mb-3">Dobrodošli! 👋</h2>
+              <p className="text-lg text-muted-foreground mb-6">
+                Vaš račun još nije povezan s restoranom.
+              </p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-left mb-6">
+              <h3 className="font-semibold text-blue-900 mb-3">Kako nastaviti:</h3>
+              <ol className="space-y-2 text-blue-800 text-sm">
+                <li className="flex gap-2">
+                  <span className="font-bold">1.</span>
+                  <span>Kontaktirajte administratora sustava</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold">2.</span>
+                  <span>Pošaljite mu svoju email adresu koju koristite za prijavu</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold">3.</span>
+                  <span>Administrator će kreirati restoran za vas</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold">4.</span>
+                  <span>Osvježite stranicu i možete početi!</span>
+                </li>
+              </ol>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="px-6 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Odjavi se
+            </button>
           </div>
         </div>
       )
@@ -136,10 +128,6 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
     switch (currentView) {
       case 'menu-items':
         return hasRestaurant ? <MenuItemsPage /> : null
-      case 'orders':
-        return hasRestaurant ? <OrdersPage /> : null
-      case 'messages':
-        return hasRestaurant ? <MessagesPage initialMessageId={messageId} /> : null
       case 'qr':
         return hasRestaurant ? <QRCodePage /> : null
       case 'settings':

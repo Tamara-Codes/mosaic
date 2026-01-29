@@ -81,7 +81,7 @@ export function Menu({ language, onLanguageChange }: MenuProps) {
     return field === 'name' ? item.name_hr : (item.description_hr || '')
   }
 
-  const uncategorized = items.filter(item => !item.category || item.category === '')
+  const uncategorized = items.filter(item => !item.category_id || item.category_id === '')
 
   const getLabel = (hr: string, en: string, de: string, it: string, fr: string) => {
     switch (language) {
@@ -301,7 +301,7 @@ export function Menu({ language, onLanguageChange }: MenuProps) {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {items
-                  .filter(item => item.category === category.name)
+                  .filter(item => item.category_id === String(category.id))
                   .map((item) => {
                     const allergenBadges = getAllergenBadges(item)
                     return (

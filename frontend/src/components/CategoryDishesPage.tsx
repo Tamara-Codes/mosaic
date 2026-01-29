@@ -11,11 +11,12 @@ import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react'
 import { MenuItemForm } from './MenuItemForm'
 
 interface CategoryDishesPageProps {
+  categoryId: number
   categoryName: string
   onBack: () => void
 }
 
-export function CategoryDishesPage({ categoryName, onBack }: CategoryDishesPageProps) {
+export function CategoryDishesPage({ categoryId, categoryName, onBack }: CategoryDishesPageProps) {
   const apiClient = useApiClient()
   const [items, setItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -26,14 +27,14 @@ export function CategoryDishesPage({ categoryName, onBack }: CategoryDishesPageP
 
   useEffect(() => {
     loadItems()
-  }, [categoryName])
+  }, [categoryId])
 
   const loadItems = async () => {
     try {
       const response = await apiClient.get('/api/menu-items')
       const data = response.data
       // Filter items by category
-      const categoryItems = data.filter((item: MenuItem) => item.category === categoryName)
+      const categoryItems = data.filter((item: MenuItem) => item.category_id === String(categoryId))
       setItems(categoryItems)
       setLoading(false)
     } catch (error) {

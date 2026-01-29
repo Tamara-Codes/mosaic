@@ -32,7 +32,7 @@ export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
 
   const loadRestaurantInfo = async () => {
     try {
-      const response = await apiClient.get('/restaurant-info')
+      const response = await apiClient.get('/api/restaurant-info')
       const info = response.data
       setRestaurantName(info.name || 'Restaurant Menu')
       setRestaurantDescription(info.description || '')
@@ -68,7 +68,7 @@ export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
       formData.append('address', address)
       formData.append('phone', phone)
       formData.append('email', email)
-      await apiClient.post('/restaurant-info', formData)
+      await apiClient.post('/api/restaurant-info', formData)
       toast.success('Informacije o restoranu su spremljene')
       // Notify parent that restaurant was created/updated
       if (onRestaurantCreated) {

@@ -25,11 +25,9 @@ export interface Translation {
 export interface MenuItem {
   id: number
   name_hr: string
-  name_en: string
   description_hr: string | null
-  description_en: string | null
   price: number
-  category: string | null
+  category_id: string | null
   image_path: string | null
   is_available: boolean
   is_vegetarian: boolean

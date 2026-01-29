@@ -14,7 +14,7 @@ export function QRCodePage() {
 
   const loadQRCode = async () => {
     try {
-      const response = await apiClient.get('/qr-code')
+      const response = await apiClient.get('/api/qr-code')
       const data = response.data
       setQrData(data)
       setLoading(false)

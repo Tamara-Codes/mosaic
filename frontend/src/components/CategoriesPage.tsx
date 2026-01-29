@@ -11,7 +11,7 @@ import { toast } from 'sonner'
 import { Plus, Edit, Trash2, Tag, ArrowRight, GripVertical, Move } from 'lucide-react'
 
 interface CategoriesPageProps {
-  onCategoryClick?: (categoryName: string) => void
+  onCategoryClick?: (categoryId: number, categoryName: string) => void
 }
 
 export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
@@ -23,7 +23,7 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
   const [editingCategory, setEditingCategory] = useState<string | null>(null)
   const [newCategoryName, setNewCategoryName] = useState('')
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
-  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null)
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
   const [draggedCategory, setDraggedCategory] = useState<number | null>(null)
   const [isReordering, setIsReordering] = useState(false)
   const [isMoveMode, setIsMoveMode] = useState(false)
@@ -50,8 +50,8 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
     }
   }
 
-  const getCategoryItemCount = (categoryName: string) => {
-    return items.filter(item => item.category === categoryName).length
+  const getCategoryItemCount = (categoryId: number) => {
+    return items.filter(item => item.category_id === String(categoryId)).length
   }
 
   const handleDragStart = (e: React.DragEvent, categoryId: number) => {
@@ -153,22 +153,18 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
     }
   }
 
-  const handleDeleteClick = (category: string) => {
+  const handleDeleteClick = (category: Category) => {
     setCategoryToDelete(category)
     setDeleteConfirmOpen(true)
   }
 
   const handleDeleteCategory = async () => {
     if (!categoryToDelete) return
-    
+
     try {
-      // Find the category by name
-      const categoryToDeleteObj = categories.find(c => c.name === categoryToDelete)
-      if (categoryToDeleteObj) {
-        await apiClient.delete(`/api/categories/${categoryToDeleteObj.id}`)
-        toast.success('Kategorija je obrisana')
-      }
-      
+      await apiClient.delete(`/api/categories/${categoryToDelete.id}`)
+      toast.success('Kategorija je obrisana')
+
       loadData()
       setDeleteConfirmOpen(false)
       setCategoryToDelete(null)
@@ -237,7 +233,7 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
                     <span className="truncate font-medium">{category.name}</span>
                   </div>
                   <p className="text-sm text-muted-foreground flex-shrink-0">
-                    {getCategoryItemCount(category.name)} {getCategoryItemCount(category.name) === 1 ? 'stavka' : 'stavki'}
+                    {getCategoryItemCount(category.id)} {getCategoryItemCount(category.id) === 1 ? 'stavka' : 'stavki'}
                   </p>
                 </CardTitle>
               </CardHeader>
@@ -251,7 +247,7 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
             <Card 
               key={category.id} 
               className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => onCategoryClick?.(category.name)}
+              onClick={() => onCategoryClick?.(category.id, category.name)}
             >
               <CardHeader>
                 <CardTitle className="flex items-center justify-between gap-2">
@@ -267,7 +263,7 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDeleteClick(category.name)}
+                      onClick={() => handleDeleteClick(category)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -277,7 +273,7 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
               <CardContent>
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-muted-foreground">
-                    {getCategoryItemCount(category.name)} {getCategoryItemCount(category.name) === 1 ? 'stavka' : 'stavki'}
+                    {getCategoryItemCount(category.id)} {getCategoryItemCount(category.id) === 1 ? 'stavka' : 'stavki'}
                   </p>
                   <ArrowRight className="h-4 w-4 text-muted-foreground" />
                 </div>
@@ -326,7 +322,7 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
         title="Obriši kategoriju"
-        description={categoryToDelete ? `Kategorija "${categoryToDelete}" ima ${getCategoryItemCount(categoryToDelete)} stavki. Jeste li sigurni da želite obrisati kategoriju? Stavke će ostati bez kategorije.` : ''}
+        description={categoryToDelete ? `Kategorija "${categoryToDelete.name}" ima ${getCategoryItemCount(categoryToDelete.id)} stavki. Jeste li sigurni da želite obrisati kategoriju? Stavke će ostati bez kategorije.` : ''}
         onConfirm={handleDeleteCategory}
         confirmText="Obriši"
         cancelText="Odustani"

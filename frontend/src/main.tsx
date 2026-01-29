@@ -13,15 +13,15 @@ if (!clerkPublishableKey) {
   console.error('VITE_CLERK_PUBLISHABLE_KEY is required but not set. Please configure Clerk.')
 }
 
-// Redirect component for menu pages to popeye frontend
+// Redirect component for menu pages to public menu frontend
 function MenuRedirect() {
   const { restaurantSlug } = useParams<{ restaurantSlug: string }>()
-  
+
   useEffect(() => {
-    const popeyeUrl = `http://localhost:5181/menu/${restaurantSlug || ''}`
-    window.location.href = popeyeUrl
+    const menuUrl = `http://localhost:5181/menu/${restaurantSlug || ''}`
+    window.location.href = menuUrl
   }, [restaurantSlug])
-  
+
   return <div>Redirecting to menu...</div>
 }
 

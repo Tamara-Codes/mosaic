@@ -442,7 +442,32 @@ export function TranslationsPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label className="text-base font-semibold">Odaberite jezike za prijevod</Label>
+              <div className="flex items-center justify-between mb-3">
+                <Label className="text-base font-semibold">Odaberite jezike za prijevod</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const availableLangs = languages
+                        .filter(l => !selectedItem?.translations.some(t => t.language_code === l.code))
+                        .map(l => l.code)
+                      setSelectedLanguages(availableLangs)
+                    }}
+                  >
+                    Odaberi sve
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedLanguages([])}
+                  >
+                    Poništi sve
+                  </Button>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-3 mt-4">
                 {languages.map((lang) => {
                   const hasTranslation = selectedItem?.translations.some(
@@ -453,19 +478,10 @@ export function TranslationsPage() {
                     <div
                       key={lang.code}
                       className={`
-                        relative flex items-center gap-3 p-3 rounded-lg border-2 transition-all cursor-pointer
+                        relative flex items-center gap-3 p-3 rounded-lg border-2 transition-all
                         ${isChecked ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300'}
                         ${hasTranslation ? 'opacity-50 cursor-not-allowed' : ''}
                       `}
-                      onClick={() => {
-                        if (!hasTranslation) {
-                          if (isChecked) {
-                            setSelectedLanguages(selectedLanguages.filter(l => l !== lang.code))
-                          } else {
-                            setSelectedLanguages([...selectedLanguages, lang.code])
-                          }
-                        }
-                      }}
                     >
                       <Checkbox
                         id={`lang-${lang.code}`}
@@ -622,7 +638,27 @@ export function TranslationsPage() {
             </div>
 
             <div>
-              <Label className="text-base font-semibold">Odaberite jezike za prijevod</Label>
+              <div className="flex items-center justify-between mb-3">
+                <Label className="text-base font-semibold">Odaberite jezike za prijevod</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedLanguages(languages.map(l => l.code))}
+                  >
+                    Odaberi sve
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedLanguages([])}
+                  >
+                    Poništi sve
+                  </Button>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-3 mt-4">
                 {languages.map((lang) => {
                   const isChecked = selectedLanguages.includes(lang.code)
@@ -630,16 +666,9 @@ export function TranslationsPage() {
                     <div
                       key={lang.code}
                       className={`
-                        relative flex items-center gap-3 p-3 rounded-lg border-2 transition-all cursor-pointer
+                        relative flex items-center gap-3 p-3 rounded-lg border-2 transition-all
                         ${isChecked ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300'}
                       `}
-                      onClick={() => {
-                        if (isChecked) {
-                          setSelectedLanguages(selectedLanguages.filter(l => l !== lang.code))
-                        } else {
-                          setSelectedLanguages([...selectedLanguages, lang.code])
-                        }
-                      }}
                     >
                       <Checkbox
                         id={`batch-lang-${lang.code}`}
