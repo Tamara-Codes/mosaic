@@ -18,8 +18,8 @@ CORS_ORIGINS = [
     "https://*.vercel.app",  # Allow all Vercel preview deployments
 ]
 
-# OpenAI
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# Gemini (AI provider for translations)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Menu URL for QR codes
 MENU_URL = os.getenv("MENU_URL", "http://localhost:5181")
@@ -34,7 +34,8 @@ DEFAULT_SUPPORTED_LANGUAGES = {
     "sl": "Slovenian",
     "cs": "Czech",
     "pl": "Polish",
-    "hu": "Hungarian"
+    "hu": "Hungarian",
+    "zh": "Chinese"
 }
 
 LANGUAGES_FILE = "supported_languages.json"

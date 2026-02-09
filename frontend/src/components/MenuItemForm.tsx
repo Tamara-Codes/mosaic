@@ -8,6 +8,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@clerk/clerk-react'
+import { Utensils, Coffee } from 'lucide-react'
 
 interface MenuItemFormProps {
   item?: MenuItem | null
@@ -18,11 +21,14 @@ interface MenuItemFormProps {
 
 export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: MenuItemFormProps) {
   const apiClient = useApiClient()
+  const { userId } = useAuth()
+  const [restaurantId, setRestaurantId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name_hr: item?.name_hr || '',
     description_hr: item?.description_hr || '',
     price: item?.price || 0,
     category_id: presetCategory || item?.category_id || '',
+    item_type: item?.item_type || 'food',
     is_available: item?.is_available ?? true,
     is_vegetarian: item?.is_vegetarian ?? false,
     is_vegan: item?.is_vegan ?? false,
@@ -42,6 +48,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
 
   useEffect(() => {
     loadCategories()
+    loadRestaurantInfo()
   }, [])
 
   // Reload categories when form opens/closes or when item changes
@@ -50,6 +57,15 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
       loadCategories()
     }
   }, [item])
+
+  const loadRestaurantInfo = async () => {
+    try {
+      const response = await apiClient.get('/api/restaurant-info')
+      setRestaurantId(response.data.id)
+    } catch (error) {
+      console.error('Failed to load restaurant info:', error)
+    }
+  }
 
   const loadCategories = async () => {
     try {
@@ -99,6 +115,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
       formDataToSend.append('description_hr', formData.description_hr)
       formDataToSend.append('price', formData.price.toString())
       formDataToSend.append('category_id', finalCategoryId.toString())
+      formDataToSend.append('item_type', formData.item_type)
       formDataToSend.append('is_available', formData.is_available.toString())
       formDataToSend.append('is_vegetarian', formData.is_vegetarian.toString())
       formDataToSend.append('is_vegan', formData.is_vegan.toString())
@@ -124,6 +141,46 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         toast.success('Stavka je dodana')
+      }
+
+      // Broadcast menu change to trigger real-time updates on public menu
+      if (restaurantId && supabase) {
+        try {
+          const channelName = `menu-updates-${restaurantId}`
+          const channel = supabase!.channel(channelName, {
+            config: {
+              broadcast: { self: true, ack: false }
+            }
+          })
+
+          // Subscribe first, then send
+          await new Promise<void>((resolve, reject) => {
+            channel.subscribe((status) => {
+              if (status === 'SUBSCRIBED') {
+                resolve()
+              } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                reject(new Error(`Channel ${status}`))
+              }
+            })
+          })
+
+          await channel.send({
+            type: 'broadcast',
+            event: 'menu_changed',
+            payload: {
+              timestamp: Date.now(),
+              userId: userId,
+              restaurantId: restaurantId
+            }
+          })
+
+          console.log('✅ Broadcast sent to channel:', channelName)
+
+          // Clean up
+          setTimeout(() => channel.unsubscribe(), 100)
+        } catch (error) {
+          console.error('Failed to broadcast menu change:', error)
+        }
       }
 
       onSuccess()
@@ -158,23 +215,46 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label htmlFor="price">Cijena (€)</Label>
           <Input
             id="price"
             type="number"
             step="0.01"
-            value={formData.price}
-            onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-            onFocus={(e) => {
-              if (e.target.value === '0') {
-                e.target.value = ''
-              }
+            value={formData.price === 0 ? '' : formData.price}
+            onChange={(e) => {
+              const value = e.target.value
+              setFormData({ ...formData, price: value === '' ? 0 : parseFloat(value) })
             }}
             placeholder="0.00"
             required
           />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="item_type">Tip</Label>
+          <Select
+            value={formData.item_type}
+            onValueChange={(value) => setFormData({ ...formData, item_type: value as 'food' | 'drink' })}
+          >
+            <SelectTrigger id="item_type">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="food">
+                <div className="flex items-center gap-2">
+                  <Utensils className="h-4 w-4" />
+                  <span>Hrana</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="drink">
+                <div className="flex items-center gap-2">
+                  <Coffee className="h-4 w-4" />
+                  <span>Piće</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
           <Label htmlFor="category">Kategorija <span className="text-destructive">*</span></Label>
@@ -292,12 +372,26 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
 
       <div className="space-y-2">
         <Label htmlFor="image">Slika</Label>
-        <Input
-          id="image"
-          type="file"
-          accept="image/*"
-          onChange={(e) => setImage(e.target.files?.[0] || null)}
-        />
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => document.getElementById('image')?.click()}
+            className="w-fit"
+          >
+            Odaberi datoteku
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {image ? image.name : 'Nema odabrane datoteke'}
+          </span>
+          <Input
+            id="image"
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImage(e.target.files?.[0] || null)}
+            className="hidden"
+          />
+        </div>
       </div>
 
       <div className="flex items-center space-x-2">

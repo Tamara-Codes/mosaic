@@ -28,6 +28,7 @@ export interface MenuItem {
   description_hr: string | null
   price: number
   category_id: string | null
+  item_type?: 'food' | 'drink'
   image_path: string | null
   is_available: boolean
   is_vegetarian: boolean

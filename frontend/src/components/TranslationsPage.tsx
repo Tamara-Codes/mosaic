@@ -31,6 +31,7 @@ interface Translation {
 interface MenuItem {
   id: number
   name_hr: string
+  description: string
   description_hr: string
   translations: Translation[]
 }

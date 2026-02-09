@@ -112,7 +112,7 @@ export function AppSidebar({ currentView, onViewChange, onLogout, ...props }: Ap
           Odjava
         </Button>
         <div className="text-xs text-muted-foreground">
-          © 2025 MosaAIc
+          © 2026 MosaAIc
         </div>
       </SidebarFooter>
     </Sidebar>

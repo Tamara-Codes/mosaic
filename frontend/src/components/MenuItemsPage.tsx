@@ -10,10 +10,13 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ConfirmDialog } from './ConfirmDialog'
 import { toast } from 'sonner'
 import { Plus, Edit, Trash2, Search, Languages, Sparkles, Loader2, CheckCircle2, GripVertical, Move } from 'lucide-react'
 import { MenuItemForm } from './MenuItemForm'
+import { supabase } from '@/lib/supabase'
+import { useRestaurantId } from '@/hooks/useRestaurantId'
 
 interface Translation {
   id: number
@@ -36,13 +39,15 @@ interface Language {
 
 export function MenuItemsPage() {
   const apiClient = useApiClient()
+  const restaurantId = useRestaurantId()
   const [items, setItems] = useState<MenuItemWithTranslations[]>([])
-  const [allCategories, setAllCategories] = useState<{id: number, name: string}[]>([])
+  const [allCategories, setAllCategories] = useState<{id: number, name: string, category_type?: 'food' | 'drink'}[]>([])
   const [languages, setLanguages] = useState<Language[]>([])
   const [loading, setLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string>('sve')
+  const [selectedItemType, setSelectedItemType] = useState<'all' | 'food' | 'drink'>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<number | null>(null)
@@ -58,12 +63,13 @@ export function MenuItemsPage() {
   const [editTranslationDescription, setEditTranslationDescription] = useState('')
   
   // Category management state
-  const [showAddCategoryDialog, setShowAddCategoryDialog] = useState(false)
+  const [showEditCategoriesDialog, setShowEditCategoriesDialog] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
+  const [newCategoryType, setNewCategoryType] = useState<'food' | 'drink'>('food')
   const [categoryToDelete, setCategoryToDelete] = useState<{id: number, name: string} | null>(null)
   const [showDeleteCategoryDialog, setShowDeleteCategoryDialog] = useState(false)
   const [showTranslateCategoryDialog, setShowTranslateCategoryDialog] = useState(false)
-  const [selectedCategoryForTranslation, setSelectedCategoryForTranslation] = useState<{id: number, name: string, translations?: any[]} | null>(null)
+  const [selectedCategoryForTranslation] = useState<{id: number, name: string, translations?: any[]} | null>(null)
 
   // Language management state
   const [showLanguageManagementDialog, setShowLanguageManagementDialog] = useState(false)
@@ -109,30 +115,31 @@ export function MenuItemsPage() {
     { code: 'uk', name: 'Ukrajinski' },
   ])
 
-  // Category reordering state
-  const [isMoveMode, setIsMoveMode] = useState(false)
+  // Category reordering state (used in edit dialog)
   const [draggedCategory, setDraggedCategory] = useState<number | null>(null)
   const [isReordering, setIsReordering] = useState(false)
 
   useEffect(() => {
-    loadItems()
+    loadItems() // Initial load should show loading state
   }, [])
 
-  // Category drag and drop handlers
+  // Reset category selection when item type changes
+  useEffect(() => {
+    setSelectedCategory('sve')
+  }, [selectedItemType])
+
+  // Category drag and drop handlers (used in edit categories dialog)
   const handleDragStart = (e: React.DragEvent, categoryId: number) => {
-    if (!isMoveMode) return
     e.dataTransfer!.effectAllowed = 'move'
     setDraggedCategory(categoryId)
   }
 
   const handleDragOver = (e: React.DragEvent) => {
-    if (!isMoveMode) return
     e.preventDefault()
     e.dataTransfer!.dropEffect = 'move'
   }
 
   const handleDrop = async (e: React.DragEvent, targetCategoryId: number) => {
-    if (!isMoveMode) return
     e.preventDefault()
     
     if (draggedCategory === null || draggedCategory === targetCategoryId) {
@@ -165,15 +172,17 @@ export function MenuItemsPage() {
       console.error('Error reordering categories:', error)
       toast.error('Greška pri promjeni redoslijeda')
       // Reload to get correct order
-      loadItems()
+      loadItems(false)
     } finally {
       setIsReordering(false)
     }
   }
 
-  const loadItems = async () => {
+  const loadItems = async (showLoading = true) => {
     try {
-      setLoading(true)
+      if (showLoading) {
+        setLoading(true)
+      }
       const [itemsData, langsData, categoriesData] = await Promise.all([
         apiClient.get('/api/menu-items-with-translations').then(r => r.data),
         apiClient.get('/api/supported-languages').then(r => r.data),
@@ -182,11 +191,13 @@ export function MenuItemsPage() {
       setItems(itemsData)
       setLanguages(langsData.languages)
       setAllCategories(categoriesData.categories_with_ids || [])
-      setLoading(false)
+      if (showLoading) {
+        setLoading(false)
+      }
     } catch (error: any) {
       console.error('Failed to load items:', error)
       const errorMessage = error?.response?.data?.detail || error?.message || 'Unknown error'
-      
+
       if (error?.response?.status === 404) {
         if (errorMessage.includes('Restaurant not found')) {
           toast.error('Restoran nije pronađen. Provjerite je li vaš račun povezan s restoranom u postavkama.')
@@ -198,7 +209,9 @@ export function MenuItemsPage() {
       } else {
         toast.error(`Greška pri učitavanju stavki: ${errorMessage}`)
       }
-      setLoading(false)
+      if (showLoading) {
+        setLoading(false)
+      }
     }
   }
 
@@ -212,7 +225,37 @@ export function MenuItemsPage() {
     try {
       await apiClient.delete(`/api/menu-items/${itemToDelete}`)
       toast.success('Stavka je obrisana')
-      loadItems()
+
+      // Broadcast menu change
+      if (restaurantId && supabase) {
+        try {
+          const channelName = `menu-updates-${restaurantId}`
+          const channel = supabase!.channel(channelName, {
+            config: {
+              broadcast: { self: true, ack: false }
+            }
+          })
+
+          await new Promise<void>((resolve) => {
+            channel.subscribe((status) => {
+              if (status === 'SUBSCRIBED') resolve()
+            })
+          })
+
+          await channel.send({
+            type: 'broadcast',
+            event: 'menu_changed',
+            payload: { timestamp: Date.now(), restaurantId }
+          })
+
+          console.log('✅ Broadcast sent to channel:', channelName)
+          setTimeout(() => channel.unsubscribe(), 100)
+        } catch (error) {
+          console.error('Failed to broadcast:', error)
+        }
+      }
+
+      loadItems(false)
       setDeleteConfirmOpen(false)
       setItemToDelete(null)
     } catch (error) {
@@ -225,8 +268,9 @@ export function MenuItemsPage() {
   const handleFormSubmit = () => {
     setIsFormOpen(false)
     setEditingItem(null)
-    toast.success(editingItem ? 'Stavka je ažurirana' : 'Stavka je dodana')
-    loadItems()
+    // Toast is already shown by MenuItemForm, no need to show it again
+    // Refresh without showing loading state to avoid UI flash
+    loadItems(false)
   }
 
   // Translation handlers
@@ -261,6 +305,8 @@ export function MenuItemsPage() {
   //   return { completed, total, percentage: Math.round((completed / total) * 100) }
   // }
 
+  // Unused but kept for potential future use
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const openTranslateDialog = (item: MenuItemWithTranslations) => {
     setSelectedItemForTranslation(item)
     // Start with all languages unchecked - user must explicitly select which ones to translate
@@ -268,6 +314,8 @@ export function MenuItemsPage() {
     setShowTranslateDialog(true)
   }
 
+  // Unused but kept for potential future use
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const openEditTranslationDialog = (translation: Translation) => {
     setSelectedTranslation(translation)
     setEditTranslationName(translation.name)
@@ -288,7 +336,7 @@ export function MenuItemsPage() {
       
       if (data.success) {
         toast.success(`Generirano ${data.translations.length} prijevoda`)
-        loadItems()
+        loadItems(false)
         setShowTranslateDialog(false)
         setSelectedLanguages([])
       } else {
@@ -312,7 +360,7 @@ export function MenuItemsPage() {
       
       await apiClient.put(`/api/translations/${selectedTranslation.id}`, formData)
       toast.success("Prijevod je ažuriran")
-      loadItems()
+      loadItems(false)
       setShowEditTranslationDialog(false)
     } catch (error) {
       console.error('Error updating translation:', error)
@@ -320,13 +368,15 @@ export function MenuItemsPage() {
     }
   }
 
+  // Unused but kept for potential future use
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDeleteTranslation = async (translationId: number) => {
     if (!confirm('Jeste li sigurni da želite obrisati ovaj prijevod?')) return
 
     try {
       await apiClient.delete(`/api/translations/${translationId}`)
       toast.success("Prijevod je obrisan")
-      loadItems()
+      loadItems(false)
     } catch (error) {
       console.error('Error deleting translation:', error)
       toast.error("Neuspješno brisanje prijevoda")
@@ -343,12 +393,20 @@ export function MenuItemsPage() {
     try {
       const formData = new FormData()
       formData.append('name', newCategoryName.trim())
-      
+      formData.append('category_type', newCategoryType)
+
       await apiClient.post('/api/categories', formData)
       toast.success("Kategorija je dodana")
       setNewCategoryName('')
-      setShowAddCategoryDialog(false)
-      loadItems() // Reload to get updated categories
+
+      // Switch main page to the type of category that was just added
+      if (newCategoryType === 'drink' && selectedItemType !== 'drink') {
+        setSelectedItemType('drink')
+      } else if (newCategoryType === 'food' && selectedItemType !== 'food') {
+        setSelectedItemType('food')
+      }
+
+      loadItems(false) // Reload to get updated categories
     } catch (error) {
       console.error('Error adding category:', error)
       toast.error("Neuspješno dodavanje kategorije")
@@ -359,15 +417,15 @@ export function MenuItemsPage() {
     if (!categoryToDelete) return
 
     try {
-      await apiClient.delete(`/categories/${categoryToDelete.id}`)
+      await apiClient.delete(`/api/categories/${categoryToDelete.id}`)
       toast.success("Kategorija je obrisana")
       setShowDeleteCategoryDialog(false)
       setCategoryToDelete(null)
       // If we were viewing the deleted category, switch to "sve"
-      if (selectedCategory === categoryToDelete.name) {
+      if (selectedCategory === String(categoryToDelete.id)) {
         setSelectedCategory('sve')
       }
-      loadItems() // Reload to get updated categories
+      loadItems(false) // Reload to get updated categories
     } catch (error) {
       console.error('Error deleting category:', error)
       toast.error("Neuspješno brisanje kategorije")
@@ -390,7 +448,7 @@ export function MenuItemsPage() {
       
       if (data.success) {
         toast.success(`Generirano ${data.translations.length} prijevoda kategorije`)
-        loadItems()
+        loadItems(false)
         setShowTranslateCategoryDialog(false)
         setSelectedLanguages([])
       } else {
@@ -412,7 +470,7 @@ export function MenuItemsPage() {
   //     
   //     await apiClient.put(`/api/category-translations/${translationId}`, formData)
   //     toast.success("Prijevod kategorije je ažuriran")
-  //     loadItems()
+  //     loadItems(false)
   //   } catch (error) {
   //     console.error('Error updating category translation:', error)
   //     toast.error("Neuspješno ažuriranje prijevoda")
@@ -425,7 +483,7 @@ export function MenuItemsPage() {
   //   try {
   //     await apiClient.delete(`/api/category-translations/${translationId}`)
   //     toast.success("Prijevod kategorije je obrisan")
-  //     loadItems()
+  //     loadItems(false)
   //   } catch (error) {
   //     console.error('Error deleting category translation:', error)
   //     toast.error("Neuspješno brisanje prijevoda")
@@ -436,11 +494,21 @@ export function MenuItemsPage() {
   // const categories = allCategories.map(c => c.name) // Unused - kept for reference
   
   // Check if there are uncategorized items
-  const uncategorizedCount = items.filter(item => !item.category_id).length
+  // Filter items by type first
+  const itemsByType = selectedItemType === 'all'
+    ? items
+    : items.filter(item => (item.item_type || 'food') === selectedItemType)
+
+  const uncategorizedCount = itemsByType.filter(item => !item.category_id).length
   const hasUncategorized = uncategorizedCount > 0
 
+  // Filter categories by type to match selected item type
+  const filteredCategories = selectedItemType === 'all'
+    ? allCategories
+    : allCategories.filter(category => (category.category_type || 'food') === selectedItemType)
+
   // Filter items
-  const filteredItems = items.filter(item => {
+  const filteredItems = itemsByType.filter(item => {
     const matchesCategory = selectedCategory === 'sve'
       || (selectedCategory === 'uncategorized' && !item.category_id)
       || item.category_id === selectedCategory
@@ -460,33 +528,25 @@ export function MenuItemsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setShowLanguageManagementDialog(true)}
-            className="gap-2"
-          >
-            <Languages className="h-4 w-4" />
-            Upravljaj jezicima
-          </Button>
-          {allCategories.length > 1 && (
-            <Button 
-              onClick={() => setIsMoveMode(!isMoveMode)}
-              variant={isMoveMode ? 'default' : 'outline'}
-              className="gap-2"
-            >
-              <Move className="w-4 h-4" />
-              {isMoveMode ? 'Završi Premještanje' : 'Premjesti Kategorije'}
-            </Button>
-          )}
-        </div>
-        <Button onClick={() => {
-          setEditingItem(null)
-          setIsFormOpen(true)
-        }}>
-          <Plus className="w-4 h-4 mr-2" />
-          Dodaj Novu Stavku
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          onClick={() => setShowLanguageManagementDialog(true)}
+          className="gap-2"
+        >
+          <Languages className="h-4 w-4" />
+          Upravljaj jezicima
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setNewCategoryType(selectedItemType === 'drink' ? 'drink' : 'food')
+            setShowEditCategoriesDialog(true)
+          }}
+          className="gap-2"
+        >
+          <Edit className="w-4 h-4" />
+          Uredi kategorije
         </Button>
       </div>
 
@@ -503,82 +563,57 @@ export function MenuItemsPage() {
         </div>
       </div>
 
-      {/* Category Tabs or Reorder Mode */}
-      {isMoveMode ? (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Povuci i ispusti kategorije za promjenu redoslijeda</h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowAddCategoryDialog(true)}
-              className="gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Nova kategorija
-            </Button>
-          </div>
-          <div className="space-y-2 max-w-2xl">
-            {allCategories.map((category) => (
-              <Card 
-                key={category.id} 
-                draggable
-                onDragStart={(e) => handleDragStart(e, category.id)}
-                onDragOver={(e) => handleDragOver(e)}
-                onDrop={(e) => handleDrop(e, category.id)}
-                onDragEnd={() => setDraggedCategory(null)}
-                className={`transition-all cursor-grab active:cursor-grabbing ${
-                  draggedCategory === category.id ? 'opacity-30 bg-blue-100 scale-95' : 'bg-white'
-                } ${
-                  isReordering ? 'pointer-events-none' : ''
-                } ${draggedCategory !== null && draggedCategory !== category.id ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-transparent'} hover:shadow-md`}
-              >
-                <CardHeader className="py-3 px-4">
-                  <CardTitle className="flex items-center justify-between gap-4 text-base">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <GripVertical className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                      <span className="truncate font-medium">{category.name}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground flex-shrink-0">
-                      {items.filter(item => item.category_id === String(category.id)).length} stavki
-                    </p>
-                  </CardTitle>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between gap-4">
-          <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="flex-1">
-            <TabsList>
-              <TabsTrigger value="sve">Sve</TabsTrigger>
-              {allCategories.map(category => (
-                <TabsTrigger key={category.id} value={category.id.toString()}>
-                  {category.name}
-                </TabsTrigger>
-              ))}
-              {hasUncategorized && (
-                <TabsTrigger value="uncategorized" className="border-2 border-amber-400 border-dashed">
-                  ⚠️ Bez kategorije ({uncategorizedCount})
-                </TabsTrigger>
-              )}
-            </TabsList>
-          </Tabs>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowAddCategoryDialog(true)}
-            className="gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Nova kategorija
-          </Button>
-        </div>
-      )}
+      {/* Item Type Filter */}
+      <div className="flex gap-2 items-center">
+        <Button
+          variant={selectedItemType === 'food' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            setSelectedItemType('food')
+            setNewCategoryType('food')
+          }}
+        >
+          Hrana
+        </Button>
+        <Button
+          variant={selectedItemType === 'drink' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            setSelectedItemType('drink')
+            setNewCategoryType('drink')
+          }}
+        >
+          Pića
+        </Button>
+        <Button onClick={() => {
+          setEditingItem(null)
+          setIsFormOpen(true)
+        }}>
+          <Plus className="w-4 h-4 mr-2" />
+          Dodaj Novu Stavku
+        </Button>
+      </div>
 
-      {!isMoveMode && (
+      {/* Category Tabs */}
+      <div className="flex items-center gap-4">
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
+          <TabsList>
+            <TabsTrigger value="sve">Sve</TabsTrigger>
+            {filteredCategories.map(category => (
+              <TabsTrigger key={category.id} value={category.id.toString()}>
+                {category.name}
+              </TabsTrigger>
+            ))}
+            {hasUncategorized && (
+              <TabsTrigger value="uncategorized" className="border-2 border-amber-400 border-dashed">
+                ⚠️ Bez kategorije ({uncategorizedCount})
+              </TabsTrigger>
+            )}
+          </TabsList>
+        </Tabs>
+      </div>
+
+      <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
           <div className="hidden"></div>
 
           <TabsContent value={selectedCategory} className="mt-6">
@@ -621,21 +656,21 @@ export function MenuItemsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {filteredItems.map((item) => (
-                <Card key={item.id} className="overflow-hidden">
+                <Card key={item.id} className="overflow-hidden flex flex-col h-[580px]">
                   {item.image_path ? (
                     <img
-                      src={`http://localhost:8000${item.image_path}`}
+                      src={item.image_path.startsWith('http') ? item.image_path : `http://localhost:8000${item.image_path}`}
                       alt={item.name_hr}
-                      className="w-full h-48 object-cover"
+                      className="w-full h-48 object-cover flex-shrink-0"
                     />
                   ) : (
-                    <div className="w-full h-48 bg-muted flex items-center justify-center">
+                    <div className="w-full h-48 bg-muted flex items-center justify-center flex-shrink-0">
                       <span className="text-muted-foreground">Nema slike</span>
                     </div>
                   )}
-                  <CardHeader>
+                  <CardHeader className="flex-shrink-0">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <CardTitle className="text-lg">{item.name_hr}</CardTitle>
@@ -644,77 +679,39 @@ export function MenuItemsPage() {
                         {item.is_available ? 'Dostupno' : 'Nedostupno'}
                       </Badge>
                     </div>
-                    {item.description_hr && (
-                      <CardDescription className="mt-2 line-clamp-2">{item.description_hr}</CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-2xl font-semibold">{item.price.toFixed(2)} €</span>
-                      </div>
-                      {item.category_id && (
-                        <p className="text-sm text-muted-foreground">
-                          Kategorija: {allCategories.find(c => c.id.toString() === item.category_id)?.name || 'N/A'}
-                        </p>
+                    <div className="h-[72px] mt-2">
+                      {item.description_hr ? (
+                        <CardDescription className="line-clamp-3">{item.description_hr}</CardDescription>
+                      ) : (
+                        <CardDescription className="text-transparent">.</CardDescription>
                       )}
-
-                      {/* Allergen & Dietary Tags */}
-                      <div className="flex flex-wrap gap-1">
-                        {item.is_vegetarian && <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-300">🌱 Vegetarijansko</Badge>}
-                        {item.is_vegan && <Badge variant="outline" className="text-xs bg-green-100 text-green-800 border-green-400">🌿 Vegansko</Badge>}
-                        {item.is_spicy && <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-300">🌶️ Ljuto</Badge>}
-                        {item.contains_gluten && <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-300">🌾 Gluten</Badge>}
-                        {item.contains_dairy && <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-300">🥛 Mliječno</Badge>}
-                        {item.contains_nuts && <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-300">🥜 Orasi</Badge>}
-                        {item.contains_fish && <Badge variant="outline" className="text-xs bg-cyan-50 text-cyan-700 border-cyan-300">🐟 Riba</Badge>}
-                        {item.contains_shellfish && <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-300">🦐 Školjke</Badge>}
-                        {item.contains_eggs && <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-300">🥚 Jaja</Badge>}
-                      </div>
-
-                      {/* Translation Status */}
-                      <div className="space-y-2 pt-2 border-t">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Prijevodi</span>
-                          <span className="font-medium">
-                            {item.translations?.length || 0}/{languages.length}
-                          </span>
+                    </div>
+                  </CardHeader>
+                  <div className="flex-[0.5] min-h-2"></div>
+                  <CardContent className="flex-shrink-0 pt-0 pb-6">
+                    <div className="space-y-3">
+                      {/* Price and Allergen Tags on same line */}
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-2xl font-semibold">{item.price.toFixed(2)} €</span>
+                        <div className="flex flex-wrap items-center gap-1.5 justify-end">
+                          {item.is_vegan && <span className="text-2xl" title="Vegansko">🌱</span>}
+                          {!item.is_vegan && item.is_vegetarian && <span className="text-2xl" title="Vegetarijansko">🥬</span>}
+                          {item.is_spicy && <span className="text-2xl" title="Ljuto">🌶️</span>}
+                          {item.contains_gluten && <span className="text-2xl" title="Sadrži gluten">🌾</span>}
+                          {item.contains_dairy && <span className="text-2xl" title="Sadrži mliječne proizvode">🥛</span>}
+                          {item.contains_nuts && <span className="text-2xl" title="Sadrži orašaste plodove">🥜</span>}
+                          {item.contains_fish && <span className="text-2xl" title="Sadrži ribu">🐟</span>}
+                          {item.contains_shellfish && <span className="text-2xl" title="Sadrži školjke">🦐</span>}
+                          {item.contains_eggs && <span className="text-2xl" title="Sadrži jaja">🥚</span>}
                         </div>
-                        {item.translations && item.translations.length > 0 ? (
-                          <div className="flex flex-wrap gap-2">
-                            {item.translations.map((trans) => (
-                              <div
-                                key={trans.id}
-                                className="relative group/flag"
-                                title={trans.language_name}
-                              >
-                                <div
-                                  className="relative rounded-full overflow-hidden border-2 border-green-500 w-10 h-10 bg-white cursor-pointer hover:border-green-600 hover:scale-105 transition-all"
-                                  onClick={() => openEditTranslationDialog(trans)}
-                                >
-                                  <img
-                                    src={getLanguageFlag(trans.language_code)}
-                                    alt={trans.language_code}
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleDeleteTranslation(trans.id)
-                                  }}
-                                  className="absolute -top-1 -right-1 opacity-0 group-hover/flag:opacity-100 transition-opacity bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600 shadow-md z-10"
-                                  title="Obriši"
-                                >
-                                  ✕
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-xs text-muted-foreground">Nema prijevoda</div>
-                        )}
                       </div>
+
+                      {/* Category */}
+                      {item.category_id && (
+                        <span className="text-sm text-muted-foreground block">
+                          Kategorija: {allCategories.find(c => c.id.toString() === item.category_id)?.name || 'N/A'}
+                        </span>
+                      )}
 
                       <div className="flex gap-2">
                         <Button
@@ -728,15 +725,6 @@ export function MenuItemsPage() {
                         >
                           <Edit className="w-3 h-3 mr-1" />
                           Uredi
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => openTranslateDialog(item)}
-                        >
-                          <Languages className="w-3 h-3 mr-1" />
-                          Prijevodi
                         </Button>
                         <Button
                           variant="destructive"
@@ -754,11 +742,12 @@ export function MenuItemsPage() {
           )}
         </TabsContent>
       </Tabs>
-      )}
 
       {/* Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent
+          className="max-w-xl max-h-[90vh] overflow-y-auto"
+        >
           <DialogHeader>
             <DialogTitle>
               {editingItem ? 'Uredi Stavku' : 'Dodaj Novu Stavku'}
@@ -959,47 +948,131 @@ export function MenuItemsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Add Category Dialog */}
-      <Dialog open={showAddCategoryDialog} onOpenChange={setShowAddCategoryDialog}>
-        <DialogContent className="max-w-md">
+      {/* Edit Categories Dialog */}
+      <Dialog open={showEditCategoriesDialog} onOpenChange={setShowEditCategoriesDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5 text-primary" />
-              Dodaj novu kategoriju
+              <Edit className="h-5 w-5 text-primary" />
+              Uredi kategorije
             </DialogTitle>
             <DialogDescription>
-              Unesite naziv nove kategorije menija
+              Dodaj nove kategorije, promijeni redoslijed ili obriši postojeće
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+
+          <div className="space-y-6 mt-6">
+            {/* Add New Category Section */}
+            <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+              <h3 className="font-semibold text-sm">Dodaj novu kategoriju</h3>
+              <div className="flex gap-2 items-end">
+                {/* Category Type Selector */}
+                <div className="space-y-2 w-32 flex-shrink-0">
+                  <Label htmlFor="category-type">Tip</Label>
+                  <Select value={newCategoryType} onValueChange={(value: 'food' | 'drink') => setNewCategoryType(value)}>
+                    <SelectTrigger id="category-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="food">Hrana</SelectItem>
+                      <SelectItem value="drink">Pića</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Category Name Input */}
+                <div className="space-y-2 flex-1">
+                  <Label htmlFor="category-name">Naziv</Label>
+                  <Input
+                    id="category-name"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    placeholder="npr. Pizze, Vina..."
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddCategory()
+                      }
+                    }}
+                  />
+                </div>
+
+                {/* Add Button */}
+                <Button onClick={handleAddCategory} size="sm" className="gap-2 flex-shrink-0">
+                  <Plus className="h-4 w-4" />
+                  Dodaj
+                </Button>
+              </div>
+            </div>
+
+            {/* Existing Categories - Reorderable List */}
             <div className="space-y-2">
-              <Label htmlFor="category-name" className="text-base">
-                Naziv kategorije
-              </Label>
-              <Input
-                id="category-name"
-                value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
-                placeholder="npr. Pizze, Paste, Salate..."
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleAddCategory()
-                  }
-                }}
-                autoFocus
-              />
+              <h3 className="font-semibold text-sm">Postojeće kategorije</h3>
+              <p className="text-sm text-muted-foreground">Povuci za promjenu redoslijeda</p>
+              <div className="space-y-2">
+                {allCategories
+                  .filter(category => (category.category_type || 'food') === newCategoryType)
+                  .map((category) => (
+                  <Card
+                    key={category.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, category.id)}
+                    onDragOver={(e) => handleDragOver(e)}
+                    onDrop={(e) => handleDrop(e, category.id)}
+                    onDragEnd={() => setDraggedCategory(null)}
+                    className={`transition-all cursor-grab active:cursor-grabbing ${
+                      draggedCategory === category.id ? 'opacity-30 bg-blue-100 scale-95' : 'bg-white'
+                    } ${
+                      isReordering ? 'pointer-events-none' : ''
+                    } ${draggedCategory !== null && draggedCategory !== category.id ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-transparent'} hover:shadow-md`}
+                  >
+                    <CardHeader className="py-3 px-4">
+                      <CardTitle className="flex items-center justify-between gap-4 text-base">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <GripVertical className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                          <span className="truncate font-medium">{category.name}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {(category.category_type || 'food') === 'food' ? 'Hrana' : 'Pića'}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <p className="text-sm text-muted-foreground">
+                            {(() => {
+                              const count = items.filter(item => item.category_id === String(category.id)).length
+                              const lastDigit = count % 10
+                              const lastTwoDigits = count % 100
+                              if (count === 1) return '1 stavka'
+                              if (lastTwoDigits >= 11 && lastTwoDigits <= 14) return `${count} stavki`
+                              if (lastDigit >= 2 && lastDigit <= 4) return `${count} stavke`
+                              return `${count} stavki`
+                            })()}
+                          </p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setCategoryToDelete({ id: category.id, name: category.name })
+                              setShowDeleteCategoryDialog(true)
+                            }}
+                            className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
             </div>
           </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => {
-              setShowAddCategoryDialog(false)
+
+          <DialogFooter>
+            <Button onClick={() => {
+              setShowEditCategoriesDialog(false)
               setNewCategoryName('')
             }}>
-              Odustani
-            </Button>
-            <Button onClick={handleAddCategory} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Dodaj kategoriju
+              Zatvori
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1158,14 +1231,51 @@ export function MenuItemsPage() {
                         setShowRemoveLanguageConfirm(true)
                       } else {
                         // Add language
+                        const loadingToast = toast.loading(`Dodajem ${lang.name} i prevodim sve stavke...`)
                         try {
-                          await apiClient.post('/api/languages/add', {
+                          const response = await apiClient.post('/api/languages/add', {
                             code: lang.code,
                             name: lang.name
                           })
-                          toast.success(`Dodan: ${lang.name}`)
-                          loadItems()
+                          toast.dismiss(loadingToast)
+                          const data = response.data
+                          toast.success(
+                            `${lang.name} dodan! ✓\n` +
+                            `Prevedeno ${data.items_translated} stavki i ${data.categories_translated} kategorija`,
+                            { duration: 5000 }
+                          )
+                          loadItems(false)
+
+                          // Broadcast menu change
+                          if (restaurantId && supabase) {
+                            try {
+                              const channelName = `menu-updates-${restaurantId}`
+                              const channel = supabase.channel(channelName, {
+                                config: {
+                                  broadcast: { self: true, ack: false }
+                                }
+                              })
+
+                              await new Promise<void>((resolve) => {
+                                channel.subscribe((status) => {
+                                  if (status === 'SUBSCRIBED') resolve()
+                                })
+                              })
+
+                              await channel.send({
+                                type: 'broadcast',
+                                event: 'menu_changed',
+                                payload: { timestamp: Date.now(), restaurantId }
+                              })
+
+                              console.log('✅ Broadcast sent to channel:', channelName)
+                              setTimeout(() => channel.unsubscribe(), 100)
+                            } catch (error) {
+                              console.error('Failed to broadcast:', error)
+                            }
+                          }
                         } catch (error: any) {
+                          toast.dismiss(loadingToast)
                           const errorMsg = error?.response?.data?.detail || 'Greška pri dodavanju'
                           toast.error(errorMsg)
                         }
@@ -1220,11 +1330,40 @@ export function MenuItemsPage() {
         onConfirm={async () => {
           if (languageToRemove) {
             try {
-              await apiClient.delete(`/languages/remove/${languageToRemove.code}`)
+              await apiClient.delete(`/api/languages/remove/${languageToRemove.code}`)
               toast.success(`Jezik ${languageToRemove.name} je uklonjen`)
-              loadItems()
+              loadItems(false)
               setShowRemoveLanguageConfirm(false)
               setLanguageToRemove(null)
+
+              // Broadcast menu change
+              if (restaurantId && supabase) {
+                try {
+                  const channelName = `menu-updates-${restaurantId}`
+                  const channel = supabase.channel(channelName, {
+                    config: {
+                      broadcast: { self: true, ack: false }
+                    }
+                  })
+
+                  await new Promise<void>((resolve) => {
+                    channel.subscribe((status) => {
+                      if (status === 'SUBSCRIBED') resolve()
+                    })
+                  })
+
+                  await channel.send({
+                    type: 'broadcast',
+                    event: 'menu_changed',
+                    payload: { timestamp: Date.now(), restaurantId }
+                  })
+
+                  console.log('✅ Broadcast sent to channel:', channelName)
+                  setTimeout(() => channel.unsubscribe(), 100)
+                } catch (error) {
+                  console.error('Failed to broadcast:', error)
+                }
+              }
             } catch (error: any) {
               const errorMsg = error?.response?.data?.detail || 'Greška pri uklanjanju'
               toast.error(errorMsg)

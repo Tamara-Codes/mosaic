@@ -78,9 +78,7 @@ class TranslationResponse(TranslationBase):
 
 class MenuItemBase(BaseModel):
     name_hr: str
-    name_en: str
     description_hr: Optional[str] = None
-    description_en: Optional[str] = None
     price: float
     category: Optional[str] = None
     is_available: bool = True
@@ -99,9 +97,7 @@ class MenuItemCreate(MenuItemBase):
 
 class MenuItemUpdate(BaseModel):
     name_hr: Optional[str] = None
-    name_en: Optional[str] = None
     description_hr: Optional[str] = None
-    description_en: Optional[str] = None
     price: Optional[float] = None
     category: Optional[str] = None
     is_available: Optional[bool] = None

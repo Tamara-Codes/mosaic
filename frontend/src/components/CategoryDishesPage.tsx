@@ -9,6 +9,8 @@ import { ConfirmDialog } from './ConfirmDialog'
 import { toast } from 'sonner'
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react'
 import { MenuItemForm } from './MenuItemForm'
+import { supabase } from '@/lib/supabase'
+import { useRestaurantId } from '@/hooks/useRestaurantId'
 
 interface CategoryDishesPageProps {
   categoryId: number
@@ -18,6 +20,7 @@ interface CategoryDishesPageProps {
 
 export function CategoryDishesPage({ categoryId, categoryName, onBack }: CategoryDishesPageProps) {
   const apiClient = useApiClient()
+  const restaurantId = useRestaurantId()
   const [items, setItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -54,6 +57,36 @@ export function CategoryDishesPage({ categoryId, categoryName, onBack }: Categor
     try {
       await apiClient.delete(`/api/menu-items/${itemToDelete}`)
       toast.success('Stavka je obrisana')
+
+      // Broadcast menu change
+      if (restaurantId && supabase) {
+        try {
+          const channelName = `menu-updates-${restaurantId}`
+          const channel = supabase!.channel(channelName, {
+            config: {
+              broadcast: { self: true, ack: false }
+            }
+          })
+
+          await new Promise<void>((resolve) => {
+            channel.subscribe((status) => {
+              if (status === 'SUBSCRIBED') resolve()
+            })
+          })
+
+          await channel.send({
+            type: 'broadcast',
+            event: 'menu_changed',
+            payload: { timestamp: Date.now(), restaurantId }
+          })
+
+          console.log('✅ Broadcast sent to channel:', channelName)
+          setTimeout(() => channel.unsubscribe(), 100)
+        } catch (error) {
+          console.error('Failed to broadcast:', error)
+        }
+      }
+
       loadItems()
       setDeleteConfirmOpen(false)
       setItemToDelete(null)
@@ -134,7 +167,7 @@ export function CategoryDishesPage({ categoryId, categoryName, onBack }: Categor
             <Card key={item.id} className="overflow-hidden">
               {item.image_path ? (
                 <img
-                  src={`http://localhost:8000${item.image_path}`}
+                  src={item.image_path.startsWith('http') ? item.image_path : `http://localhost:8000${item.image_path}`}
                   alt={item.name_hr}
                   className="w-full h-48 object-cover"
                 />
@@ -194,7 +227,9 @@ export function CategoryDishesPage({ categoryId, categoryName, onBack }: Categor
 
       {/* Add/Edit Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent
+          className="max-w-4xl max-h-[90vh] overflow-y-auto"
+        >
           <DialogHeader>
             <DialogTitle>
               {editingItem ? 'Uredi Stavku' : `Dodaj Novu Stavku u ${categoryName}`}

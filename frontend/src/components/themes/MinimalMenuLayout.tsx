@@ -3,9 +3,7 @@ import '../../themes/minimal-theme-v1.css'
 interface MenuItem {
   id: string
   name_hr: string
-  name_en: string
   description_hr?: string
-  description_en?: string
   price: number
   image_path?: string
   category?: string
@@ -43,13 +41,13 @@ export function MinimalMenuLayout({ restaurant, menuItems, categories, language 
   const getTranslatedName = (item: MenuItem): string => {
     if (language === 'hr') return item.name_hr
     const translation = item.translations?.find(t => t.language_code === language)
-    return translation?.name || item.name_en
+    return translation?.name || item.name_hr
   }
 
   const getTranslatedDescription = (item: MenuItem): string | undefined => {
     if (language === 'hr') return item.description_hr
     const translation = item.translations?.find(t => t.language_code === language)
-    return translation?.description || item.description_en
+    return translation?.description || item.description_hr
   }
 
   const getTranslatedCategoryName = (category: Category): string => {

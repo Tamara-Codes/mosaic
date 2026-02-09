@@ -308,7 +308,7 @@ export function Menu({ language, onLanguageChange }: MenuProps) {
                       <Card key={item.id} className="overflow-hidden hover:shadow-xl transition-all bg-white border-amber-200 hover:border-amber-300">
                         {item.image_path ? (
                           <img
-                            src={`http://localhost:8000${item.image_path}`}
+                            src={item.image_path.startsWith('http') ? item.image_path : `http://localhost:8000${item.image_path}`}
                             alt={getTranslatedText(item, 'name')}
                             className="w-full h-48 object-cover"
                           />
@@ -368,7 +368,7 @@ export function Menu({ language, onLanguageChange }: MenuProps) {
                     <Card key={item.id} className="overflow-hidden hover:shadow-xl transition-all bg-white border-amber-200 hover:border-amber-300">
                       {item.image_path ? (
                         <img
-                          src={`http://localhost:8000${item.image_path}`}
+                          src={item.image_path.startsWith('http') ? item.image_path : `http://localhost:8000${item.image_path}`}
                           alt={getTranslatedText(item, 'name')}
                           className="w-full h-48 object-cover"
                         />

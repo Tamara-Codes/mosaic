@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Lato:wght@300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -27,4 +28,31 @@ body {
   .ornamental-line {
     background: linear-gradient(90deg, transparent, #d4c4a8 20%, #d4c4a8 80%, transparent);
   }
+}
+
+/* Chinese font support */
+[data-lang="zh"] {
+  font-family: 'Noto Sans SC', 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+[data-lang="zh"] .font-serif {
+  font-family: 'Noto Sans SC', 'Cormorant Garamond', Georgia, serif;
+}
+
+/* Better Chinese text wrapping */
+[data-lang="zh"] p,
+[data-lang="zh"] div {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* Flag icons styling */
+.fi {
+  width: 1.5em;
+  height: 1.5em;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: inline-block;
+  border-radius: 2px;
 }

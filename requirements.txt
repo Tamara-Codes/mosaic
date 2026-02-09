@@ -8,7 +8,7 @@ pillow==10.1.0
 qrcode[pil]==7.4.2
 aiofiles==23.2.1
 python-dotenv==1.0.0
-openai>=1.68.2
+google-generativeai==0.3.2
 python-slugify==8.0.1
 PyJWT==2.8.0
 cryptography==41.0.7
