@@ -469,7 +469,7 @@ export default function MenuPage() {
             {restaurant.name}
           </p>
           <p className="text-xs text-[#5c5043]">
-            © 2026 Mosaic
+            © 2026 Ferros
           </p>
         </div>
       </footer>

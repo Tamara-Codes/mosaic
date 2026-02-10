@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ConfirmDialog } from './ConfirmDialog'
 import { toast } from 'sonner'
-import { Plus, Edit, Trash2, Search, Languages, Sparkles, Loader2, CheckCircle2, GripVertical, Move } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, Languages, Sparkles, Loader2, CheckCircle2, GripVertical } from 'lucide-react'
 import { MenuItemForm } from './MenuItemForm'
 import { supabase } from '@/lib/supabase'
 import { useRestaurantId } from '@/hooks/useRestaurantId'
@@ -56,8 +56,10 @@ export function MenuItemsPage() {
   // Translation state
   const [showTranslateDialog, setShowTranslateDialog] = useState(false)
   const [showEditTranslationDialog, setShowEditTranslationDialog] = useState(false)
-  const [selectedItemForTranslation, setSelectedItemForTranslation] = useState<MenuItemWithTranslations | null>(null)
-  const [selectedTranslation, setSelectedTranslation] = useState<Translation | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [selectedItemForTranslation] = useState<MenuItemWithTranslations | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [selectedTranslation] = useState<Translation | null>(null)
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([])
   const [generating, setGenerating] = useState(false)
   const [editTranslationName, setEditTranslationName] = useState('')
@@ -307,22 +309,6 @@ export function MenuItemsPage() {
   // }
 
   // Unused but kept for potential future use
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const openTranslateDialog = (item: MenuItemWithTranslations) => {
-    setSelectedItemForTranslation(item)
-    // Start with all languages unchecked - user must explicitly select which ones to translate
-    setSelectedLanguages([])
-    setShowTranslateDialog(true)
-  }
-
-  // Unused but kept for potential future use
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const openEditTranslationDialog = (translation: Translation) => {
-    setSelectedTranslation(translation)
-    setEditTranslationName(translation.name)
-    setEditTranslationDescription(translation.description)
-    setShowEditTranslationDialog(true)
-  }
 
   const handleGenerateTranslations = async () => {
     if (!selectedItemForTranslation || selectedLanguages.length === 0) {
@@ -366,21 +352,6 @@ export function MenuItemsPage() {
     } catch (error) {
       console.error('Error updating translation:', error)
       toast.error("Neuspješno ažuriranje prijevoda")
-    }
-  }
-
-  // Unused but kept for potential future use
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleDeleteTranslation = async (translationId: number) => {
-    if (!confirm('Jeste li sigurni da želite obrisati ovaj prijevod?')) return
-
-    try {
-      await apiClient.delete(`/api/translations/${translationId}`)
-      toast.success("Prijevod je obrisan")
-      loadItems(false)
-    } catch (error) {
-      console.error('Error deleting translation:', error)
-      toast.error("Neuspješno brisanje prijevoda")
     }
   }
 

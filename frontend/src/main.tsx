@@ -1,11 +1,12 @@
 import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom'
 import { ClerkProvider } from '@clerk/clerk-react'
 import { Toaster } from '@/components/ui/sonner'
 import './index.css'
 import App from './App.tsx'
 import { LoginPage } from './components/LoginPage'
+import { LandingPage } from './pages/LandingPage'
 
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
@@ -35,7 +36,7 @@ const routes = (
       <Route path="/sign-in" element={<LoginPage />} />
       <Route path="/sign-up" element={<LoginPage />} />
       <Route path="/dashboard" element={<App />} />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<LandingPage />} />
     </Routes>
     <Toaster />
   </BrowserRouter>

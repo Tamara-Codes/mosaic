@@ -37,7 +37,7 @@ function RestaurantLogo() {
           if (fallback && !fallback.querySelector('.logo-fallback')) {
             const textFallback = document.createElement('div');
             textFallback.className = 'logo-fallback text-xl font-bold';
-            textFallback.textContent = 'Menu Manager';
+            textFallback.textContent = 'Ferros';
             fallback.appendChild(textFallback);
           }
         }}
@@ -112,7 +112,7 @@ export function AppSidebar({ currentView, onViewChange, onLogout, ...props }: Ap
           Odjava
         </Button>
         <div className="text-xs text-muted-foreground">
-          © 2026 MosaAIc
+          © 2026 Ferros
         </div>
       </SidebarFooter>
     </Sidebar>
