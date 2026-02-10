@@ -380,7 +380,7 @@ export default function MenuPage() {
                         {item.image_path && (
                           <div className="flex-shrink-0 group relative">
                             <img
-                              src={item.image_path}
+                              src={getImageUrl(item.image_path)}
                               alt={item.name_hr}
                               onClick={() => setZoomedImage(item.id)}
                               className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-[#d4c4a8] transition-all duration-300 cursor-pointer group-hover:scale-110 group-hover:shadow-lg group-hover:border-[#8b6f47]"
@@ -486,7 +486,7 @@ export default function MenuPage() {
           >
             <div className="relative max-w-2xl w-full">
               <img
-                src={zoomedItem.image_path}
+                src={getImageUrl(zoomedItem.image_path)}
                 alt={zoomedItem.name_hr}
                 className="w-full h-auto max-h-[80vh] object-contain rounded-lg shadow-2xl"
                 onClick={(e) => e.stopPropagation()}

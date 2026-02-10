@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { type MenuItem, type Category } from '@/lib/api'
 import { useApiClient } from '@/lib/apiHelpers'
+import { getImageUrl, getApiUrl } from '@/lib/utils'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -44,7 +45,7 @@ export function Menu({ language, onLanguageChange }: MenuProps) {
       setError(null)
     } catch (error: any) {
       console.error('Failed to load menu:', error)
-      setError('Greška pri učitavanju menija. Provjerite je li backend server pokrenut na http://localhost:8000')
+      setError(`Greška pri učitavanju menija. Provjerite je li backend server pokrenut na ${getApiUrl()}`)
       setLoading(false)
     }
   }
@@ -308,7 +309,7 @@ export function Menu({ language, onLanguageChange }: MenuProps) {
                       <Card key={item.id} className="overflow-hidden hover:shadow-xl transition-all bg-white border-amber-200 hover:border-amber-300">
                         {item.image_path ? (
                           <img
-                            src={item.image_path.startsWith('http') ? item.image_path : `http://localhost:8000${item.image_path}`}
+                            src={getImageUrl(item.image_path)}
                             alt={getTranslatedText(item, 'name')}
                             className="w-full h-48 object-cover"
                           />

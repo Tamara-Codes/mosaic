@@ -18,7 +18,9 @@ function MenuRedirect() {
   const { restaurantSlug } = useParams<{ restaurantSlug: string }>()
 
   useEffect(() => {
-    const menuUrl = `http://localhost:5181/menu/${restaurantSlug || ''}`
+    const menuUrl = import.meta.env.VITE_MENU_URL
+      ? `${import.meta.env.VITE_MENU_URL}/menu/${restaurantSlug || ''}`
+      : `http://localhost:5181/menu/${restaurantSlug || ''}`
     window.location.href = menuUrl
   }, [restaurantSlug])
 

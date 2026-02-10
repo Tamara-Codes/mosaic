@@ -7,16 +7,20 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # CORS settings
+# Get CORS origins from environment variable (comma separated)
+env_origins = os.getenv("CORS_ORIGINS", "")
+additional_origins = [origin.strip() for origin in env_origins.split(",") if origin.strip()]
+
 CORS_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:5175",
-    "http://localhost:5181",  # Restaurant menu frontend
+    "http://localhost:5181",
     "http://localhost:3000",
     "https://mos-a-ic-livid.vercel.app",
     "https://mos-a-ic-git-main-tamaras-projects-5517455e.vercel.app",
-    "https://*.vercel.app",  # Allow all Vercel preview deployments
-]
+    "https://*.vercel.app",
+] + additional_origins
 
 # Gemini (AI provider for translations)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")

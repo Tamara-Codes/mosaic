@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { type MenuItem } from '@/lib/api'
 import { useApiClient } from '@/lib/apiHelpers'
+import { getImageUrl } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -167,7 +168,7 @@ export function CategoryDishesPage({ categoryId, categoryName, onBack }: Categor
             <Card key={item.id} className="overflow-hidden">
               {item.image_path ? (
                 <img
-                  src={item.image_path.startsWith('http') ? item.image_path : `http://localhost:8000${item.image_path}`}
+                  src={getImageUrl(item.image_path)}
                   alt={item.name_hr}
                   className="w-full h-48 object-cover"
                 />
