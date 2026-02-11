@@ -84,34 +84,38 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
     if (!hasRestaurant) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-background p-6">
-          <div className="text-center max-w-lg">
-            <div className="mb-6">
-              <h2 className="text-3xl font-bold mb-3">Dobrodošli! 👋</h2>
-              <p className="text-lg text-muted-foreground mb-6">
-                Vaš račun još nije povezan s restoranom.
+          <div className="text-center max-w-2xl">
+            <div className="mb-8">
+              <h2 className="text-4xl font-bold mb-4">Dobrodošli! 👋</h2>
+              <p className="text-lg text-muted-foreground mb-8">
+                Vaš račun još nije povezan s restoranom. Kako biste počeli, trebate kontaktirati našu podršku.
               </p>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-left mb-6">
-              <h3 className="font-semibold text-blue-900 mb-3">Kako nastaviti:</h3>
-              <ol className="space-y-2 text-blue-800 text-sm">
-                <li className="flex gap-2">
-                  <span className="font-bold">1.</span>
-                  <span>Kontaktirajte administratora sustava</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-bold">2.</span>
-                  <span>Pošaljite mu svoju email adresu koju koristite za prijavu</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-bold">3.</span>
-                  <span>Administrator će kreirati restoran za vas</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-bold">4.</span>
-                  <span>Osvježite stranicu i možete početi!</span>
-                </li>
-              </ol>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center mb-8">
+              <p className="text-blue-900 font-semibold mb-6">
+                Kontaktirajte nas na:
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-blue-800 text-sm mb-2">📧 Email:</p>
+                  <a 
+                    href="mailto:info@ferros.menu"
+                    className="inline-block px-6 py-2 bg-blue-900 text-white rounded hover:bg-blue-800 transition-colors font-semibold"
+                  >
+                    info@ferros.menu
+                  </a>
+                </div>
+                <div>
+                  <p className="text-blue-800 text-sm mb-2">ili ispunite obrazac:</p>
+                  <a 
+                    href="https://ferros.menu#contact"
+                    className="inline-block px-6 py-2 bg-blue-200 text-blue-900 rounded hover:bg-blue-300 transition-colors font-semibold"
+                  >
+                    Obrazac za kontakt
+                  </a>
+                </div>
+              </div>
             </div>
 
             <button
