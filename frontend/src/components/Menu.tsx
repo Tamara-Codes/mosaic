@@ -31,9 +31,9 @@ export function Menu({ language, onLanguageChange }: MenuProps) {
   const loadItems = async () => {
     try {
       const [itemsResponse, categoriesResponse, languagesResponse] = await Promise.all([
-        apiClient.get('/api/menu-items-with-translations'),
-        apiClient.get('/api/categories-with-translations'),
-        apiClient.get('/api/supported-languages')
+        apiClient.get('/menu-items-with-translations'),
+        apiClient.get('/categories-with-translations'),
+        apiClient.get('/supported-languages')
       ])
       const itemsData = itemsResponse.data
       const categoriesData = categoriesResponse.data

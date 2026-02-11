@@ -126,7 +126,7 @@ export function NotificationBell() {
 
       try {
         // Get restaurant ID
-        const restaurantResponse = await apiClient.get('/api/restaurant-info')
+        const restaurantResponse = await apiClient.get('/restaurant-info')
         restaurantId = restaurantResponse.data?.id
 
         if (!restaurantId) {

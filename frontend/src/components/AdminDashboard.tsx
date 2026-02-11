@@ -35,7 +35,7 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
   useEffect(() => {
     const checkRestaurant = async () => {
       try {
-        await apiClient.get('/api/restaurant-info')
+        await apiClient.get('/restaurant-info')
         setHasRestaurant(true)
       } catch (error: any) {
         if (error?.response?.status === 404) {

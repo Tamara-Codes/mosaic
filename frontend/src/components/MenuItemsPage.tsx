@@ -169,7 +169,7 @@ export function MenuItemsPage() {
     setIsReordering(true)
 
     try {
-      await apiClient.put('/api/categories/reorder', newCategories)
+      await apiClient.put('/categories/reorder', newCategories)
       toast.success('Redoslijed kategorija je promijenjen')
     } catch (error) {
       console.error('Error reordering categories:', error)
@@ -187,9 +187,9 @@ export function MenuItemsPage() {
         setLoading(true)
       }
       const [itemsData, langsData, categoriesData] = await Promise.all([
-        apiClient.get('/api/menu-items-with-translations').then(r => r.data),
-        apiClient.get('/api/supported-languages').then(r => r.data),
-        apiClient.get('/api/categories').then(r => r.data)
+        apiClient.get('/menu-items-with-translations').then(r => r.data),
+        apiClient.get('/supported-languages').then(r => r.data),
+        apiClient.get('/categories').then(r => r.data)
       ])
       setItems(itemsData)
       setLanguages(langsData.languages)
@@ -367,7 +367,7 @@ export function MenuItemsPage() {
       formData.append('name', newCategoryName.trim())
       formData.append('category_type', newCategoryType)
 
-      await apiClient.post('/api/categories', formData)
+      await apiClient.post('/categories', formData)
       toast.success("Kategorija je dodana")
       setNewCategoryName('')
 
@@ -1205,7 +1205,7 @@ export function MenuItemsPage() {
                         // Add language
                         const loadingToast = toast.loading(`Dodajem ${lang.name} i prevodim sve stavke...`)
                         try {
-                          const response = await apiClient.post('/api/languages/add', {
+                          const response = await apiClient.post('/languages/add', {
                             code: lang.code,
                             name: lang.name
                           })

@@ -60,7 +60,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
 
   const loadRestaurantInfo = async () => {
     try {
-      const response = await apiClient.get('/api/restaurant-info')
+      const response = await apiClient.get('/restaurant-info')
       setRestaurantId(response.data.id)
     } catch (error) {
       console.error('Failed to load restaurant info:', error)
@@ -69,7 +69,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
 
   const loadCategories = async () => {
     try {
-      const response = await apiClient.get('/api/categories')
+      const response = await apiClient.get('/categories')
       const data = response.data
       setCategories(data.categories_with_ids || [])
     } catch (error) {
@@ -98,7 +98,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
         try {
           const formDataCategory = new FormData()
           formDataCategory.append('name', categoryInput.trim())
-          const response = await apiClient.post('/api/categories', formDataCategory)
+          const response = await apiClient.post('/categories', formDataCategory)
           finalCategoryId = response.data.id
           await loadCategories() // Reload categories list
           toast.success('Nova kategorija je dodana')
@@ -137,7 +137,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
         })
         toast.success('Stavka je ažurirana')
       } else {
-        await apiClient.post('/api/menu-items', formDataToSend, {
+        await apiClient.post('/menu-items', formDataToSend, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         toast.success('Stavka je dodana')
@@ -333,7 +333,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
                     try {
                       const formDataCategory = new FormData()
                       formDataCategory.append('name', categoryInput.trim())
-                      const response = await apiClient.post('/api/categories', formDataCategory)
+                      const response = await apiClient.post('/categories', formDataCategory)
                       await loadCategories()
                       // Set the newly created category ID
                       if (response.data?.id) {

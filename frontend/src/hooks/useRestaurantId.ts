@@ -8,7 +8,7 @@ export function useRestaurantId() {
   useEffect(() => {
     const loadRestaurantInfo = async () => {
       try {
-        const response = await apiClient.get('/api/restaurant-info')
+        const response = await apiClient.get('/restaurant-info')
         setRestaurantId(response.data.id)
       } catch (error) {
         console.error('Failed to load restaurant info:', error)

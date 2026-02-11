@@ -15,7 +15,7 @@ export function DashboardOverview() {
 
   const loadAnalytics = async () => {
     try {
-      const response = await apiClient.get('/api/analytics')
+      const response = await apiClient.get('/analytics')
       const data = response.data
       setAnalytics(data)
       setLoading(false)

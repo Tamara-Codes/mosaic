@@ -35,8 +35,8 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
   const loadData = async () => {
     try {
       const [categoriesResponse, itemsResponse] = await Promise.all([
-        apiClient.get('/api/categories'),
-        apiClient.get('/api/menu-items')
+        apiClient.get('/categories'),
+        apiClient.get('/menu-items')
       ])
       const categoriesData = categoriesResponse.data
       const itemsData = itemsResponse.data
@@ -94,7 +94,7 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
     setIsReordering(true)
 
     try {
-      await apiClient.put('/api/categories/reorder', newCategories)
+      await apiClient.put('/categories/reorder', newCategories)
       toast.success('Redoslijed kategorija je promijenjen')
     } catch (error) {
       console.error('Error reordering categories:', error)
@@ -138,7 +138,7 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
         // Create new category via API
         const formData = new FormData()
         formData.append('name', newCategoryName.trim())
-        await apiClient.post('/api/categories', formData)
+        await apiClient.post('/categories', formData)
         toast.success('Kategorija je dodana')
       }
 

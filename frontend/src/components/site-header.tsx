@@ -26,7 +26,7 @@ export function SiteHeader({ currentView = 'menu-items' }: SiteHeaderProps) {
     // Fetch restaurant info to get the slug
     const fetchRestaurantInfo = async () => {
       try {
-        const response = await apiClient.get('/api/restaurant-info')
+        const response = await apiClient.get('/restaurant-info')
         if (response.data?.slug) {
           setRestaurantSlug(response.data.slug)
         }

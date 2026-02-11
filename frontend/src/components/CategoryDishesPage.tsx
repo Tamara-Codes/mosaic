@@ -35,7 +35,7 @@ export function CategoryDishesPage({ categoryId, categoryName, onBack }: Categor
 
   const loadItems = async () => {
     try {
-      const response = await apiClient.get('/api/menu-items')
+      const response = await apiClient.get('/menu-items')
       const data = response.data
       // Filter items by category
       const categoryItems = data.filter((item: MenuItem) => item.category_id === String(categoryId))
