@@ -1,6 +1,6 @@
-import { StrictMode, useEffect } from 'react'
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ClerkProvider } from '@clerk/clerk-react'
 import { Toaster } from '@/components/ui/sonner'
 import './index.css'

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase, getImageUrl } from '../lib/supabase'
 import { useLanguage } from '../contexts/LanguageContext'
-import LanguageSelector from './LanguageSelector'
+import LanguageSelector from '../components/LanguageSelector'
 
 interface MenuItem {
   id: string
