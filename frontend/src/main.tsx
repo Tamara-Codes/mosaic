@@ -14,29 +14,44 @@ if (!clerkPublishableKey) {
   console.error('VITE_CLERK_PUBLISHABLE_KEY is required but not set. Please configure Clerk.')
 }
 
-// Redirect component for menu pages to public menu frontend
-function MenuRedirect() {
+// Redirect component for catch-all menu pages (clean URLs without /menu prefix)
+function PublicMenuRedirect() {
   const { restaurantSlug } = useParams<{ restaurantSlug: string }>()
 
   useEffect(() => {
+    if (!restaurantSlug) {
+      window.location.href = '/'
+      return
+    }
+    
     const menuUrl = import.meta.env.VITE_MENU_URL
-      ? `${import.meta.env.VITE_MENU_URL}/menu/${restaurantSlug || ''}`
-      : `http://localhost:5181/menu/${restaurantSlug || ''}`
+      ? `${import.meta.env.VITE_MENU_URL}/${restaurantSlug}`
+      : `http://localhost:5181/${restaurantSlug}`
     window.location.href = menuUrl
   }, [restaurantSlug])
 
-  return <div>Redirecting to menu...</div>
+  return <div className="p-8 text-center">Redirecting to menu...</div>
 }
 
 const routes = (
   <BrowserRouter>
     <Routes>
-      <Route path="/menu/:restaurantSlug" element={<MenuRedirect />} />
+      {/* API routes - pass through to backend */}
+      <Route path="/api/*" element={null} />
+      
+      {/* Authentication routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/sign-in" element={<LoginPage />} />
       <Route path="/sign-up" element={<LoginPage />} />
-      <Route path="/dashboard" element={<App />} />
+      
+      {/* Dashboard route (protected) */}
+      <Route path="/dashboard/*" element={<App />} />
+      
+      {/* Landing page */}
       <Route path="/" element={<LandingPage />} />
+      
+      {/* Catch-all: Clean URL public menu (/{restaurantSlug}) */}
+      <Route path="/:restaurantSlug" element={<PublicMenuRedirect />} />
     </Routes>
     <Toaster />
   </BrowserRouter>

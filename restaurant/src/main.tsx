@@ -10,8 +10,11 @@ createRoot(document.getElementById('root')!).render(
     <LanguageProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/menu/:restaurantSlug" element={<MenuPage />} />
-          <Route path="*" element={<div className="p-8 text-center">Page not found</div>} />
+          {/* Clean URL for public menu: /:restaurantSlug */}
+          <Route path="/:restaurantSlug" element={<MenuPage />} />
+          
+          {/* 404 fallback */}
+          <Route path="*" element={<div className="p-8 text-center text-gray-600">Restaurant menu not found</div>} />
         </Routes>
       </BrowserRouter>
     </LanguageProvider>
