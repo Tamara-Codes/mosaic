@@ -60,19 +60,3 @@ createRoot(document.getElementById('root')!).render(
     )}
   </StrictMode>,
 )
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    {clerkPublishableKey ? (
-      <ClerkProvider publishableKey={clerkPublishableKey}>
-        {routes}
-      </ClerkProvider>
-    ) : (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h1>Configuration Error</h1>
-        <p>VITE_CLERK_PUBLISHABLE_KEY is required but not set.</p>
-        <p>Please configure Clerk in your environment variables.</p>
-      </div>
-    )}
-  </StrictMode>,
-)
