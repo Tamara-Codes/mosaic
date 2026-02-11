@@ -209,46 +209,39 @@ export default function MenuPage() {
 
   if (error || !menuData) {
     return (
-      <div className="min-h-screen bg-[#fdfbf7] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#18181b] flex items-center justify-center px-4">
         <div className="text-center max-w-2xl mx-auto">
-          <div className="bg-white rounded-xl border border-[#d4c4a8] px-8 py-12 md:px-16 md:py-20">
-            <h1 className="font-serif text-4xl md:text-5xl text-[#2c2416] mb-6">
+          <div className="bg-zinc-900/50 rounded-2xl border border-white/10 px-8 py-12 md:px-16 md:py-20">
+            {/* Logo */}
+            <div className="flex justify-center mb-8">
+              <img src="/ferros-logo.png" alt="Ferros Logo" className="h-24 w-24 object-contain drop-shadow-[0_0_30px_rgba(249,115,22,0.3)]" />
+            </div>
+
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Jelovnik nije dostupan
             </h1>
             
-            <p className="font-serif text-lg md:text-xl text-[#5c5043] italic mb-8 leading-relaxed">
+            <p className="text-lg md:text-xl text-zinc-400 mb-12 leading-relaxed">
               Ovaj restoran nema aktivan račun.
             </p>
 
-            <div className="bg-[#f5f0e8] rounded-lg p-8 mb-10">
-              <p className="text-[#2c2416] font-semibold mb-6">
+            <div className="bg-zinc-800/50 rounded-xl border border-white/5 p-8 mb-8">
+              <p className="text-white font-semibold text-lg mb-6">
                 Želite li stvoriti jelovnik za svoj restoran?
               </p>
               
-              <div className="space-y-4">
-                <div className="text-[#5c5043]">
-                  <p className="font-serif text-base mb-3">📧 Kontaktirajte nas izravno:</p>
-                  <a 
-                    href="mailto:info@ferros.menu"
-                    className="inline-block px-6 py-3 bg-[#8b6f47] text-white rounded-lg hover:bg-[#6b5837] transition-colors font-serif text-lg"
-                  >
-                    info@ferros.menu
-                  </a>
-                </div>
-
-                <div className="text-[#5c5043]">
-                  <p className="font-serif text-base mb-3">ili ispunite naš obrazac za kontakt:</p>
-                  <a 
-                    href="https://ferros.menu#contact"
-                    className="inline-block px-6 py-3 bg-[#d4c4a8] text-[#2c2416] rounded-lg hover:bg-[#c4b498] transition-colors font-serif text-lg"
-                  >
-                    Obrazac za kontakt
-                  </a>
-                </div>
-              </div>
+              <p className="text-zinc-400 text-sm mb-6">Kontaktirajte nas izravno:</p>
+              
+              <a 
+                href="mailto:info@ferros.menu"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium text-lg shadow-lg hover:shadow-orange-500/20"
+              >
+                <span>📧</span>
+                <span>info@ferros.menu</span>
+              </a>
             </div>
 
-            <p className="text-[#6b5d4f] text-sm">
+            <p className="text-zinc-500 text-sm">
               Pomoći ćemo vam postaviti digitalni jelovnik u tren oka!
             </p>
           </div>
