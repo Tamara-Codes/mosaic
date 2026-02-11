@@ -95,9 +95,26 @@ async def get_clerk_user_id(authorization: Optional[str] = Header(None)) -> Opti
 async def get_restaurant_by_clerk_user(clerk_user_id: str):
     """Get restaurant for a Clerk user"""
     supabase = get_supabase_client()
+    print(f"DEBUG: Searching for restaurant with clerk_user_id: '{clerk_user_id}' (length: {len(clerk_user_id)})")
+    
+    # First, get ALL restaurants to see what we have
+    all_result = supabase.table('restaurants').select('id, name, email, clerk_user_id').execute()
+    print(f"DEBUG: All restaurants in database:")
+    for r in (all_result.data or []):
+        stored_id = r.get('clerk_user_id')
+        print(f"  - {r.get('name')}: clerk_user_id='{stored_id}' (length: {len(stored_id) if stored_id else 0}), email={r.get('email')}")
+        if stored_id:
+            print(f"    Match check: '{clerk_user_id}' == '{stored_id}' ? {clerk_user_id == stored_id}")
+    
+    # Now try the actual query
     result = supabase.table('restaurants').select('*').eq('clerk_user_id', clerk_user_id).execute()
+    print(f"DEBUG: Query result count: {len(result.data or [])}")
+    
     if result.data:
+        print(f"DEBUG: ✅ Found restaurant: {result.data[0]['name']}")
         return result.data[0]
+    
+    print(f"DEBUG: ❌ No restaurant found for clerk_user_id: '{clerk_user_id}'")
     return None
 
 async def require_auth(authorization: Optional[str] = Header(None)):
