@@ -209,11 +209,48 @@ export default function MenuPage() {
 
   if (error || !menuData) {
     return (
-      <div className="min-h-screen bg-[#fdfbf7] flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-8">
-          <div className="border border-[#d4c4a8] bg-white px-12 py-16">
-            <h2 className="font-serif text-3xl text-[#2c2416] mb-4">Menu Unavailable</h2>
-            <p className="text-[#5c5043]">{error || 'Unable to load menu'}</p>
+      <div className="min-h-screen bg-[#fdfbf7] flex items-center justify-center px-4">
+        <div className="text-center max-w-2xl mx-auto">
+          <div className="bg-white rounded-xl border border-[#d4c4a8] px-8 py-12 md:px-16 md:py-20">
+            <h1 className="font-serif text-4xl md:text-5xl text-[#2c2416] mb-6">
+              Jelovnik nije dostupan
+            </h1>
+            
+            <p className="font-serif text-lg md:text-xl text-[#5c5043] italic mb-8 leading-relaxed">
+              Ovaj restoran nema aktivan račun.
+            </p>
+
+            <div className="bg-[#f5f0e8] rounded-lg p-8 mb-10">
+              <p className="text-[#2c2416] font-semibold mb-6">
+                Želite li stvoriti jelovnik za svoj restoran?
+              </p>
+              
+              <div className="space-y-4">
+                <div className="text-[#5c5043]">
+                  <p className="font-serif text-base mb-3">📧 Kontaktirajte nas izravno:</p>
+                  <a 
+                    href="mailto:info@ferros.menu"
+                    className="inline-block px-6 py-3 bg-[#8b6f47] text-white rounded-lg hover:bg-[#6b5837] transition-colors font-serif text-lg"
+                  >
+                    info@ferros.menu
+                  </a>
+                </div>
+
+                <div className="text-[#5c5043]">
+                  <p className="font-serif text-base mb-3">ili ispunite naš obrazac za kontakt:</p>
+                  <a 
+                    href="https://ferros.menu#contact"
+                    className="inline-block px-6 py-3 bg-[#d4c4a8] text-[#2c2416] rounded-lg hover:bg-[#c4b498] transition-colors font-serif text-lg"
+                  >
+                    Obrazac za kontakt
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-[#6b5d4f] text-sm">
+              Pomoći ćemo vam postaviti digitalni jelovnik u tren oka!
+            </p>
           </div>
         </div>
       </div>
