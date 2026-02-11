@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 from core.config import CORS_ORIGINS, MENU_URL
 from services.languages import load_supported_languages, save_supported_languages
-from services.auth import get_clerk_user_id, get_restaurant_by_clerk_user, require_auth
+from services.auth import get_clerk_user_info, get_restaurant_by_clerk_user, require_auth
 from services.webhooks import verify_signature, handle_user_created, handle_user_deleted
 from services.gemini_translator import translate_menu_item, translate_category, translate_batch
 
@@ -221,32 +221,40 @@ async def get_restaurant_public(restaurant_slug: str):
 # Admin Endpoints for Orders and Messages
 # Restaurant Info Endpoints (Authenticated)
 @app.get("/api/restaurant-info")
-async def get_restaurant_info(clerk_user_id: str = Depends(require_auth)):
+async def get_restaurant_info(clerk_user_id: str = Depends(require_auth), authorization: Optional[str] = Header(None)):
     """Get restaurant information for authenticated user"""
     supabase = get_supabase_client()
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     
     # If not found by clerk_user_id, try to link by email from Clerk user
     if not restaurant:
-        # Get user email from Clerk token (we need to fetch it)
-        # Try to find restaurant by checking all restaurants without clerk_user_id
-        # and attempt to link by matching the user later
-        # For now, we'll check if there's any unlinked restaurant
-        unlinked_restaurants = supabase.table('restaurants').select('*').is_('clerk_user_id', 'null').execute()
+        # Get user info including email from Clerk token
+        user_info = await get_clerk_user_info(authorization)
+        user_email = user_info.get("email") if user_info else None
         
-        if unlinked_restaurants.data and len(unlinked_restaurants.data) > 0:
-            # Link the first unlinked restaurant to this user
-            first_unlinked = unlinked_restaurants.data[0]
-            result = supabase.table('restaurants').update({
-                'clerk_user_id': clerk_user_id
-            }).eq('id', first_unlinked['id']).execute()
+        if user_email:
+            logger.info(f"Restaurant not found for Clerk user {clerk_user_id}, trying to link by email: {user_email}")
             
-            if result.data:
-                restaurant = result.data[0]
-                logger.info(f"Automatically linked restaurant {restaurant['name']} (ID: {restaurant['id']}) to Clerk user {clerk_user_id}")
+            # Find restaurant by email (that doesn't have a clerk_user_id yet)
+            restaurants = supabase.table('restaurants').select('*').eq('email', user_email).execute()
+            available = [r for r in (restaurants.data or []) if not r.get('clerk_user_id')]
+            
+            if available:
+                # Link the restaurant to this Clerk user
+                result = supabase.table('restaurants').update({
+                    'clerk_user_id': clerk_user_id
+                }).eq('id', available[0]['id']).execute()
+                
+                if result.data:
+                    restaurant = result.data[0]
+                    logger.info(f"Successfully linked restaurant {restaurant['name']} (ID: {restaurant['id']}) to Clerk user {clerk_user_id} via email {user_email}")
+            else:
+                logger.warning(f"No unlinked restaurant found for email: {user_email}")
+        else:
+            logger.error(f"Could not extract email from Clerk token for user {clerk_user_id}")
     
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen. Kontaktirajte administratora da kreira restoran za vašu email adresu.")
     
     return JSONResponse({
         "id": restaurant['id'],

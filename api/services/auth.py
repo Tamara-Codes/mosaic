@@ -10,10 +10,11 @@ from core.supabase_client import get_supabase_client
 
 CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
 
-async def verify_clerk_token(token: str) -> Optional[str]:
+async def verify_clerk_token(token: str) -> Optional[dict]:
     """
-    Verify Clerk JWT token and return user ID.
+    Verify Clerk JWT token and return user info.
     Uses Clerk's JWKS endpoint for proper token verification.
+    Returns dict with 'user_id' and 'email' if successful.
     """
     try:
         # First, decode token without verification to get issuer
@@ -39,7 +40,12 @@ async def verify_clerk_token(token: str) -> Optional[str]:
             algorithms=["RS256"],
             options={"verify_exp": True}
         )
-        return decoded.get("sub")
+        
+        # Extract user ID and email from token
+        return {
+            "user_id": decoded.get("sub"),
+            "email": decoded.get("email") or decoded.get("email_address") or decoded.get("primary_email_address")
+        }
     except jwt.ExpiredSignatureError:
         print("Token has expired")
         return None
@@ -50,10 +56,10 @@ async def verify_clerk_token(token: str) -> Optional[str]:
         print(f"Error verifying Clerk token: {e}")
         return None
 
-async def get_clerk_user_id(authorization: Optional[str] = Header(None)) -> Optional[str]:
+async def get_clerk_user_info(authorization: Optional[str] = Header(None)) -> Optional[dict]:
     """
-    Extract and verify Clerk user ID from authorization header.
-    Returns None if authentication is missing or invalid.
+    Extract and verify Clerk user info from authorization header.
+    Returns dict with user_id and email, or None if authentication is missing or invalid.
     """
     if not authorization:
         return None
@@ -63,8 +69,16 @@ async def get_clerk_user_id(authorization: Optional[str] = Header(None)) -> Opti
         return None
     
     token = parts[1]
-    user_id = await verify_clerk_token(token)
-    return user_id
+    user_info = await verify_clerk_token(token)
+    return user_info
+
+async def get_clerk_user_id(authorization: Optional[str] = Header(None)) -> Optional[str]:
+    """
+    Extract and verify Clerk user ID from authorization header.
+    Returns None if authentication is missing or invalid.
+    """
+    user_info = await get_clerk_user_info(authorization)
+    return user_info["user_id"] if user_info else None
 
 async def get_restaurant_by_clerk_user(clerk_user_id: str):
     """Get restaurant for a Clerk user"""
