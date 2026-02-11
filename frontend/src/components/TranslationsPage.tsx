@@ -64,8 +64,8 @@ export function TranslationsPage() {
     try {
       setLoading(true)
       const [itemsRes, langsRes] = await Promise.all([
-        fetch('/api/menu-items-with-translations'),
-        fetch('/api/supported-languages')
+        fetch('/api/v1/menu-items-with-translations'),
+        fetch('/api/v1/supported-languages')
       ])
       
       const itemsData = await itemsRes.json()
@@ -89,7 +89,7 @@ export function TranslationsPage() {
 
     try {
       setGenerating(true)
-      const response = await fetch(`/api/translations/generate/${selectedItem.id}`, {
+      const response = await fetch(`/api/v1/translations/generate/${selectedItem.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ export function TranslationsPage() {
 
     try {
       setGenerating(true)
-      const response = await fetch('/api/translations/batch-generate', {
+      const response = await fetch('/api/v1/translations/batch-generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ export function TranslationsPage() {
     if (!selectedTranslation) return
 
     try {
-      const response = await fetch(`/api/translations/${selectedTranslation.id}`, {
+      const response = await fetch(`/api/v1/translations/${selectedTranslation.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -175,7 +175,7 @@ export function TranslationsPage() {
     if (!confirm('Jeste li sigurni da želite obrisati ovaj prijevod?')) return
 
     try {
-      const response = await fetch(`/api/translations/${translationId}`, {
+      const response = await fetch(`/api/v1/translations/${translationId}`, {
         method: 'DELETE'
       })
 

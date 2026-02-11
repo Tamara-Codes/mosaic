@@ -83,33 +83,42 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
     // If no restaurant, show message (without sidebar)
     if (!hasRestaurant) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-6">
-          <div className="text-center max-w-2xl">
-            <div className="mb-8">
-              <h2 className="text-4xl font-bold mb-4">Dobrodošli! 👋</h2>
-              <p className="text-lg text-muted-foreground mb-8">
-                Vaš račun još nije povezan s restoranom. Kako biste počeli, trebate kontaktirati našu podršku.
-              </p>
-            </div>
+        <div className="min-h-screen bg-[#18181b] flex items-center justify-center px-4">
+          <div className="text-center max-w-2xl mx-auto">
+            <div className="bg-zinc-900/50 rounded-2xl border border-white/10 px-8 py-12 md:px-16 md:py-20">
+              {/* Logo */}
+              <div className="flex justify-center mb-8">
+                <img src="/ferros-logo.png" alt="Ferros Logo" className="h-24 w-24 object-contain drop-shadow-[0_0_30px_rgba(249,115,22,0.3)]" />
+              </div>
 
-            <div className="mb-8">
-              <p className="text-muted-foreground font-semibold mb-4">
-                Kontaktirajte nas na:
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+                Račun nije povezan
+              </h1>
+              
+              <p className="text-lg md:text-xl text-zinc-400 mb-12 leading-relaxed">
+                Vaš račun još nije povezan s restoranom.
               </p>
-              <a 
-                href="mailto:info@ferros.menu"
-                className="inline-block px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold"
+
+              <div className="bg-zinc-800/50 rounded-xl border border-white/5 p-8 mb-8">
+                <p className="text-white font-semibold text-lg mb-6">
+                  Kako biste počeli, kontaktirajte našu podršku:
+                </p>
+                
+                <a 
+                  href="mailto:info@ferros.menu"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium text-lg shadow-lg hover:shadow-orange-500/20 mb-6"
+                >
+                  <span>info@ferros.menu</span>
+                </a>
+              </div>
+
+              <button
+                onClick={handleLogout}
+                className="text-zinc-400 hover:text-white transition-colors text-sm"
               >
-                info@ferros.menu
-              </a>
+                Odjavi se
+              </button>
             </div>
-
-            <button
-              onClick={handleLogout}
-              className="px-6 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Odjavi se
-            </button>
           </div>
         </div>
       )

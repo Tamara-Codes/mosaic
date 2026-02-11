@@ -51,7 +51,7 @@ export function ContactForm() {
       formData.append('message', values.message)
       
       // Send to backend API
-      const response = await axios.post('/api/contact', formData, {
+      const response = await axios.post('/api/v1/contact', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

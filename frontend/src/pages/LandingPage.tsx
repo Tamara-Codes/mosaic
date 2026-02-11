@@ -195,9 +195,9 @@ export function LandingPage() {
                 </div>
               </div>
               {/* Arrow for desktop */}
-              <div className="hidden md:block absolute top-10 -right-4 text-orange-500/30">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                  <path d="M5 20 L30 20 M30 20 L22 12 M30 20 L22 28" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <div className="hidden md:block absolute top-1/2 -translate-y-1/2 -right-8 text-orange-500/50">
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                  <path d="M8 32 L48 32 M48 32 L36 20 M48 32 L36 44" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
             </div>
@@ -210,16 +210,16 @@ export function LandingPage() {
                     <QrCode className="w-10 h-10 text-white" />
                   </div>
                   <div className="text-purple-500 font-bold text-sm mb-2">KORAK 2</div>
-                  <h3 className="text-white font-semibold text-xl mb-3">Generirajte QR kod</h3>
+                  <h3 className="text-white font-semibold text-xl mb-3">Dobivate QR kod i držače</h3>
                   <p className="text-zinc-400 leading-relaxed">
-                    Kliknite jednom i dobijete QR kod. Ispišite ga i stavite na stol ili pri ulazu.
+                    Mi vam besplatno dostavljamo QR kod i elegantne držače za stolove. Vi samo postavite — bez brige, bez dodatnih troškova.
                   </p>
                 </div>
               </div>
               {/* Arrow for desktop */}
-              <div className="hidden md:block absolute top-10 -right-4 text-purple-500/30">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                  <path d="M5 20 L30 20 M30 20 L22 12 M30 20 L22 28" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <div className="hidden md:block absolute top-1/2 -translate-y-1/2 -right-8 text-purple-500/50">
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                  <path d="M8 32 L48 32 M48 32 L36 20 M48 32 L36 44" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
             </div>
@@ -234,7 +234,7 @@ export function LandingPage() {
                   <div className="text-green-500 font-bold text-sm mb-2">KORAK 3</div>
                   <h3 className="text-white font-semibold text-xl mb-3">Gosti skeniraju i pregledavaju</h3>
                   <p className="text-zinc-400 leading-relaxed">
-                    Gost skenira kod i vidi jelovnik na svom jeziku. Bez aplikacije, bez čekanja.
+                    Gost skenira kod, vidi fotografije dezerta i naručuje. Sve na svom jeziku, instant.
                   </p>
                 </div>
               </div>
@@ -274,24 +274,6 @@ export function LandingPage() {
                 </div>
                 {/* When you have a screenshot, replace the above div with: */}
                 {/* <img src="/dashboard-screenshot.png" alt="Ferros Dashboard" className="w-full h-full object-cover" /> */}
-              </div>
-            </div>
-            
-            {/* Feature Highlights */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-zinc-900/50 p-6 rounded-xl border border-white/5">
-                <h3 className="text-white font-semibold mb-2">📊 Pregled u realnom vremenu</h3>
-                <p className="text-zinc-400 text-sm">Vidite statistike, dostupnost jela i povratne informacije gostiju.</p>
-              </div>
-              
-              <div className="bg-zinc-900/50 p-6 rounded-xl border border-white/5">
-                <h3 className="text-white font-semibold mb-2">⚡ Instant ažuriranja</h3>
-                <p className="text-zinc-400 text-sm">Promijenite cijenu ili dostupnost jela — promjena je vidljiva odmah.</p>
-              </div>
-              
-              <div className="bg-zinc-900/50 p-6 rounded-xl border border-white/5">
-                <h3 className="text-white font-semibold mb-2">📱 Mobilno optimizirano</h3>
-                <p className="text-zinc-400 text-sm">Upravljajte jelovnikom s mobitela, tableta ili računala.</p>
               </div>
             </div>
           </div>

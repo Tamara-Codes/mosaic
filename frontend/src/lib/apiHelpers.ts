@@ -5,9 +5,9 @@
 import { useAuth } from '@clerk/clerk-react'
 import axios from 'axios'
 
-// Use proxy in dev - always use '/api' which goes through Vite proxy to backend
+// Use proxy in dev - always use '/api/v1' which goes through Vite proxy to backend
 // In production, use full URL if VITE_API_BASE_URL is set
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
 /**
  * Get axios instance with Clerk token automatically included
