@@ -223,7 +223,28 @@ async def get_restaurant_public(restaurant_slug: str):
 @app.get("/api/restaurant-info")
 async def get_restaurant_info(clerk_user_id: str = Depends(require_auth)):
     """Get restaurant information for authenticated user"""
+    supabase = get_supabase_client()
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    
+    # If not found by clerk_user_id, try to link by email from Clerk user
+    if not restaurant:
+        # Get user email from Clerk token (we need to fetch it)
+        # Try to find restaurant by checking all restaurants without clerk_user_id
+        # and attempt to link by matching the user later
+        # For now, we'll check if there's any unlinked restaurant
+        unlinked_restaurants = supabase.table('restaurants').select('*').is_('clerk_user_id', 'null').execute()
+        
+        if unlinked_restaurants.data and len(unlinked_restaurants.data) > 0:
+            # Link the first unlinked restaurant to this user
+            first_unlinked = unlinked_restaurants.data[0]
+            result = supabase.table('restaurants').update({
+                'clerk_user_id': clerk_user_id
+            }).eq('id', first_unlinked['id']).execute()
+            
+            if result.data:
+                restaurant = result.data[0]
+                logger.info(f"Automatically linked restaurant {restaurant['name']} (ID: {restaurant['id']}) to Clerk user {clerk_user_id}")
+    
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
