@@ -126,8 +126,8 @@ export default function MenuPage() {
       }
 
       try {
-        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-        const response = await fetch(`${apiBaseUrl}/v1/menu/${restaurantSlug}`)
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+        const response = await fetch(`${apiBaseUrl}/api/v1/menu/${restaurantSlug}`)
 
         if (!response.ok) {
           throw new Error('Restaurant not found')
@@ -166,8 +166,8 @@ export default function MenuPage() {
       .on('broadcast', { event: 'menu_changed' }, (payload) => {
         console.log('🎉 Menu change broadcast received!', payload)
 
-        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-        fetch(`${apiBaseUrl}/v1/menu/${restaurantSlug}`)
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+        fetch(`${apiBaseUrl}/api/v1/menu/${restaurantSlug}`)
           .then(res => res.json())
           .then(data => {
             console.log('✅ Menu data refetched after broadcast')
