@@ -44,8 +44,7 @@ from services.email_service import send_contact_email
 app = FastAPI(
     title="Restaurant Menu API",
     description="Multi-tenant restaurant menu management system",
-    version="1.0.0",
-    root_path="/api"
+    version="1.0.0"
 )
 
 # CORS middleware
@@ -100,7 +99,7 @@ async def clerk_webhook(request: Request):
         return JSONResponse({"message": f"Event {event_type} not handled", "handled": False})
 
 # Public Menu Endpoint - Returns menu data + theme_identifier
-@app.get("/v1/menu/{restaurant_slug}")
+@app.get("/api/v1/menu/{restaurant_slug}")
 async def get_public_menu(restaurant_slug: str):
     """
     Public endpoint to get menu for a restaurant
@@ -196,7 +195,7 @@ async def get_public_menu(restaurant_slug: str):
 
 # Preview Menu Endpoint - Get menu for a specific date (for preview)
 # Public Restaurant Info Endpoint
-@app.get("/v1/restaurant/{restaurant_slug}")
+@app.get("/api/v1/restaurant/{restaurant_slug}")
 async def get_restaurant_public(restaurant_slug: str):
     """Get restaurant information (public)"""
     supabase = get_supabase_anon_client()
@@ -222,7 +221,7 @@ async def get_restaurant_public(restaurant_slug: str):
 # Public Contact Form Endpoint
 # Admin Endpoints for Orders and Messages
 # Restaurant Info Endpoints (Authenticated)
-@app.get("/api/restaurant-info")
+@app.get("/api/v1/restaurant-info")
 async def get_restaurant_info(clerk_user_id: str = Depends(require_auth), authorization: Optional[str] = Header(None)):
     """Get restaurant information for authenticated user"""
     logger.info(f"=== Restaurant Info Request for Clerk User: {clerk_user_id} ===")
@@ -290,7 +289,7 @@ async def get_restaurant_info(clerk_user_id: str = Depends(require_auth), author
         "theme_identifier": restaurant['theme_identifier']
     })
 
-@app.post("/api/restaurant-info")
+@app.post("/api/v1/restaurant-info")
 async def save_restaurant_info(
     name: str = Form(...),
     description: Optional[str] = Form(None),
@@ -365,7 +364,7 @@ async def save_restaurant_info(
         )
 
 # Menu Items Endpoints (Authenticated)
-@app.get("/api/menu-items")
+@app.get("/api/v1/menu-items")
 async def get_menu_items(clerk_user_id: str = Depends(require_auth)):
     """Get all menu items for authenticated user's restaurant"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
@@ -376,7 +375,7 @@ async def get_menu_items(clerk_user_id: str = Depends(require_auth)):
     result = supabase.table('menu_items').select('*').eq('restaurant_id', restaurant['id']).execute()
     return JSONResponse(result.data)
 
-@app.post("/api/menu-items")
+@app.post("/api/v1/menu-items")
 async def create_menu_item(
     name_hr: str = Form(...),
     description_hr: Optional[str] = Form(None),
@@ -482,7 +481,7 @@ async def create_menu_item(
     
     return JSONResponse(menu_item)
 
-@app.put("/api/menu-items/{item_id}")
+@app.put("/api/v1/menu-items/{item_id}")
 async def update_menu_item(
     item_id: str,
     name_hr: Optional[str] = Form(None),
@@ -581,7 +580,7 @@ async def update_menu_item(
     logger.info(f"No changes made to menu item '{old_item['name_hr']}'")
     return JSONResponse(item_result.data[0])
 
-@app.delete("/api/menu-items/{item_id}")
+@app.delete("/api/v1/menu-items/{item_id}")
 async def delete_menu_item(item_id: str, clerk_user_id: str = Depends(require_auth)):
     """Delete a menu item"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
@@ -609,7 +608,7 @@ async def delete_menu_item(item_id: str, clerk_user_id: str = Depends(require_au
     logger.info(f"Menu item '{item_name}' deleted successfully")
     return JSONResponse({"message": "Menu item deleted"})
 
-@app.get("/api/menu-items-with-translations")
+@app.get("/api/v1/menu-items-with-translations")
 async def get_menu_items_with_translations(clerk_user_id: str = Depends(require_auth)):
     """Get all menu items with their translations"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
@@ -642,7 +641,7 @@ async def get_menu_items_with_translations(clerk_user_id: str = Depends(require_
     return JSONResponse(menu_items)
 
 # Daily Menus Endpoints (Authenticated)
-@app.get("/api/categories")
+@app.get("/api/v1/categories")
 async def get_categories(clerk_user_id: str = Depends(require_auth)):
     """Get all categories for authenticated user's restaurant"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
@@ -660,7 +659,7 @@ async def get_categories(clerk_user_id: str = Depends(require_auth)):
         "categories_with_ids": categories_with_ids
     })
 
-@app.get("/api/categories-with-translations")
+@app.get("/api/v1/categories-with-translations")
 async def get_categories_with_translations(clerk_user_id: str = Depends(require_auth)):
     """Get all categories with their translations"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
@@ -692,7 +691,7 @@ async def get_categories_with_translations(clerk_user_id: str = Depends(require_
     
     return JSONResponse(categories)
 
-@app.post("/api/categories")
+@app.post("/api/v1/categories")
 async def create_category(
     name: str = Form(...),
     category_type: Optional[str] = Form("food"),
@@ -730,7 +729,7 @@ async def create_category(
     logger.info(f"Category '{name}' created successfully with ID {result.data[0]['id']}")
     return JSONResponse(result.data[0])
 
-@app.put("/api/categories/reorder")
+@app.put("/api/v1/categories/reorder")
 async def reorder_categories(
     request: Request,
     clerk_user_id: str = Depends(require_auth)
@@ -753,7 +752,7 @@ async def reorder_categories(
     
     return JSONResponse({"message": "Categories reordered"})
 
-@app.delete("/api/categories/{category_id}")
+@app.delete("/api/v1/categories/{category_id}")
 async def delete_category(category_id: str, clerk_user_id: str = Depends(require_auth)):
     """Delete a category"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
@@ -781,7 +780,7 @@ async def delete_category(category_id: str, clerk_user_id: str = Depends(require
     return JSONResponse({"message": "Category deleted"})
 
 # Translations Endpoints
-@app.get("/api/translations/{menu_item_id}")
+@app.get("/api/v1/translations/{menu_item_id}")
 async def get_translations(menu_item_id: str, clerk_user_id: str = Depends(require_auth)):
     """Get all translations for a menu item"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
@@ -798,7 +797,7 @@ async def get_translations(menu_item_id: str, clerk_user_id: str = Depends(requi
     result = supabase.table('translations').select('*').eq('menu_item_id', menu_item_id).execute()
     return JSONResponse(result.data)
 
-@app.post("/api/translations/generate/{menu_item_id}")
+@app.post("/api/v1/translations/generate/{menu_item_id}")
 async def generate_translations(
     menu_item_id: str,
     language_codes: List[str],
@@ -861,7 +860,7 @@ async def generate_translations(
         "errors": errors
     })
 
-@app.put("/api/translations/{translation_id}")
+@app.put("/api/v1/translations/{translation_id}")
 async def update_translation(
     translation_id: str,
     name: Optional[str] = Form(None),
@@ -896,7 +895,7 @@ async def update_translation(
     
     return JSONResponse(translation_result.data[0])
 
-@app.delete("/api/translations/{translation_id}")
+@app.delete("/api/v1/translations/{translation_id}")
 async def delete_translation(translation_id: str, clerk_user_id: str = Depends(require_auth)):
     """Delete a translation"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
@@ -908,7 +907,7 @@ async def delete_translation(translation_id: str, clerk_user_id: str = Depends(r
     return JSONResponse({"message": "Translation deleted"})
 
 # Category Translations Endpoints
-@app.post("/api/category-translations/generate/{category_id}")
+@app.post("/api/v1/category-translations/generate/{category_id}")
 async def generate_category_translations(
     category_id: str,
     language_codes: List[str],
@@ -969,7 +968,7 @@ async def generate_category_translations(
         "errors": errors
     })
 
-@app.put("/api/category-translations/{translation_id}")
+@app.put("/api/v1/category-translations/{translation_id}")
 async def update_category_translation(
     translation_id: str,
     name: str = Form(...),
@@ -984,7 +983,7 @@ async def update_category_translation(
     result = supabase.table('category_translations').update({"name": name}).eq('id', translation_id).execute()
     return JSONResponse(result.data[0] if result.data else {"message": "Translation updated"})
 
-@app.delete("/api/category-translations/{translation_id}")
+@app.delete("/api/v1/category-translations/{translation_id}")
 async def delete_category_translation(translation_id: str, clerk_user_id: str = Depends(require_auth)):
     """Delete a category translation"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
@@ -1061,7 +1060,7 @@ UI_TRANSLATIONS = {
     },
 }
 
-@app.get("/api/ui-translations/{language_code}")
+@app.get("/api/v1/ui-translations/{language_code}")
 async def get_ui_translations(language_code: str):
     """Get UI translations for a specific language"""
     result = {}
@@ -1070,7 +1069,7 @@ async def get_ui_translations(language_code: str):
     return result
 
 # Analytics Endpoint
-@app.get("/api/analytics")
+@app.get("/api/v1/analytics")
 async def get_analytics(clerk_user_id: str = Depends(require_auth)):
     """Get analytics data for dashboard"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
@@ -1114,7 +1113,7 @@ async def get_analytics(clerk_user_id: str = Depends(require_auth)):
     })
 
 # QR Code Endpoint
-@app.get("/api/qr-code")
+@app.get("/api/v1/qr-code")
 async def generate_qr_code_api(clerk_user_id: str = Depends(require_auth)):
     """Generate QR code for the menu - requires authentication"""
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
@@ -1142,7 +1141,7 @@ async def generate_qr_code_api(clerk_user_id: str = Depends(require_auth)):
     })
 
 # Supported Languages Endpoints
-@app.get("/api/supported-languages")
+@app.get("/api/v1/supported-languages")
 async def get_supported_languages():
     """Get list of supported languages"""
     global SUPPORTED_LANGUAGES
@@ -1154,7 +1153,7 @@ async def get_supported_languages():
         ]
     })
 
-@app.post("/api/languages/add")
+@app.post("/api/v1/languages/add")
 async def add_language(request: Request, clerk_user_id: str = Depends(require_auth)):
     """Add a new supported language and automatically translate all content"""
     global SUPPORTED_LANGUAGES
@@ -1347,7 +1346,7 @@ async def add_language(request: Request, clerk_user_id: str = Depends(require_au
         "restaurant_description_translated": restaurant_description_translated
     })
 
-@app.delete("/api/languages/remove/{language_code}")
+@app.delete("/api/v1/languages/remove/{language_code}")
 async def remove_language(language_code: str, clerk_user_id: str = Depends(require_auth)):
     """Remove a supported language and delete all translations for it"""
     global SUPPORTED_LANGUAGES
@@ -1393,7 +1392,7 @@ async def remove_language(language_code: str, clerk_user_id: str = Depends(requi
     else:
         raise HTTPException(status_code=500, detail="Failed to save languages")
 
-@app.post("/api/contact")
+@app.post("/api/v1/contact")
 async def submit_contact_form(
     name: str = Form(...),
     email: str = Form(...),
