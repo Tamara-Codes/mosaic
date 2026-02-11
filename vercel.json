@@ -1,5 +1,4 @@
 {
-  "buildCommand": "cd frontend && npm run build",
-  "outputDirectory": "frontend/dist",
+  "buildCommand": "cd frontend && npm run build && mkdir -p public && cp -r frontend/dist/* public/",
   "installCommand": "pip install -r requirements.txt --break-system-packages && cd frontend && npm install"
 }
