@@ -44,7 +44,8 @@ from services.email_service import send_contact_email
 app = FastAPI(
     title="Restaurant Menu API",
     description="Multi-tenant restaurant menu management system",
-    version="1.0.0"
+    version="1.0.0",
+    root_path="/api"
 )
 
 # CORS middleware

@@ -236,7 +236,6 @@ export default function MenuPage() {
                 href="mailto:info@ferros.menu"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium text-lg shadow-lg hover:shadow-orange-500/20"
               >
-                <span>📧</span>
                 <span>info@ferros.menu</span>
               </a>
             </div>

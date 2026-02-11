@@ -343,8 +343,8 @@ export function Menu({ language, onLanguageChange }: MenuProps) {
                             </div>
                           )}
                         </CardHeader>
-                        <CardContent>
-                          <div className="flex items-center justify-between pt-2 border-t border-amber-100">
+                        <CardContent className="pb-0">
+                          <div className="flex items-center justify-between pt-1 border-t border-amber-100">
                             <span className="text-xl font-semibold text-amber-900">
                               {item.price.toFixed(2)} €
                             </span>
