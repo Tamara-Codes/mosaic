@@ -223,39 +223,62 @@ async def get_restaurant_public(restaurant_slug: str):
 @app.get("/api/restaurant-info")
 async def get_restaurant_info(clerk_user_id: str = Depends(require_auth), authorization: Optional[str] = Header(None)):
     """Get restaurant information for authenticated user"""
+    logger.info(f"=== Restaurant Info Request for Clerk User: {clerk_user_id} ===")
     supabase = get_supabase_client()
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     
     # If not found by clerk_user_id, try to link by email from Clerk user
     if not restaurant:
+        logger.info(f"No restaurant found for clerk_user_id: {clerk_user_id}")
+        
         # Get user info including email from Clerk token
         user_info = await get_clerk_user_info(authorization)
+        logger.info(f"User info from token: {user_info}")
         user_email = user_info.get("email") if user_info else None
         
         if user_email:
-            logger.info(f"Restaurant not found for Clerk user {clerk_user_id}, trying to link by email: {user_email}")
+            logger.info(f"Extracted email from token: {user_email}")
+            logger.info(f"Searching for restaurant with email: {user_email}")
             
             # Find restaurant by email (that doesn't have a clerk_user_id yet)
             restaurants = supabase.table('restaurants').select('*').eq('email', user_email).execute()
+            logger.info(f"Found {len(restaurants.data or [])} restaurants with email {user_email}")
+            
+            if restaurants.data:
+                for idx, r in enumerate(restaurants.data):
+                    logger.info(f"Restaurant {idx}: id={r.get('id')}, name={r.get('name')}, clerk_user_id={r.get('clerk_user_id')}")
+            
             available = [r for r in (restaurants.data or []) if not r.get('clerk_user_id')]
+            logger.info(f"Found {len(available)} unlinked restaurants")
             
             if available:
                 # Link the restaurant to this Clerk user
+                logger.info(f"Attempting to link restaurant {available[0]['id']} to Clerk user {clerk_user_id}")
                 result = supabase.table('restaurants').update({
                     'clerk_user_id': clerk_user_id
                 }).eq('id', available[0]['id']).execute()
                 
                 if result.data:
                     restaurant = result.data[0]
-                    logger.info(f"Successfully linked restaurant {restaurant['name']} (ID: {restaurant['id']}) to Clerk user {clerk_user_id} via email {user_email}")
+                    logger.info(f"✅ Successfully linked restaurant {restaurant['name']} (ID: {restaurant['id']}) to Clerk user {clerk_user_id} via email {user_email}")
+                else:
+                    logger.error(f"❌ Failed to link restaurant - no data returned from update")
             else:
-                logger.warning(f"No unlinked restaurant found for email: {user_email}")
+                logger.warning(f"❌ No unlinked restaurant found for email: {user_email}")
+                # List all restaurants for debugging
+                all_restaurants = supabase.table('restaurants').select('id, name, email, clerk_user_id').execute()
+                logger.info(f"All restaurants in database: {all_restaurants.data}")
         else:
-            logger.error(f"Could not extract email from Clerk token for user {clerk_user_id}")
+            logger.error(f"❌ Could not extract email from Clerk token for user {clerk_user_id}")
+            logger.error(f"User info was: {user_info}")
+    else:
+        logger.info(f"✅ Found existing restaurant: {restaurant['name']} (ID: {restaurant['id']})")
     
     if not restaurant:
+        logger.error(f"❌ Final result: No restaurant found for user {clerk_user_id}")
         raise HTTPException(status_code=404, detail="Restoran nije pronađen. Kontaktirajte administratora da kreira restoran za vašu email adresu.")
     
+    logger.info(f"=== Returning restaurant info for: {restaurant['name']} ===")
     return JSONResponse({
         "id": restaurant['id'],
         "name": restaurant['name'],

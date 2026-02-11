@@ -41,10 +41,22 @@ async def verify_clerk_token(token: str) -> Optional[dict]:
             options={"verify_exp": True}
         )
         
+        # Debug: print all fields in the token to see what's available
+        print(f"DEBUG: Decoded token fields: {decoded.keys()}")
+        print(f"DEBUG: Full decoded token: {decoded}")
+        
         # Extract user ID and email from token
+        # Clerk tokens usually have email in these fields
+        email = (
+            decoded.get("email") or 
+            decoded.get("email_address") or 
+            decoded.get("primary_email_address") or
+            decoded.get("azp")  # Sometimes email is in azp field
+        )
+        
         return {
             "user_id": decoded.get("sub"),
-            "email": decoded.get("email") or decoded.get("email_address") or decoded.get("primary_email_address")
+            "email": email
         }
     except jwt.ExpiredSignatureError:
         print("Token has expired")
