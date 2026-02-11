@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Globe, DollarSign, Clock, Plus, QrCode, Smartphone } from 'lucide-react'
 
 import { ContactForm } from '@/components/ContactForm'
 import { PricingSection } from '@/components/PricingSection'
@@ -48,6 +48,37 @@ export function LandingPage() {
             <p className="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
               QR jelovnik koji govori 100+ jezika. Mijenjajte cijene, sakrijte nedostupna jela, istaknite alergene — instant, bez tiskanja.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-16 bg-[#18181b] border-y border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+            <div className="text-center group">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-500/10 mb-4 group-hover:bg-purple-500/20 transition-colors">
+                <Globe className="w-8 h-8 text-purple-500" />
+              </div>
+              <div className="text-5xl font-bold text-white mb-2">100+</div>
+              <p className="text-zinc-400 text-lg">jezika podržano</p>
+            </div>
+            
+            <div className="text-center group">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 mb-4 group-hover:bg-green-500/20 transition-colors">
+                <DollarSign className="w-8 h-8 text-green-500" />
+              </div>
+              <div className="text-5xl font-bold text-white mb-2">0€</div>
+              <p className="text-zinc-400 text-lg">za tiskanje</p>
+            </div>
+            
+            <div className="text-center group">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 mb-4 group-hover:bg-orange-500/20 transition-colors">
+                <Clock className="w-8 h-8 text-orange-500" />
+              </div>
+              <div className="text-5xl font-bold text-white mb-2">5 min</div>
+              <p className="text-zinc-400 text-lg">za postavljanje</p>
+            </div>
           </div>
         </div>
       </section>
@@ -140,8 +171,132 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* How It Works */}
+      <section className="py-20 bg-[#18181b]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">Kako funkcionira?</h2>
+            <p className="text-zinc-400 text-lg">Tri jednostavna koraka do vašeg digitalnog jelovnika</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            {/* Step 1 */}
+            <div className="relative">
+              <div className="bg-zinc-900/50 p-8 rounded-2xl border border-white/5 hover:border-orange-500/30 transition-all h-full">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mb-6 shadow-lg">
+                    <Plus className="w-10 h-10 text-white" />
+                  </div>
+                  <div className="text-orange-500 font-bold text-sm mb-2">KORAK 1</div>
+                  <h3 className="text-white font-semibold text-xl mb-3">Dodajte jela i cijene</h3>
+                  <p className="text-zinc-400 leading-relaxed">
+                    Jednostavno unesite nazive jela, cijene i opise. AI automatski prevodi na sve jezike.
+                  </p>
+                </div>
+              </div>
+              {/* Arrow for desktop */}
+              <div className="hidden md:block absolute top-10 -right-4 text-orange-500/30">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                  <path d="M5 20 L30 20 M30 20 L22 12 M30 20 L22 28" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </div>
+            </div>
+            
+            {/* Step 2 */}
+            <div className="relative">
+              <div className="bg-zinc-900/50 p-8 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all h-full">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-6 shadow-lg">
+                    <QrCode className="w-10 h-10 text-white" />
+                  </div>
+                  <div className="text-purple-500 font-bold text-sm mb-2">KORAK 2</div>
+                  <h3 className="text-white font-semibold text-xl mb-3">Generirajte QR kod</h3>
+                  <p className="text-zinc-400 leading-relaxed">
+                    Kliknite jednom i dobijete QR kod. Ispišite ga i stavite na stol ili pri ulazu.
+                  </p>
+                </div>
+              </div>
+              {/* Arrow for desktop */}
+              <div className="hidden md:block absolute top-10 -right-4 text-purple-500/30">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                  <path d="M5 20 L30 20 M30 20 L22 12 M30 20 L22 28" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </div>
+            </div>
+            
+            {/* Step 3 */}
+            <div>
+              <div className="bg-zinc-900/50 p-8 rounded-2xl border border-white/5 hover:border-green-500/30 transition-all h-full">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mb-6 shadow-lg">
+                    <Smartphone className="w-10 h-10 text-white" />
+                  </div>
+                  <div className="text-green-500 font-bold text-sm mb-2">KORAK 3</div>
+                  <h3 className="text-white font-semibold text-xl mb-3">Gosti skeniraju i pregledavaju</h3>
+                  <p className="text-zinc-400 leading-relaxed">
+                    Gost skenira kod i vidi jelovnik na svom jeziku. Bez aplikacije, bez čekanja.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <PricingSection />
+
+      {/* Dashboard Preview */}
+      <section className="py-20 bg-zinc-900/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">Jednostavan i moćan dashboard</h2>
+            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+              Intuitivno sučelje dizajnirano za vlasnike restorana. Sve što vam treba na jednom mjestu.
+            </p>
+          </div>
+          
+          <div className="space-y-8">
+            {/* Main Dashboard Screenshot */}
+            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+              <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 aspect-video flex items-center justify-center">
+                {/* Placeholder - replace with actual screenshot */}
+                <div className="text-center p-8">
+                  <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-orange-500/10 flex items-center justify-center">
+                    <Sparkles className="w-12 h-12 text-orange-500" />
+                  </div>
+                  <p className="text-zinc-500 text-sm">
+                    Dashboard screenshot će biti dodan ovdje
+                  </p>
+                  <p className="text-zinc-600 text-xs mt-2">
+                    Možete dodati pravi screenshot kasnije u /public/dashboard-screenshot.png
+                  </p>
+                </div>
+                {/* When you have a screenshot, replace the above div with: */}
+                {/* <img src="/dashboard-screenshot.png" alt="Ferros Dashboard" className="w-full h-full object-cover" /> */}
+              </div>
+            </div>
+            
+            {/* Feature Highlights */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-zinc-900/50 p-6 rounded-xl border border-white/5">
+                <h3 className="text-white font-semibold mb-2">📊 Pregled u realnom vremenu</h3>
+                <p className="text-zinc-400 text-sm">Vidite statistike, dostupnost jela i povratne informacije gostiju.</p>
+              </div>
+              
+              <div className="bg-zinc-900/50 p-6 rounded-xl border border-white/5">
+                <h3 className="text-white font-semibold mb-2">⚡ Instant ažuriranja</h3>
+                <p className="text-zinc-400 text-sm">Promijenite cijenu ili dostupnost jela — promjena je vidljiva odmah.</p>
+              </div>
+              
+              <div className="bg-zinc-900/50 p-6 rounded-xl border border-white/5">
+                <h3 className="text-white font-semibold mb-2">📱 Mobilno optimizirano</h3>
+                <p className="text-zinc-400 text-sm">Upravljajte jelovnikom s mobitela, tableta ili računala.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Contact Section */}
       <section className="py-24 bg-[#18181b] relative overflow-hidden" id="contact">
