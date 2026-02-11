@@ -92,30 +92,16 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
               </p>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center mb-8">
-              <p className="text-blue-900 font-semibold mb-6">
+            <div className="mb-8">
+              <p className="text-muted-foreground font-semibold mb-4">
                 Kontaktirajte nas na:
               </p>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-blue-800 text-sm mb-2">📧 Email:</p>
-                  <a 
-                    href="mailto:info@ferros.menu"
-                    className="inline-block px-6 py-2 bg-blue-900 text-white rounded hover:bg-blue-800 transition-colors font-semibold"
-                  >
-                    info@ferros.menu
-                  </a>
-                </div>
-                <div>
-                  <p className="text-blue-800 text-sm mb-2">ili ispunite obrazac:</p>
-                  <a 
-                    href="https://ferros.menu#contact"
-                    className="inline-block px-6 py-2 bg-blue-200 text-blue-900 rounded hover:bg-blue-300 transition-colors font-semibold"
-                  >
-                    Obrazac za kontakt
-                  </a>
-                </div>
-              </div>
+              <a 
+                href="mailto:info@ferros.menu"
+                className="inline-block px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold"
+              >
+                info@ferros.menu
+              </a>
             </div>
 
             <button
