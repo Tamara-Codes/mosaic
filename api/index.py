@@ -1069,8 +1069,8 @@ async def generate_qr_code_api(clerk_user_id: str = Depends(require_auth)):
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
-    # Get restaurant slug for menu URL
-    menu_url = f"{MENU_URL}/menu/{restaurant['slug']}"
+    # Get restaurant slug for menu URL - use root path for clean URLs
+    menu_url = f"{MENU_URL}/{restaurant['slug']}"
     
     # Generate QR code
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
