@@ -13,6 +13,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
+import { useState } from "react"
+import axios from "axios"
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -27,6 +29,8 @@ const formSchema = z.object({
 })
 
 export function ContactForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -36,12 +40,39 @@ export function ContactForm() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
-    toast.success("Poruka poslana!", {
-      description: "Javit ćemo vam se uskoro.",
-    })
-    form.reset()
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true)
+    
+    try {
+      // Create FormData for the API
+      const formData = new FormData()
+      formData.append('name', values.name)
+      formData.append('email', values.email)
+      formData.append('message', values.message)
+      
+      // Send to backend API
+      const response = await axios.post('/api/contact', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      
+      if (response.data.success) {
+        toast.success("Poruka poslana!", {
+          description: "Javit ćemo vam se uskoro.",
+        })
+        form.reset()
+      } else {
+        throw new Error('Failed to send message')
+      }
+    } catch (error) {
+      console.error('Contact form error:', error)
+      toast.error("Greška pri slanju poruke", {
+        description: "Molimo pokušajte ponovno kasnije.",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -104,8 +135,12 @@ export function ContactForm() {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-6">
-            Pošalji poruku
+          <Button 
+            type="submit" 
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-6"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Šalje se..." : "Pošalji poruku"}
           </Button>
         </form>
       </Form>

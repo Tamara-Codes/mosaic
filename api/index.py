@@ -39,6 +39,7 @@ from services.languages import load_supported_languages, save_supported_language
 from services.auth import get_clerk_user_info, get_clerk_user_email, get_restaurant_by_clerk_user, require_auth
 from services.webhooks import verify_signature, handle_user_created, handle_user_deleted
 from services.gemini_translator import translate_menu_item, translate_category, translate_batch
+from services.email_service import send_contact_email
 
 app = FastAPI(
     title="Restaurant Menu API",
@@ -268,8 +269,7 @@ async def get_restaurant_info(clerk_user_id: str = Depends(require_auth), author
                 all_restaurants = supabase.table('restaurants').select('id, name, email, clerk_user_id').execute()
                 logger.info(f"All restaurants in database: {all_restaurants.data}")
         else:
-            logger.error(f"❌ Could not extract email from Clerk token for user {clerk_user_id}")
-            logger.error(f"User info was: {user_info}")
+            logger.error(f"❌ Could not fetch email from Clerk API for user {clerk_user_id}")
     else:
         logger.info(f"✅ Found existing restaurant: {restaurant['name']} (ID: {restaurant['id']})")
     
@@ -1391,6 +1391,41 @@ async def remove_language(language_code: str, clerk_user_id: str = Depends(requi
         })
     else:
         raise HTTPException(status_code=500, detail="Failed to save languages")
+
+@app.post("/api/contact")
+async def submit_contact_form(
+    name: str = Form(...),
+    email: str = Form(...),
+    message: str = Form(...)
+):
+    """
+    Public endpoint for contact form submissions
+    Sends email to info@ferros.menu
+    """
+    try:
+        # Send email
+        success = await send_contact_email(
+            name=name,
+            email=email,
+            message=message
+        )
+        
+        if success:
+            return JSONResponse({
+                "success": True,
+                "message": "Poruka uspješno poslana"
+            })
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Greška pri slanju poruke. Molimo pokušajte kasnije."
+            )
+    except Exception as e:
+        logger.error(f"Contact form error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Greška pri slanju poruke. Molimo pokušajte kasnije."
+        )
 
 if __name__ == "__main__":
     import uvicorn
