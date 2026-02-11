@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 from core.config import CORS_ORIGINS, MENU_URL
 from services.languages import load_supported_languages, save_supported_languages
-from services.auth import get_clerk_user_info, get_restaurant_by_clerk_user, require_auth
+from services.auth import get_clerk_user_info, get_clerk_user_email, get_restaurant_by_clerk_user, require_auth
 from services.webhooks import verify_signature, handle_user_created, handle_user_deleted
 from services.gemini_translator import translate_menu_item, translate_category, translate_batch
 
@@ -231,10 +231,9 @@ async def get_restaurant_info(clerk_user_id: str = Depends(require_auth), author
     if not restaurant:
         logger.info(f"No restaurant found for clerk_user_id: {clerk_user_id}")
         
-        # Get user info including email from Clerk token
-        user_info = await get_clerk_user_info(authorization)
-        logger.info(f"User info from token: {user_info}")
-        user_email = user_info.get("email") if user_info else None
+        # Get user email from Clerk API (JWT doesn't contain email)
+        user_email = await get_clerk_user_email(clerk_user_id)
+        logger.info(f"Fetched email from Clerk API: {user_email}")
         
         if user_email:
             logger.info(f"Extracted email from token: {user_email}")

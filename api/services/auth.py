@@ -6,9 +6,54 @@ from fastapi import Header, HTTPException
 import os
 import jwt
 from jwt import PyJWKClient
+import httpx
 from core.supabase_client import get_supabase_client
 
 CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
+
+async def get_clerk_user_email(user_id: str) -> Optional[str]:
+    """
+    Fetch user email from Clerk API using the user ID.
+    """
+    if not CLERK_SECRET_KEY:
+        print("ERROR: CLERK_SECRET_KEY not set")
+        return None
+    
+    try:
+        # Call Clerk API to get user details
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://api.clerk.com/v1/users/{user_id}",
+                headers={
+                    "Authorization": f"Bearer {CLERK_SECRET_KEY}",
+                    "Content-Type": "application/json"
+                }
+            )
+            
+            if response.status_code == 200:
+                user_data = response.json()
+                # Get primary email address
+                email_addresses = user_data.get("email_addresses", [])
+                primary_email_id = user_data.get("primary_email_address_id")
+                
+                # Find primary email
+                for email_obj in email_addresses:
+                    if email_obj.get("id") == primary_email_id:
+                        email = email_obj.get("email_address")
+                        print(f"DEBUG: Fetched email from Clerk API: {email}")
+                        return email
+                
+                # Fallback to first email if primary not found
+                if email_addresses:
+                    email = email_addresses[0].get("email_address")
+                    print(f"DEBUG: Using first email from Clerk API: {email}")
+                    return email
+            else:
+                print(f"ERROR: Clerk API returned status {response.status_code}: {response.text}")
+                return None
+    except Exception as e:
+        print(f"ERROR: Failed to fetch user from Clerk API: {e}")
+        return None
 
 async def verify_clerk_token(token: str) -> Optional[dict]:
     """
