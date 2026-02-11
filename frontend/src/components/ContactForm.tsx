@@ -79,7 +79,6 @@ export function ContactForm() {
     <div className="w-full max-w-md mx-auto p-8 rounded-2xl bg-zinc-900 border border-white/5 shadow-xl">
       <div className="mb-8 text-center">
         <h3 className="text-2xl font-bold text-white mb-2">Kontaktirajte nas</h3>
-        <p className="text-zinc-400 text-sm">Imate pitanja? Rado ćemo pomoći.</p>
       </div>
       
       <Form {...form}>
