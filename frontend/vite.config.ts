@@ -16,13 +16,9 @@ export default defineConfig({
         manualChunks: (id) => {
           // Vendor chunks
           if (id.includes('node_modules')) {
-            // Clerk (authentication) - large library, separate chunk
-            if (id.includes('@clerk')) {
-              return 'vendor-clerk'
-            }
-            
-            // React core
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+            // Keep Clerk WITH React - they must share the same module state
+            // Splitting them causes "Cannot set properties of undefined (setting 'Children')" errors
+            if (id.includes('@clerk') || id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
               return 'vendor-react'
             }
             
