@@ -254,40 +254,6 @@ export function LandingPage() {
       {/* Pricing Section */}
       <PricingSection />
 
-      {/* Dashboard Preview */}
-      <section className="py-20 bg-zinc-900/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">Jednostavan i moćan dashboard</h2>
-            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-              Intuitivno sučelje dizajnirano za vlasnike restorana. Sve što vam treba na jednom mjestu.
-            </p>
-          </div>
-          
-          <div className="space-y-8">
-            {/* Main Dashboard Screenshot */}
-            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
-              <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 aspect-video flex items-center justify-center">
-                {/* Placeholder - replace with actual screenshot */}
-                <div className="text-center p-8">
-                  <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-orange-500/10 flex items-center justify-center">
-                    <Sparkles className="w-12 h-12 text-orange-500" />
-                  </div>
-                  <p className="text-zinc-500 text-sm">
-                    Dashboard screenshot će biti dodan ovdje
-                  </p>
-                  <p className="text-zinc-600 text-xs mt-2">
-                    Možete dodati pravi screenshot kasnije u /public/dashboard-screenshot.png
-                  </p>
-                </div>
-                {/* When you have a screenshot, replace the above div with: */}
-                {/* <img src="/dashboard-screenshot.png" alt="Ferros Dashboard" className="w-full h-full object-cover" /> */}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Contact Section */}
       <section className="py-24 bg-[#18181b] relative overflow-hidden" id="contact">
         <div className="absolute inset-0 bg-orange-500/5 blur-3xl rounded-full transform -translate-x-1/2 translate-y-1/2"></div>
