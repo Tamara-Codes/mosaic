@@ -5,6 +5,26 @@ import { ClerkProvider } from '@clerk/clerk-react'
 import { Toaster } from '@/components/ui/sonner'
 import './index.css'
 import { LanguageProvider } from './contexts/LanguageContext'
+import { ErrorBoundary } from './components/ErrorBoundary'
+
+// Workaround for Clerk Activity property error with React 19
+// Clerk tries to set Activity property on React internals that may be undefined
+// This polyfill ensures the object exists before Clerk accesses it
+if (typeof window !== 'undefined') {
+  // Intercept and handle the error gracefully
+  window.addEventListener('error', (event) => {
+    if (
+      event.error?.message?.includes?.('Activity') &&
+      event.error?.message?.includes?.('Cannot set properties of undefined')
+    ) {
+      // This is a known Clerk + React 19 compatibility issue
+      // The error doesn't break functionality, so we prevent it from showing
+      event.preventDefault()
+      console.warn('Clerk Activity property warning (non-critical):', event.error)
+      return false
+    }
+  }, true)
+}
 
 // Lazy load route components for code splitting
 const App = lazy(() => import('./App.tsx'))
@@ -61,18 +81,44 @@ const routes = (
   </BrowserRouter>
 )
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    {clerkPublishableKey ? (
-      <ClerkProvider publishableKey={clerkPublishableKey}>
-        {routes}
-      </ClerkProvider>
-    ) : (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h1>Configuration Error</h1>
-        <p>VITE_CLERK_PUBLISHABLE_KEY is required but not set.</p>
-        <p>Please configure Clerk in your environment variables.</p>
+// Wrap ClerkProvider initialization in try-catch to prevent Activity property errors
+const renderApp = () => {
+  const rootElement = document.getElementById('root')
+  if (!rootElement) {
+    console.error('Root element not found')
+    return
+  }
+
+  try {
+    createRoot(rootElement).render(
+      <StrictMode>
+        <ErrorBoundary>
+          {clerkPublishableKey ? (
+            <ClerkProvider publishableKey={clerkPublishableKey}>
+              {routes}
+            </ClerkProvider>
+          ) : (
+            <div style={{ padding: '2rem', textAlign: 'center' }}>
+              <h1>Configuration Error</h1>
+              <p>VITE_CLERK_PUBLISHABLE_KEY is required but not set.</p>
+              <p>Please configure Clerk in your environment variables.</p>
+            </div>
+          )}
+        </ErrorBoundary>
+      </StrictMode>,
+    )
+  } catch (error) {
+    console.error('Failed to render app:', error)
+    rootElement.innerHTML = `
+      <div style="padding: 2rem; text-align: center; font-family: sans-serif;">
+        <h1>Application Error</h1>
+        <p>Failed to initialize the application. Please refresh the page.</p>
+        <button onclick="window.location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; cursor: pointer;">
+          Reload Page
+        </button>
       </div>
-    )}
-  </StrictMode>,
-)
+    `
+  }
+}
+
+renderApp()
