@@ -1,35 +1,28 @@
 """
-Email service for sending contact form messages via SMTP
+Email service for sending contact form messages via Resend HTTP API.
 
-IMPORTANT: For Zoho Mail with 2FA enabled, you MUST use an app-specific password.
-Generate one at: https://accounts.zoho.com/home#security/app-passwords
+Resend is used instead of SMTP because Vercel serverless functions
+block outbound SMTP connections on ports 587/465.
 
-SMTP Settings for Zoho:
-- Host: smtp.zoho.com
-- Port 587: Use with STARTTLS (TLS encryption)
-- Port 465: Use with SSL encryption
-- Username: Your full Zoho email address (e.g., info@ferros.menu)
-- Password: App-specific password (if 2FA enabled) or regular password
+Setup:
+1. Sign up at https://resend.com
+2. Add and verify your domain (ferros.menu) in the Resend dashboard
+3. Set RESEND_API_KEY in your environment variables
 """
 import os
-import smtplib
-import ssl
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import httpx
 from typing import Optional
 import logging
 
 logger = logging.getLogger(__name__)
 
-# SMTP Configuration for Zoho
-SMTP_HOST = os.getenv("SMTP_HOST", "smtp.zoho.com")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USER = os.getenv("SMTP_USER")  # Your Zoho email (info@ferros.menu)
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")  # App-specific password if 2FA enabled
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+RESEND_API_URL = "https://api.resend.com/emails"
+FROM_EMAIL = os.getenv("RESEND_FROM_EMAIL", "Ferros <info@ferros.menu>")
 CONTACT_EMAIL = "info@ferros.menu"
 
-if not SMTP_USER or not SMTP_PASSWORD:
-    logger.warning("SMTP credentials not set - email functionality will be disabled")
+if not RESEND_API_KEY:
+    logger.warning("RESEND_API_KEY not set - email functionality will be disabled")
 
 
 async def send_contact_email(
@@ -39,28 +32,26 @@ async def send_contact_email(
     restaurant_name: Optional[str] = None
 ) -> bool:
     """
-    Send contact form submission to info@ferros.menu via SMTP
-    
+    Send contact form submission to info@ferros.menu via Resend API
+
     Args:
         name: Name of the person contacting
         email: Email address of the person contacting
         message: The message content
         restaurant_name: Optional restaurant name if from authenticated user
-    
+
     Returns:
         bool: True if email was sent successfully, False otherwise
     """
-    if not SMTP_USER or not SMTP_PASSWORD:
-        logger.error("Cannot send email: SMTP credentials not configured")
+    if not RESEND_API_KEY:
+        logger.error("Cannot send email: RESEND_API_KEY not configured")
         return False
-    
+
     try:
-        # Build email subject
         subject = f"Nova poruka sa kontakt forme - {name}"
         if restaurant_name:
             subject += f" ({restaurant_name})"
-        
-        # Build email HTML content
+
         html_content = f"""
         <html>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
@@ -68,20 +59,20 @@ async def send_contact_email(
                     <h2 style="color: #f97316; border-bottom: 2px solid #f97316; padding-bottom: 10px;">
                         Nova poruka sa kontakt forme
                     </h2>
-                    
+
                     <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
                         <p><strong>Ime:</strong> {name}</p>
                         <p><strong>Email:</strong> <a href="mailto:{email}">{email}</a></p>
                         {f'<p><strong>Restoran:</strong> {restaurant_name}</p>' if restaurant_name else ''}
                     </div>
-                    
+
                     <div style="margin: 20px 0;">
                         <h3 style="color: #555;">Poruka:</h3>
                         <div style="background-color: #fff; padding: 15px; border-left: 4px solid #f97316; border-radius: 4px;">
-                            {message.replace('\n', '<br>')}
+                            {message.replace(chr(10), '<br>')}
                         </div>
                     </div>
-                    
+
                     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #888; font-size: 12px;">
                         <p>Ova poruka je poslana sa Ferros kontakt forme.</p>
                     </div>
@@ -89,83 +80,31 @@ async def send_contact_email(
             </body>
         </html>
         """
-        
-        # Build plain text version
-        text_content = f"""
-Nova poruka sa kontakt forme
 
-Ime: {name}
-Email: {email}
-{'Restoran: ' + restaurant_name if restaurant_name else ''}
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                RESEND_API_URL,
+                headers={
+                    "Authorization": f"Bearer {RESEND_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": FROM_EMAIL,
+                    "to": [CONTACT_EMAIL],
+                    "reply_to": email,
+                    "subject": subject,
+                    "html": html_content,
+                },
+                timeout=10.0,
+            )
 
-Poruka:
-{message}
-
----
-Ova poruka je poslana sa Ferros kontakt forme.
-        """
-        
-        # Create message
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = SMTP_USER
-        msg['To'] = CONTACT_EMAIL
-        msg['Reply-To'] = email
-        
-        # Attach both plain text and HTML versions
-        part1 = MIMEText(text_content, 'plain', 'utf-8')
-        part2 = MIMEText(html_content, 'html', 'utf-8')
-        msg.attach(part1)
-        msg.attach(part2)
-        
-        # Send email via SMTP
-        # Try port 587 with TLS first, fallback to 465 with SSL if needed
-        port = SMTP_PORT
-        use_ssl = port == 465
-        
-        try:
-            if use_ssl:
-                # Use SSL for port 465
-                context = ssl.create_default_context()
-                with smtplib.SMTP_SSL(SMTP_HOST, port, context=context) as server:
-                    server.login(SMTP_USER, SMTP_PASSWORD)
-                    server.send_message(msg)
-            else:
-                # Use STARTTLS for port 587
-                with smtplib.SMTP(SMTP_HOST, port) as server:
-                    server.starttls()
-                    server.login(SMTP_USER, SMTP_PASSWORD)
-                    server.send_message(msg)
-            
+        if response.status_code == 200:
             logger.info(f"Contact email sent successfully to {CONTACT_EMAIL}")
             return True
-            
-        except smtplib.SMTPAuthenticationError as auth_error:
-            error_msg = str(auth_error)
-            logger.error(f"SMTP Authentication failed: {error_msg}")
-            logger.error("Common causes:")
-            logger.error("1. 2FA is enabled - you MUST use an app-specific password")
-            logger.error("   Generate one at: https://accounts.zoho.com/home#security/app-passwords")
-            logger.error("2. Incorrect email address or password")
-            logger.error("3. SMTP access not enabled in Zoho account settings")
-            logger.error(f"SMTP_USER: {SMTP_USER}")
-            logger.error(f"SMTP_HOST: {SMTP_HOST}, SMTP_PORT: {port}")
-            
-            # Try alternative port if first attempt failed
-            if not use_ssl and port == 587:
-                logger.info("Retrying with port 465 (SSL)...")
-                try:
-                    context = ssl.create_default_context()
-                    with smtplib.SMTP_SSL(SMTP_HOST, 465, context=context) as server:
-                        server.login(SMTP_USER, SMTP_PASSWORD)
-                        server.send_message(msg)
-                    logger.info(f"Contact email sent successfully using port 465")
-                    return True
-                except Exception as retry_error:
-                    logger.error(f"Retry with port 465 also failed: {str(retry_error)}")
-            
+        else:
+            logger.error(f"Resend API error {response.status_code}: {response.text}")
             return False
-        
+
     except Exception as e:
         logger.error(f"Failed to send contact email: {str(e)}")
         logger.error(f"Error type: {type(e).__name__}")
@@ -178,29 +117,29 @@ async def send_notification_email(
     message: str
 ) -> bool:
     """
-    Send a notification email to a specific address via SMTP
-    
+    Send a notification email to a specific address via Resend API
+
     Args:
         to_email: Recipient email address
         subject: Email subject
         message: Email message content
-    
+
     Returns:
         bool: True if email was sent successfully, False otherwise
     """
-    if not SMTP_USER or not SMTP_PASSWORD:
-        logger.error("Cannot send email: SMTP credentials not configured")
+    if not RESEND_API_KEY:
+        logger.error("Cannot send email: RESEND_API_KEY not configured")
         return False
-    
+
     try:
         html_content = f"""
         <html>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
                     <div style="margin: 20px 0;">
-                        {message.replace('\n', '<br>')}
+                        {message.replace(chr(10), '<br>')}
                     </div>
-                    
+
                     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #888; font-size: 12px;">
                         <p>Ferros - Vaš elektronski jelovnik</p>
                     </div>
@@ -208,67 +147,31 @@ async def send_notification_email(
             </body>
         </html>
         """
-        
-        # Create message
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = SMTP_USER
-        msg['To'] = to_email
-        
-        # Attach both plain text and HTML versions
-        part1 = MIMEText(message, 'plain', 'utf-8')
-        part2 = MIMEText(html_content, 'html', 'utf-8')
-        msg.attach(part1)
-        msg.attach(part2)
-        
-        # Send email via SMTP
-        # Try port 587 with TLS first, fallback to 465 with SSL if needed
-        port = SMTP_PORT
-        use_ssl = port == 465
-        
-        try:
-            if use_ssl:
-                # Use SSL for port 465
-                context = ssl.create_default_context()
-                with smtplib.SMTP_SSL(SMTP_HOST, port, context=context) as server:
-                    server.login(SMTP_USER, SMTP_PASSWORD)
-                    server.send_message(msg)
-            else:
-                # Use STARTTLS for port 587
-                with smtplib.SMTP(SMTP_HOST, port) as server:
-                    server.starttls()
-                    server.login(SMTP_USER, SMTP_PASSWORD)
-                    server.send_message(msg)
-            
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                RESEND_API_URL,
+                headers={
+                    "Authorization": f"Bearer {RESEND_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": FROM_EMAIL,
+                    "to": [to_email],
+                    "subject": subject,
+                    "html": html_content,
+                },
+                timeout=10.0,
+            )
+
+        if response.status_code == 200:
             logger.info(f"Notification email sent successfully to {to_email}")
             return True
-            
-        except smtplib.SMTPAuthenticationError as auth_error:
-            error_msg = str(auth_error)
-            logger.error(f"SMTP Authentication failed: {error_msg}")
-            logger.error("Common causes:")
-            logger.error("1. 2FA is enabled - you MUST use an app-specific password")
-            logger.error("   Generate one at: https://accounts.zoho.com/home#security/app-passwords")
-            logger.error("2. Incorrect email address or password")
-            logger.error("3. SMTP access not enabled in Zoho account settings")
-            
-            # Try alternative port if first attempt failed
-            if not use_ssl and port == 587:
-                logger.info("Retrying with port 465 (SSL)...")
-                try:
-                    context = ssl.create_default_context()
-                    with smtplib.SMTP_SSL(SMTP_HOST, 465, context=context) as server:
-                        server.login(SMTP_USER, SMTP_PASSWORD)
-                        server.send_message(msg)
-                    logger.info(f"Notification email sent successfully using port 465")
-                    return True
-                except Exception as retry_error:
-                    logger.error(f"Retry with port 465 also failed: {str(retry_error)}")
-            
+        else:
+            logger.error(f"Resend API error {response.status_code}: {response.text}")
             return False
-        
+
     except Exception as e:
         logger.error(f"Failed to send notification email to {to_email}: {str(e)}")
         logger.error(f"Error type: {type(e).__name__}")
         return False
-
