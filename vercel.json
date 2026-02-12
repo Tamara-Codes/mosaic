@@ -9,7 +9,7 @@
     },
     {
       "source": "/sitemap.xml",
-      "destination": "/api/sitemap.xml"
+      "destination": "/api/index.py"
     },
     {
       "source": "/google1bc3981fa4fc2385.html",

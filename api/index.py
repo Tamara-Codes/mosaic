@@ -242,6 +242,7 @@ async def get_restaurant_public(restaurant_slug: str):
     })
 
 # Sitemap Endpoint
+@app.get("/sitemap.xml")
 @app.get("/api/sitemap.xml")
 async def generate_sitemap():
     """Generate sitemap.xml with all public restaurant pages"""
