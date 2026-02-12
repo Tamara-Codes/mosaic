@@ -35,7 +35,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 from core.config import CORS_ORIGINS, MENU_URL
-from services.languages import load_supported_languages, save_supported_languages
 from services.auth import get_clerk_user_info, get_clerk_user_email, get_restaurant_by_clerk_user, require_auth
 from services.webhooks import verify_signature, handle_user_created, handle_user_deleted
 from services.gemini_translator import translate_menu_item, translate_category, translate_batch
@@ -1534,7 +1533,7 @@ async def submit_contact_form(
             )
         
         # Send email
-        success = await send_contact_email(
+        success, error_message = await send_contact_email(
             name=contact_data.name,
             email=contact_data.email,
             message=contact_data.message
@@ -1546,6 +1545,8 @@ async def submit_contact_form(
                 "message": "Poruka uspješno poslana"
             })
         else:
+            # Log the actual error for debugging
+            logger.error(f"Contact form email failed: {error_message}")
             raise HTTPException(
                 status_code=500,
                 detail="Greška pri slanju poruke. Molimo pokušajte kasnije."

@@ -11,7 +11,7 @@ Setup:
 """
 import os
 import httpx
-from typing import Optional
+from typing import Optional, Tuple
 import logging
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ async def send_contact_email(
     email: str,
     message: str,
     restaurant_name: Optional[str] = None
-) -> bool:
+) -> Tuple[bool, Optional[str]]:
     """
     Send contact form submission to info@ferros.menu via Resend API
 
@@ -41,11 +41,14 @@ async def send_contact_email(
         restaurant_name: Optional restaurant name if from authenticated user
 
     Returns:
-        bool: True if email was sent successfully, False otherwise
+        Tuple[bool, Optional[str]]: (success, error_message)
+        - success: True if email was sent successfully, False otherwise
+        - error_message: Error description if failed, None if successful
     """
     if not RESEND_API_KEY:
-        logger.error("Cannot send email: RESEND_API_KEY not configured")
-        return False
+        error_msg = "RESEND_API_KEY not configured"
+        logger.error(f"Cannot send email: {error_msg}")
+        return False, error_msg
 
     try:
         subject = f"Nova poruka sa kontakt forme - {name}"
@@ -100,15 +103,27 @@ async def send_contact_email(
 
         if response.status_code == 200:
             logger.info(f"Contact email sent successfully to {CONTACT_EMAIL}")
-            return True
+            return True, None
         else:
-            logger.error(f"Resend API error {response.status_code}: {response.text}")
-            return False
+            error_msg = f"Resend API error {response.status_code}: {response.text}"
+            logger.error(error_msg)
+            return False, error_msg
 
+    except httpx.TimeoutException as e:
+        error_msg = f"Request timeout: {str(e)}"
+        logger.error(f"Failed to send contact email: {error_msg}")
+        return False, error_msg
+    except httpx.RequestError as e:
+        error_msg = f"Request error: {str(e)}"
+        logger.error(f"Failed to send contact email: {error_msg}")
+        return False, error_msg
     except Exception as e:
-        logger.error(f"Failed to send contact email: {str(e)}")
+        error_msg = f"Unexpected error: {str(e)}"
+        logger.error(f"Failed to send contact email: {error_msg}")
         logger.error(f"Error type: {type(e).__name__}")
-        return False
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return False, error_msg
 
 
 async def send_notification_email(
