@@ -10,15 +10,21 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 // Suppress Clerk + React 19 Activity property error (non-breaking console error)
 // See: https://github.com/clerk/javascript/issues - React 19 compatibility ongoing
 if (typeof window !== 'undefined') {
-  window.addEventListener('error', (event) => {
+  const originalError = console.error
+  console.error = (...args: unknown[]) => {
+    const firstArg = String(args[0] || '')
+
+    // Filter out the specific Clerk + React 19 Activity property error
     if (
-      event.error?.message?.includes?.('Activity') &&
-      event.error?.message?.includes?.('Cannot set properties of undefined')
+      firstArg.includes('Cannot set properties of undefined') &&
+      firstArg.includes('Activity')
     ) {
-      event.preventDefault()
-      return false
+      return // Suppress this specific error
     }
-  }, true)
+
+    // Pass through all other errors
+    originalError.apply(console, args)
+  }
 }
 
 // Lazy load route components for code splitting
