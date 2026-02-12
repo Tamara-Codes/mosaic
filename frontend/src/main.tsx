@@ -1,4 +1,4 @@
-import { StrictMode, Suspense, lazy } from 'react'
+import { Suspense, lazy } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ClerkProvider } from '@clerk/clerk-react'
@@ -69,19 +69,17 @@ if (!rootElement) {
 }
 
 createRoot(rootElement).render(
-  <StrictMode>
-    <ErrorBoundary>
-      {clerkPublishableKey ? (
-        <ClerkProvider publishableKey={clerkPublishableKey}>
-          {routes}
-        </ClerkProvider>
-      ) : (
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
-          <h1>Configuration Error</h1>
-          <p>VITE_CLERK_PUBLISHABLE_KEY is required but not set.</p>
-          <p>Please configure Clerk in your environment variables.</p>
-        </div>
-      )}
-    </ErrorBoundary>
-  </StrictMode>,
+  <ErrorBoundary>
+    {clerkPublishableKey ? (
+      <ClerkProvider publishableKey={clerkPublishableKey}>
+        {routes}
+      </ClerkProvider>
+    ) : (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <h1>Configuration Error</h1>
+        <p>VITE_CLERK_PUBLISHABLE_KEY is required but not set.</p>
+        <p>Please configure Clerk in your environment variables.</p>
+      </div>
+    )}
+  </ErrorBoundary>,
 )
