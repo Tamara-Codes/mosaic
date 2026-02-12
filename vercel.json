@@ -8,6 +8,10 @@
       "destination": "/api/index.py"
     },
     {
+      "source": "/google1bc3981fa4fc2385.html",
+      "destination": "/google1bc3981fa4fc2385.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
