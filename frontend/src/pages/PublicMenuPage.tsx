@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { supabase, getImageUrl } from '../lib/supabase'
 import { useLanguage } from '../contexts/LanguageContext'
 import LanguageSelector from '../components/LanguageSelector'
+import { SEO } from '../components/SEO'
 
 interface MenuItem {
   id: string
@@ -298,7 +299,25 @@ export default function MenuPage() {
     return icons
   }
 
+  // Prepare menu items for structured data
+  const menuItemsForSEO = menu_items.slice(0, 10).map(item => ({
+    name: getTranslatedText(item, 'name', item.name_hr),
+    price: item.price,
+    description: getTranslatedText(item, 'description', item.description_hr || item.description || ''),
+  }))
+
   return (
+    <>
+      <SEO
+        title={`${restaurant.name} - Jelovnik | Ferros`}
+        description={restaurant.description || `Pregledajte jelovnik restorana ${restaurant.name}. Sve jela dostupna na više jezika.`}
+        image={restaurant.logo_url || '/ferros-logo.png'}
+        url={`/${restaurantSlug}`}
+        type="restaurant"
+        restaurantName={restaurant.name}
+        restaurantDescription={restaurant.description}
+        menuItems={menuItemsForSEO}
+      />
     <div className="min-h-screen bg-[#fdfbf7] text-[#2c2416]" data-lang={language}>
       <header className="border-b border-[#d4c4a8] bg-white">
         <div className="max-w-4xl mx-auto px-12 py-16 text-center relative">
@@ -496,6 +515,7 @@ export default function MenuPage() {
         )
       })()}
     </div>
+    </>
   )
 }
 

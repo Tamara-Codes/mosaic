@@ -1,8 +1,19 @@
 """
 Email service for sending contact form messages via SMTP
+
+IMPORTANT: For Zoho Mail with 2FA enabled, you MUST use an app-specific password.
+Generate one at: https://accounts.zoho.com/home#security/app-passwords
+
+SMTP Settings for Zoho:
+- Host: smtp.zoho.com
+- Port 587: Use with STARTTLS (TLS encryption)
+- Port 465: Use with SSL encryption
+- Username: Your full Zoho email address (e.g., info@ferros.menu)
+- Password: App-specific password (if 2FA enabled) or regular password
 """
 import os
 import smtplib
+import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Optional
@@ -14,7 +25,7 @@ logger = logging.getLogger(__name__)
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.zoho.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER")  # Your Zoho email (info@ferros.menu)
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")  # Your Zoho email password
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")  # App-specific password if 2FA enabled
 CONTACT_EMAIL = "info@ferros.menu"
 
 if not SMTP_USER or not SMTP_PASSWORD:
@@ -108,16 +119,56 @@ Ova poruka je poslana sa Ferros kontakt forme.
         msg.attach(part2)
         
         # Send email via SMTP
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.send_message(msg)
+        # Try port 587 with TLS first, fallback to 465 with SSL if needed
+        port = SMTP_PORT
+        use_ssl = port == 465
         
-        logger.info(f"Contact email sent successfully to {CONTACT_EMAIL}")
-        return True
+        try:
+            if use_ssl:
+                # Use SSL for port 465
+                context = ssl.create_default_context()
+                with smtplib.SMTP_SSL(SMTP_HOST, port, context=context) as server:
+                    server.login(SMTP_USER, SMTP_PASSWORD)
+                    server.send_message(msg)
+            else:
+                # Use STARTTLS for port 587
+                with smtplib.SMTP(SMTP_HOST, port) as server:
+                    server.starttls()
+                    server.login(SMTP_USER, SMTP_PASSWORD)
+                    server.send_message(msg)
+            
+            logger.info(f"Contact email sent successfully to {CONTACT_EMAIL}")
+            return True
+            
+        except smtplib.SMTPAuthenticationError as auth_error:
+            error_msg = str(auth_error)
+            logger.error(f"SMTP Authentication failed: {error_msg}")
+            logger.error("Common causes:")
+            logger.error("1. 2FA is enabled - you MUST use an app-specific password")
+            logger.error("   Generate one at: https://accounts.zoho.com/home#security/app-passwords")
+            logger.error("2. Incorrect email address or password")
+            logger.error("3. SMTP access not enabled in Zoho account settings")
+            logger.error(f"SMTP_USER: {SMTP_USER}")
+            logger.error(f"SMTP_HOST: {SMTP_HOST}, SMTP_PORT: {port}")
+            
+            # Try alternative port if first attempt failed
+            if not use_ssl and port == 587:
+                logger.info("Retrying with port 465 (SSL)...")
+                try:
+                    context = ssl.create_default_context()
+                    with smtplib.SMTP_SSL(SMTP_HOST, 465, context=context) as server:
+                        server.login(SMTP_USER, SMTP_PASSWORD)
+                        server.send_message(msg)
+                    logger.info(f"Contact email sent successfully using port 465")
+                    return True
+                except Exception as retry_error:
+                    logger.error(f"Retry with port 465 also failed: {str(retry_error)}")
+            
+            return False
         
     except Exception as e:
         logger.error(f"Failed to send contact email: {str(e)}")
+        logger.error(f"Error type: {type(e).__name__}")
         return False
 
 
@@ -171,15 +222,53 @@ async def send_notification_email(
         msg.attach(part2)
         
         # Send email via SMTP
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.send_message(msg)
+        # Try port 587 with TLS first, fallback to 465 with SSL if needed
+        port = SMTP_PORT
+        use_ssl = port == 465
         
-        logger.info(f"Notification email sent successfully to {to_email}")
-        return True
+        try:
+            if use_ssl:
+                # Use SSL for port 465
+                context = ssl.create_default_context()
+                with smtplib.SMTP_SSL(SMTP_HOST, port, context=context) as server:
+                    server.login(SMTP_USER, SMTP_PASSWORD)
+                    server.send_message(msg)
+            else:
+                # Use STARTTLS for port 587
+                with smtplib.SMTP(SMTP_HOST, port) as server:
+                    server.starttls()
+                    server.login(SMTP_USER, SMTP_PASSWORD)
+                    server.send_message(msg)
+            
+            logger.info(f"Notification email sent successfully to {to_email}")
+            return True
+            
+        except smtplib.SMTPAuthenticationError as auth_error:
+            error_msg = str(auth_error)
+            logger.error(f"SMTP Authentication failed: {error_msg}")
+            logger.error("Common causes:")
+            logger.error("1. 2FA is enabled - you MUST use an app-specific password")
+            logger.error("   Generate one at: https://accounts.zoho.com/home#security/app-passwords")
+            logger.error("2. Incorrect email address or password")
+            logger.error("3. SMTP access not enabled in Zoho account settings")
+            
+            # Try alternative port if first attempt failed
+            if not use_ssl and port == 587:
+                logger.info("Retrying with port 465 (SSL)...")
+                try:
+                    context = ssl.create_default_context()
+                    with smtplib.SMTP_SSL(SMTP_HOST, 465, context=context) as server:
+                        server.login(SMTP_USER, SMTP_PASSWORD)
+                        server.send_message(msg)
+                    logger.info(f"Notification email sent successfully using port 465")
+                    return True
+                except Exception as retry_error:
+                    logger.error(f"Retry with port 465 also failed: {str(retry_error)}")
+            
+            return False
         
     except Exception as e:
         logger.error(f"Failed to send notification email to {to_email}: {str(e)}")
+        logger.error(f"Error type: {type(e).__name__}")
         return False
 

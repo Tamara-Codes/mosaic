@@ -218,6 +218,49 @@ async def get_restaurant_public(restaurant_slug: str):
         "theme_identifier": restaurant['theme_identifier']
     })
 
+# Sitemap Endpoint
+@app.get("/sitemap.xml")
+async def generate_sitemap():
+    """Generate sitemap.xml with all public restaurant pages"""
+    from fastapi.responses import Response
+    from datetime import datetime
+    
+    supabase = get_supabase_anon_client()
+    base_url = os.getenv("MENU_URL", "https://ferros.menu")
+    
+    # Get all restaurants with slugs
+    restaurants_result = supabase.table('restaurants').select('slug, updated_at').execute()
+    restaurants = restaurants_result.data if restaurants_result.data else []
+    
+    # Generate sitemap XML
+    sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    sitemap += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    
+    # Add homepage
+    sitemap += '  <url>\n'
+    sitemap += f'    <loc>{base_url}/</loc>\n'
+    sitemap += '    <changefreq>weekly</changefreq>\n'
+    sitemap += '    <priority>1.0</priority>\n'
+    sitemap += '  </url>\n'
+    
+    # Add each restaurant page
+    for restaurant in restaurants:
+        if restaurant.get('slug'):
+            updated_at = restaurant.get('updated_at', datetime.now().isoformat())
+            # Format date for sitemap (YYYY-MM-DD)
+            lastmod = updated_at.split('T')[0] if 'T' in str(updated_at) else str(updated_at)[:10]
+            
+            sitemap += '  <url>\n'
+            sitemap += f'    <loc>{base_url}/{restaurant["slug"]}</loc>\n'
+            sitemap += f'    <lastmod>{lastmod}</lastmod>\n'
+            sitemap += '    <changefreq>weekly</changefreq>\n'
+            sitemap += '    <priority>0.8</priority>\n'
+            sitemap += '  </url>\n'
+    
+    sitemap += '</urlset>'
+    
+    return Response(content=sitemap, media_type="application/xml")
+
 # Public Contact Form Endpoint
 # Admin Endpoints for Orders and Messages
 # Restaurant Info Endpoints (Authenticated)

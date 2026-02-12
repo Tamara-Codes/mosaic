@@ -4,9 +4,17 @@ import { Sparkles, Globe, DollarSign, Clock, Plus, QrCode, Smartphone } from 'lu
 
 import { ContactForm } from '@/components/ContactForm'
 import { PricingSection } from '@/components/PricingSection'
+import { SEO } from '@/components/SEO'
 
 export function LandingPage() {
   return (
+    <>
+      <SEO
+        title="Ferros - QR Jelovnik koji govori 100+ jezika | Digitalni Meni za Restorane"
+        description="QR jelovnik koji automatski prevodi na 100+ jezika. Mijenjajte cijene, sakrijte nedostupna jela, istaknite alergene — instant, bez tiskanja. Besplatno postavljanje za restorane."
+        url="/"
+        type="website"
+      />
     <div className="min-h-screen bg-[#18181b] text-white font-sans selection:bg-orange-500/30">
       {/* Navigation */}
       <nav className="fixed top-0 w-full bg-[#18181b]/80 backdrop-blur-md border-b border-white/10 z-50">
@@ -313,6 +321,7 @@ export function LandingPage() {
         </div>
       </footer>
     </div>
+    </>
   )
 }
 
