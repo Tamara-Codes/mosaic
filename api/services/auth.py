@@ -38,13 +38,13 @@ async def get_clerk_user_email(user_id: str) -> Optional[str]:
                 
                 # Find primary email
                 for email_obj in email_addresses:
-                if email_obj.get("id") == primary_email_id:
-                    email = email_obj.get("email_address")
-                    # SECURITY: Don't log email addresses in production
-                    import os
-                    if os.getenv("ENVIRONMENT", "production").lower() == "development":
-                        print(f"DEBUG: Fetched email from Clerk API")
-                    return email
+                    if email_obj.get("id") == primary_email_id:
+                        email = email_obj.get("email_address")
+                        # SECURITY: Don't log email addresses in production
+                        import os
+                        if os.getenv("ENVIRONMENT", "production").lower() == "development":
+                            print(f"DEBUG: Fetched email from Clerk API")
+                        return email
                 
                 # Fallback to first email if primary not found
                 if email_addresses:
