@@ -7,6 +7,20 @@ import './index.css'
 import { LanguageProvider } from './contexts/LanguageContext'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
+// Suppress Clerk + React 19 Activity property error (non-breaking console error)
+// See: https://github.com/clerk/javascript/issues - React 19 compatibility ongoing
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (event) => {
+    if (
+      event.error?.message?.includes?.('Activity') &&
+      event.error?.message?.includes?.('Cannot set properties of undefined')
+    ) {
+      event.preventDefault()
+      return false
+    }
+  }, true)
+}
+
 // Lazy load route components for code splitting
 const App = lazy(() => import('./App.tsx'))
 const LoginPage = lazy(() => import('./components/LoginPage').then(m => ({ default: m.LoginPage })))
