@@ -78,45 +78,7 @@ export function MenuItemsPage() {
   const [showLanguageManagementDialog, setShowLanguageManagementDialog] = useState(false)
   const [languageToRemove, setLanguageToRemove] = useState<{code: string, name: string} | null>(null)
   const [showRemoveLanguageConfirm, setShowRemoveLanguageConfirm] = useState(false)
-  const [availableLanguages] = useState([
-    { code: 'sq', name: 'Albanski' },
-    { code: 'ar', name: 'Arapski' },
-    { code: 'by', name: 'Bjeloruski' },
-    { code: 'bs', name: 'Bosanski' },
-    { code: 'bg', name: 'Bugarski' },
-    { code: 'cs', name: 'Češki' },
-    { code: 'da', name: 'Danski' },
-    { code: 'en', name: 'Engleski' },
-    { code: 'et', name: 'Estonski' },
-    { code: 'fi', name: 'Finski' },
-    { code: 'fr', name: 'Francuski' },
-    { code: 'el', name: 'Grčki' },
-    { code: 'ga', name: 'Irski' },
-    { code: 'is', name: 'Islandski' },
-    { code: 'ja', name: 'Japanski' },
-    { code: 'zh', name: 'Kineski' },
-    { code: 'ko', name: 'Korejski' },
-    { code: 'lv', name: 'Latvijski' },
-    { code: 'lt', name: 'Litavski' },
-    { code: 'hu', name: 'Mađarski' },
-    { code: 'mk', name: 'Makedonski' },
-    { code: 'mt', name: 'Malteški' },
-    { code: 'de', name: 'Njemački' },
-    { code: 'nl', name: 'Nizozemski' },
-    { code: 'no', name: 'Norveški' },
-    { code: 'pl', name: 'Poljski' },
-    { code: 'pt', name: 'Portugalski' },
-    { code: 'ro', name: 'Rumunjski' },
-    { code: 'ru', name: 'Ruski' },
-    { code: 'sk', name: 'Slovački' },
-    { code: 'sl', name: 'Slovenski' },
-    { code: 'sr', name: 'Srpski' },
-    { code: 'es', name: 'Španjolski' },
-    { code: 'sv', name: 'Švedski' },
-    { code: 'it', name: 'Talijanski' },
-    { code: 'tr', name: 'Turski' },
-    { code: 'uk', name: 'Ukrajinski' },
-  ])
+  const [availableLanguages, setAvailableLanguages] = useState<Language[]>([])
 
   // Category reordering state (used in edit dialog)
   const [draggedCategory, setDraggedCategory] = useState<number | null>(null)
@@ -186,14 +148,16 @@ export function MenuItemsPage() {
       if (showLoading) {
         setLoading(true)
       }
-      const [itemsData, langsData, categoriesData] = await Promise.all([
+      const [itemsData, langsData, categoriesData, availableLangsData] = await Promise.all([
         apiClient.get('/menu-items-with-translations').then(r => r.data),
         apiClient.get('/supported-languages').then(r => r.data),
-        apiClient.get('/categories').then(r => r.data)
+        apiClient.get('/categories').then(r => r.data),
+        apiClient.get('/available-languages').then(r => r.data)
       ])
       setItems(itemsData)
       setLanguages(langsData.languages)
       setAllCategories(categoriesData.categories_with_ids || [])
+      setAvailableLanguages(availableLangsData.languages || [])
       if (showLoading) {
         setLoading(false)
       }

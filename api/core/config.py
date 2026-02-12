@@ -52,20 +52,5 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # Menu URL for QR codes - should point to the public menu domain
 MENU_URL = os.getenv("MENU_URL", "http://localhost:5180")
 
-# Supported languages
-LANGUAGES_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "supported_languages.json")
-DEFAULT_SUPPORTED_LANGUAGES = {
-    "en": "English",
-    "de": "German",
-    "it": "Italian",
-    "fr": "French",
-    "es": "Spanish",
-    "sl": "Slovenian",
-    "cs": "Czech",
-    "pl": "Polish",
-    "hu": "Hungarian",
-    "zh": "Chinese"
-}
-
 
 

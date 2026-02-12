@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge'
 import { Languages, Plus, Edit2, Trash2, Loader2, Sparkles, CheckCircle2, AlertCircle, Flag } from 'lucide-react'
 import { toast } from 'sonner'
 import { Progress } from '@/components/ui/progress'
+import { useApiClient } from '@/lib/apiHelpers'
 
 interface Translation {
   id: number
@@ -42,6 +43,7 @@ interface Language {
 }
 
 export function TranslationsPage() {
+  const apiClient = useApiClient()
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [languages, setLanguages] = useState<Language[]>([])
   const [loading, setLoading] = useState(true)
@@ -64,15 +66,12 @@ export function TranslationsPage() {
     try {
       setLoading(true)
       const [itemsRes, langsRes] = await Promise.all([
-        fetch('/api/v1/menu-items-with-translations'),
-        fetch('/api/v1/supported-languages')
+        apiClient.get('/menu-items-with-translations'),
+        apiClient.get('/supported-languages')
       ])
-      
-      const itemsData = await itemsRes.json()
-      const langsData = await langsRes.json()
-      
-      setMenuItems(itemsData)
-      setLanguages(langsData.languages)
+
+      setMenuItems(itemsRes.data)
+      setLanguages(langsRes.data.languages)
     } catch (error) {
       console.error('Error fetching data:', error)
       toast.error("Neuspješno učitavanje podataka")
@@ -89,16 +88,9 @@ export function TranslationsPage() {
 
     try {
       setGenerating(true)
-      const response = await fetch(`/api/v1/translations/generate/${selectedItem.id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(selectedLanguages)
-      })
+      const response = await apiClient.post(`/translations/generate/${selectedItem.id}`, selectedLanguages)
+      const data = response.data
 
-      const data = await response.json()
-      
       if (data.success) {
         toast.success(`Generirano ${data.translations.length} prijevoda`)
         fetchData()
@@ -123,16 +115,9 @@ export function TranslationsPage() {
 
     try {
       setGenerating(true)
-      const response = await fetch('/api/v1/translations/batch-generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(selectedLanguages)
-      })
+      const response = await apiClient.post('/translations/batch-generate', selectedLanguages)
+      const data = response.data
 
-      const data = await response.json()
-      
       toast.success(`Generirano ${data.total_generated} prijevoda${data.total_errors > 0 ? `, ${data.total_errors} greška` : ''}`)
       fetchData()
       setShowBatchDialog(false)
@@ -149,22 +134,13 @@ export function TranslationsPage() {
     if (!selectedTranslation) return
 
     try {
-      const response = await fetch(`/api/v1/translations/${selectedTranslation.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: editName,
-          description: editDescription
-        })
-      })
-
-      if (response.ok) {
-        toast.success("Prijevod je ažuriran")
-        fetchData()
-        setShowEditDialog(false)
-      }
+      const formData = new FormData()
+      formData.append('name', editName)
+      formData.append('description', editDescription)
+      await apiClient.put(`/translations/${selectedTranslation.id}`, formData)
+      toast.success("Prijevod je ažuriran")
+      fetchData()
+      setShowEditDialog(false)
     } catch (error) {
       console.error('Error updating translation:', error)
       toast.error("Neuspješno ažuriranje prijevoda")
@@ -175,14 +151,9 @@ export function TranslationsPage() {
     if (!confirm('Jeste li sigurni da želite obrisati ovaj prijevod?')) return
 
     try {
-      const response = await fetch(`/api/v1/translations/${translationId}`, {
-        method: 'DELETE'
-      })
-
-      if (response.ok) {
-        toast.success("Prijevod je obrisan")
-        fetchData()
-      }
+      await apiClient.delete(`/translations/${translationId}`)
+      toast.success("Prijevod je obrisan")
+      fetchData()
     } catch (error) {
       console.error('Error deleting translation:', error)
       toast.error("Neuspješno brisanje prijevoda")
