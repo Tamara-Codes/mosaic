@@ -39,6 +39,7 @@ from services.auth import get_clerk_user_info, get_clerk_user_email, get_restaur
 from services.webhooks import verify_signature, handle_user_created, handle_user_deleted
 from services.gemini_translator import translate_menu_item, translate_category, translate_batch
 from services.email_service import send_contact_email
+from services.language_service import get_all_languages, get_restaurant_languages, add_restaurant_language, remove_restaurant_language
 
 # SECURITY: Import security middleware
 from middleware.security_headers import SecurityHeadersMiddleware
@@ -81,10 +82,6 @@ app.add_middleware(
         "X-RateLimit-Reset",
     ],
 )
-
-# Load supported languages
-SUPPORTED_LANGUAGES = load_supported_languages()
-logger.info(f"Restaurant Menu API started. Loaded {len(SUPPORTED_LANGUAGES)} supported languages: {', '.join(SUPPORTED_LANGUAGES.keys())}")
 
 # Catch-all OPTIONS handler for CORS preflight
 @app.options("/{full_path:path}")
@@ -245,7 +242,7 @@ async def get_restaurant_public(restaurant_slug: str):
     })
 
 # Sitemap Endpoint
-@app.get("/sitemap.xml")
+@app.get("/api/sitemap.xml")
 async def generate_sitemap():
     """Generate sitemap.xml with all public restaurant pages"""
     from fastapi.responses import Response
@@ -931,42 +928,44 @@ async def generate_translations(
     menu_item = item_result.data[0]
     translations = []
     errors = []
-    
+
+    all_languages = get_all_languages()
+
     for lang_code in language_codes:
-        if lang_code not in SUPPORTED_LANGUAGES:
+        if lang_code not in all_languages:
             errors.append(f"Unsupported language: {lang_code}")
             continue
-        
+
         # Check if translation already exists
         existing = supabase.table('translations').select('*').eq('menu_item_id', menu_item_id).eq('language_code', lang_code).execute()
         if existing.data:
-            errors.append(f"Translation for {SUPPORTED_LANGUAGES[lang_code]} already exists")
+            errors.append(f"Translation for {all_languages[lang_code]} already exists")
             continue
-        
+
         try:
             # Use Gemini for translation
             translation_data = translate_menu_item(
                 menu_item['name_hr'],
                 menu_item.get('description_hr', ''),
                 lang_code,
-                SUPPORTED_LANGUAGES[lang_code]
+                all_languages[lang_code]
             )
-            
+
             translation_record = {
                 "menu_item_id": menu_item_id,
                 "language_code": lang_code,
-                "language_name": SUPPORTED_LANGUAGES[lang_code],
+                "language_name": all_languages[lang_code],
                 "name": translation_data["name"],
                 "description": translation_data.get("description", ""),
                 "is_ai_generated": True
             }
-            
+
             result = supabase.table('translations').insert(translation_record).execute()
             translations.append(result.data[0])
-            
+
         except Exception as e:
-            errors.append(f"Error generating translation for {SUPPORTED_LANGUAGES[lang_code]}: {str(e)}")
-    
+            errors.append(f"Error generating translation for {all_languages[lang_code]}: {str(e)}")
+
     return JSONResponse({
         "success": len(translations) > 0,
         "translations": translations,
@@ -1041,39 +1040,41 @@ async def generate_category_translations(
     category = category_result.data[0]
     translations = []
     errors = []
-    
+
+    all_languages = get_all_languages()
+
     for lang_code in language_codes:
-        if lang_code not in SUPPORTED_LANGUAGES:
+        if lang_code not in all_languages:
             errors.append(f"Unsupported language: {lang_code}")
             continue
-        
+
         # Check if translation already exists
         existing = supabase.table('category_translations').select('*').eq('category_id', category_id).eq('language_code', lang_code).execute()
         if existing.data:
-            errors.append(f"Translation for {SUPPORTED_LANGUAGES[lang_code]} already exists")
+            errors.append(f"Translation for {all_languages[lang_code]} already exists")
             continue
-        
+
         try:
             # Use Gemini for translation
             translation_data = translate_category(
                 category['name'],
                 lang_code,
-                SUPPORTED_LANGUAGES[lang_code]
+                all_languages[lang_code]
             )
-            
+
             translation_record = {
                 "category_id": category_id,
                 "language_code": lang_code,
-                "language_name": SUPPORTED_LANGUAGES[lang_code],
+                "language_name": all_languages[lang_code],
                 "name": translation_data["name"],
                 "is_ai_generated": True
             }
-            
+
             result = supabase.table('category_translations').insert(translation_record).execute()
             translations.append(result.data[0])
-            
+
         except Exception as e:
-            errors.append(f"Error generating translation for {SUPPORTED_LANGUAGES[lang_code]}: {str(e)}")
+            errors.append(f"Error generating translation for {all_languages[lang_code]}: {str(e)}")
     
     return JSONResponse({
         "success": len(translations) > 0,
@@ -1254,23 +1255,32 @@ async def generate_qr_code_api(clerk_user_id: str = Depends(require_auth)):
     })
 
 # Supported Languages Endpoints
-@app.get("/api/v1/supported-languages")
-async def get_supported_languages():
-    """Get list of supported languages"""
-    global SUPPORTED_LANGUAGES
-    SUPPORTED_LANGUAGES = load_supported_languages()
+@app.get("/api/v1/available-languages")
+async def get_available_languages():
+    """Get all available languages from the master list (public)"""
+    all_langs = get_all_languages()
     return JSONResponse({
         "languages": [
             {"code": code, "name": name}
-            for code, name in SUPPORTED_LANGUAGES.items()
+            for code, name in all_langs.items()
         ]
+    })
+
+@app.get("/api/v1/supported-languages")
+async def get_supported_languages(clerk_user_id: str = Depends(require_auth)):
+    """Get active languages for the authenticated user's restaurant"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+
+    langs = get_restaurant_languages(restaurant['id'])
+    return JSONResponse({
+        "languages": langs
     })
 
 @app.post("/api/v1/languages/add")
 async def add_language(request: Request, clerk_user_id: str = Depends(require_auth)):
     """Add a new supported language and automatically translate all content"""
-    global SUPPORTED_LANGUAGES
-
     # Verify user has a restaurant
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
@@ -1286,14 +1296,22 @@ async def add_language(request: Request, clerk_user_id: str = Depends(require_au
     if not code or not name:
         raise HTTPException(status_code=400, detail="Language code and name are required")
 
-    SUPPORTED_LANGUAGES = load_supported_languages()
-    if code in SUPPORTED_LANGUAGES:
-        raise HTTPException(status_code=400, detail="Language already exists")
+    # Validate language code exists in master languages table
+    all_languages = get_all_languages()
+    if code not in all_languages:
+        raise HTTPException(status_code=400, detail="Invalid language code")
 
-    # Add language to supported languages
-    SUPPORTED_LANGUAGES[code] = name
-    if not save_supported_languages(SUPPORTED_LANGUAGES):
-        raise HTTPException(status_code=500, detail="Failed to save languages")
+    # Check if already active for this restaurant
+    current_langs = get_restaurant_languages(restaurant['id'])
+    if any(l['code'] == code for l in current_langs):
+        raise HTTPException(status_code=400, detail="Language already active for this restaurant")
+
+    # Add to restaurant_languages
+    try:
+        add_restaurant_language(restaurant['id'], code)
+    except Exception as e:
+        logger.error(f"Failed to add restaurant language: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to add language")
 
     supabase = get_supabase_client()
 
@@ -1462,25 +1480,25 @@ async def add_language(request: Request, clerk_user_id: str = Depends(require_au
 @app.delete("/api/v1/languages/remove/{language_code}")
 async def remove_language(language_code: str, clerk_user_id: str = Depends(require_auth)):
     """Remove a supported language and delete all translations for it"""
-    global SUPPORTED_LANGUAGES
     restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restoran nije pronađen")
-    
-    SUPPORTED_LANGUAGES = load_supported_languages()
-    
-    if language_code not in SUPPORTED_LANGUAGES:
-        raise HTTPException(status_code=404, detail="Language not found")
-    
+
+    # Verify language is active for this restaurant
+    current_langs = get_restaurant_languages(restaurant['id'])
+    lang_entry = next((l for l in current_langs if l['code'] == language_code), None)
+    if not lang_entry:
+        raise HTTPException(status_code=404, detail="Language not active for this restaurant")
+
     supabase = get_supabase_client()
-    
+
     # Delete all translations for this language for this restaurant's items
     menu_items_result = supabase.table('menu_items').select('id').eq('restaurant_id', restaurant['id']).execute()
     menu_item_ids = [item['id'] for item in menu_items_result.data]
-    
+
     if menu_item_ids:
         supabase.table('translations').delete().in_('menu_item_id', menu_item_ids).eq('language_code', language_code).execute()
-    
+
     # Delete category translations
     categories_result = supabase.table('categories').select('id').eq('restaurant_id', restaurant['id']).execute()
     category_ids = [cat['id'] for cat in categories_result.data]
@@ -1494,16 +1512,13 @@ async def remove_language(language_code: str, clerk_user_id: str = Depends(requi
     # Delete UI translations
     supabase.table('ui_translations').delete().eq('restaurant_id', restaurant['id']).eq('language_code', language_code).execute()
 
-    # Remove from supported languages
-    language_name = SUPPORTED_LANGUAGES[language_code]
-    del SUPPORTED_LANGUAGES[language_code]
-    
-    if save_supported_languages(SUPPORTED_LANGUAGES):
-        return JSONResponse({
-            "message": f"Language {language_name} removed successfully"
-        })
-    else:
-        raise HTTPException(status_code=500, detail="Failed to save languages")
+    # Remove from restaurant_languages
+    remove_restaurant_language(restaurant['id'], language_code)
+
+    language_name = lang_entry['name']
+    return JSONResponse({
+        "message": f"Language {language_name} removed successfully"
+    })
 
 @app.post("/api/v1/contact")
 async def submit_contact_form(

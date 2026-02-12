@@ -8,6 +8,10 @@
       "destination": "/api/index.py"
     },
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap.xml"
+    },
+    {
       "source": "/google1bc3981fa4fc2385.html",
       "destination": "/google1bc3981fa4fc2385.html"
     },
