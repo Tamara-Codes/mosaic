@@ -10,7 +10,7 @@ export function LandingPage() {
   return (
     <>
       <SEO
-        title="Ferros - QR Jelovnik koji govori 100+ jezika | Digitalni Meni za Restorane"
+        title="QR menu"
         description="QR jelovnik koji automatski prevodi na 100+ jezika. Mijenjajte cijene, sakrijte nedostupna jela, istaknite alergene — instant, bez tiskanja. Besplatno postavljanje za restorane."
         url="/"
         type="website"

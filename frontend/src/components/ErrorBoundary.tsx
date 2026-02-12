@@ -23,7 +23,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo)
-    
+
     // Log to error tracking service if available
     if (import.meta.env.PROD) {
       // You can add error tracking here (e.g., Sentry, LogRocket, etc.)
@@ -73,4 +73,3 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children
   }
 }
-
