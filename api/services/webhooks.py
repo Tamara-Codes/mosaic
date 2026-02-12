@@ -15,8 +15,36 @@ WEBHOOK_SECRET = os.getenv("CLERK_WEBHOOK_SECRET")
 def verify_signature(headers: dict, body: bytes) -> bool:
     """Verify webhook signature from Clerk (using Svix format)"""
     if not WEBHOOK_SECRET:
-        print("WARNING: CLERK_WEBHOOK_SECRET not set, skipping verification")
-        return True  # Skip verification if secret not set (dev mode)
+        # SECURITY: If webhook secret is not set, webhooks are disabled
+        # This is acceptable if you're not using webhooks (relying on fallback linking instead)
+        import os
+        env = os.getenv("ENVIRONMENT", "production").lower()
+        
+        # In production, fail if webhook secret is missing (webhooks should be configured)
+        if env == "production":
+            # Check if webhooks are intentionally disabled
+            webhooks_disabled = os.getenv("WEBHOOKS_DISABLED", "false").lower() == "true"
+            if not webhooks_disabled:
+                raise HTTPException(
+                    status_code=500,
+                    detail="Webhook secret not configured. Set CLERK_WEBHOOK_SECRET or WEBHOOKS_DISABLED=true if not using webhooks."
+                )
+            # Webhooks intentionally disabled - reject all webhook requests
+            return False
+        
+        # Development: allow bypass with explicit flag, or if webhooks are disabled
+        webhooks_disabled = os.getenv("WEBHOOKS_DISABLED", "false").lower() == "true"
+        dev_bypass = os.getenv("ALLOW_WEBHOOK_BYPASS", "false").lower() == "true"
+        
+        if webhooks_disabled:
+            return False  # Reject webhook requests if disabled
+        elif dev_bypass:
+            return True  # Allow bypass in dev with explicit flag
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Webhook secret not configured. Set CLERK_WEBHOOK_SECRET, WEBHOOKS_DISABLED=true, or ALLOW_WEBHOOK_BYPASS=true (dev only)"
+            )
     
     # FastAPI headers are case-insensitive, but try different casings to be safe
     svix_id = headers.get("svix-id") or headers.get("Svix-Id")
@@ -75,10 +103,12 @@ def verify_signature(headers: dict, body: bytes) -> bool:
                 if hmac.compare_digest(expected_signature, received_signature):
                     return True
         
-        # Debug output (remove in production)
-        print(f"Signature verification failed")
-        print(f"Expected signature (first 20 chars): {expected_signature[:20]}...")
-        print(f"Received signature header: {svix_signature[:50]}...")
+        # SECURITY: Don't log signature details in production
+        import os
+        if os.getenv("ENVIRONMENT", "production").lower() == "development":
+            print(f"Signature verification failed")
+            print(f"Expected signature (first 20 chars): {expected_signature[:20]}...")
+            print(f"Received signature header: {svix_signature[:50]}...")
         return False
     except Exception as e:
         # Log error for debugging

@@ -41,20 +41,46 @@ from services.webhooks import verify_signature, handle_user_created, handle_user
 from services.gemini_translator import translate_menu_item, translate_category, translate_batch
 from services.email_service import send_contact_email
 
+# SECURITY: Import security middleware
+from middleware.security_headers import SecurityHeadersMiddleware
+from middleware.rate_limiter import RateLimiterMiddleware
+from schemas.contact import ContactFormRequest
+
 app = FastAPI(
     title="Restaurant Menu API",
     description="Multi-tenant restaurant menu management system",
-    version="1.0.0"
+    version="1.0.0",
+    # SECURITY: Set maximum request size (10MB for file uploads)
+    max_request_size=10 * 1024 * 1024,  # 10MB
 )
 
+# SECURITY: Add security headers middleware (must be first)
+app.add_middleware(SecurityHeadersMiddleware)
+
+# SECURITY: Add rate limiting middleware
+app.add_middleware(RateLimiterMiddleware, default_limit=100, default_window=60)
+
 # CORS middleware
+# SECURITY: Restricted headers and exposed headers for better security
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["*"],
-    expose_headers=["*"],
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+    ],
+    expose_headers=[
+        "Content-Type",
+        "Content-Length",
+        "X-RateLimit-Limit",
+        "X-RateLimit-Remaining",
+        "X-RateLimit-Reset",
+    ],
 )
 
 # Load supported languages
@@ -183,7 +209,8 @@ async def get_public_menu(restaurant_slug: str):
             "description": restaurant['description'],
             "address": restaurant['address'],
             "phone": restaurant['phone'],
-            "email": restaurant['email'],
+            # SECURITY: Email removed from public endpoint to prevent harvesting
+            # Email is only available in authenticated endpoints
             "logo_url": restaurant.get('logo_url'),
             "theme_identifier": restaurant['theme_identifier'],
             "description_translations": restaurant_translations
@@ -214,7 +241,7 @@ async def get_restaurant_public(restaurant_slug: str):
         "description": restaurant['description'],
         "address": restaurant['address'],
         "phone": restaurant['phone'],
-        "email": restaurant['email'],
+        # SECURITY: Email removed from public endpoint
         "theme_identifier": restaurant['theme_identifier']
     })
 
@@ -471,9 +498,30 @@ async def create_menu_item(
     else:
         menu_id = menu_result.data[0]['id']
     
-    # Handle image upload to Supabase Storage
+    # SECURITY: Handle image upload with size validation
     image_path = None
     if image:
+        # SECURITY: Validate file size (max 5MB)
+        MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
+        file_size = 0
+        content = await image.read()
+        file_size = len(content)
+        await image.seek(0)  # Reset file pointer
+        
+        if file_size > MAX_IMAGE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Image file too large. Maximum size is 5MB, got {file_size / 1024 / 1024:.2f}MB"
+            )
+        
+        # SECURITY: Validate file type
+        allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+        if image.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid file type. Allowed types: JPEG, PNG, WebP"
+            )
+        
         try:
             image_path = await upload_image_to_storage(
                 file=image,
@@ -481,7 +529,8 @@ async def create_menu_item(
                 menu_item_id=None  # Will be set after item is created
             )
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
+            logger.error(f"Image upload error: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to upload image. Please try again.")
     
     def str_to_bool(value: Optional[str]) -> bool:
         return value.lower() in ("true", "on", "1") if value else False
@@ -598,6 +647,27 @@ async def update_menu_item(
         update_data["is_spicy"] = str_to_bool(is_spicy)
     
     if image:
+        # SECURITY: Validate file size (max 5MB)
+        MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
+        file_size = 0
+        content = await image.read()
+        file_size = len(content)
+        await image.seek(0)  # Reset file pointer
+        
+        if file_size > MAX_IMAGE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Image file too large. Maximum size is 5MB, got {file_size / 1024 / 1024:.2f}MB"
+            )
+        
+        # SECURITY: Validate file type
+        allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+        if image.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid file type. Allowed types: JPEG, PNG, WebP"
+            )
+        
         # Delete old image if exists
         old_image_path = item_result.data[0].get('image_path')
         if old_image_path:
@@ -612,7 +682,8 @@ async def update_menu_item(
             )
             update_data["image_path"] = image_path
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
+            logger.error(f"Image upload error: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to upload image. Please try again.")
     
     if update_data:
         result = supabase.table('menu_items').update(update_data).eq('id', item_id).execute()
@@ -1443,14 +1514,30 @@ async def submit_contact_form(
 ):
     """
     Public endpoint for contact form submissions
+    SECURITY: Protected by rate limiting (3 requests per hour per IP)
     Sends email to info@ferros.menu
     """
     try:
+        # SECURITY: Validate input using Pydantic model
+        try:
+            contact_data = ContactFormRequest(
+                name=name,
+                email=email,
+                message=message
+            )
+        except Exception as e:
+            # Return generic error to avoid information disclosure
+            logger.warning(f"Contact form validation failed: {str(e)}")
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid form data. Please check your input and try again."
+            )
+        
         # Send email
         success = await send_contact_email(
-            name=name,
-            email=email,
-            message=message
+            name=contact_data.name,
+            email=contact_data.email,
+            message=contact_data.message
         )
         
         if success:
@@ -1463,7 +1550,10 @@ async def submit_contact_form(
                 status_code=500,
                 detail="Greška pri slanju poruke. Molimo pokušajte kasnije."
             )
+    except HTTPException:
+        raise
     except Exception as e:
+        # SECURITY: Don't expose internal error details
         logger.error(f"Contact form error: {str(e)}")
         raise HTTPException(
             status_code=500,

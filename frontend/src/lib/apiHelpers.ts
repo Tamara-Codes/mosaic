@@ -20,10 +20,8 @@ export function useApiClient() {
     baseURL: API_BASE_URL,
   })
   
-  // Debug: log the baseURL (remove in production)
-  if (import.meta.env.DEV) {
-    console.log('API Base URL:', API_BASE_URL)
-  }
+  // SECURITY: Removed API base URL logging (even in dev)
+  // API endpoints should not be exposed in client logs
 
   // Add token interceptor
   client.interceptors.request.use(

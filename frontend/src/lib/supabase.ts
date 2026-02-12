@@ -14,11 +14,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 })
 
-// Log connection info for debugging
-console.log('Supabase client initialized:', {
-  url: supabaseUrl,
-  hasKey: !!supabaseAnonKey
-})
+// SECURITY: Removed console.log in production
+// Only log in development mode
+if (import.meta.env.DEV) {
+  console.log('Supabase client initialized')
+}
 
 // Helper function to get image URL from Supabase Storage
 export function getImageUrl(imagePath: string): string {

@@ -126,6 +126,13 @@ export default function MenuPage() {
         return
       }
 
+      // Exclude reserved static file names from being treated as restaurant slugs
+      const reservedPaths = ['robots.txt', 'sitemap.xml', 'favicon.ico', 'ferros-logo.png']
+      if (reservedPaths.includes(restaurantSlug.toLowerCase())) {
+        setLoading(false)
+        return
+      }
+
       try {
         const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
         const response = await fetch(`${apiBaseUrl}/api/v1/menu/${restaurantSlug}`)

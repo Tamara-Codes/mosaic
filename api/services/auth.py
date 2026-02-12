@@ -38,15 +38,18 @@ async def get_clerk_user_email(user_id: str) -> Optional[str]:
                 
                 # Find primary email
                 for email_obj in email_addresses:
-                    if email_obj.get("id") == primary_email_id:
-                        email = email_obj.get("email_address")
-                        print(f"DEBUG: Fetched email from Clerk API: {email}")
-                        return email
+                if email_obj.get("id") == primary_email_id:
+                    email = email_obj.get("email_address")
+                    # SECURITY: Don't log email addresses in production
+                    import os
+                    if os.getenv("ENVIRONMENT", "production").lower() == "development":
+                        print(f"DEBUG: Fetched email from Clerk API")
+                    return email
                 
                 # Fallback to first email if primary not found
                 if email_addresses:
                     email = email_addresses[0].get("email_address")
-                    print(f"DEBUG: Using first email from Clerk API: {email}")
+                    # SECURITY: Don't log email addresses
                     return email
             else:
                 print(f"ERROR: Clerk API returned status {response.status_code}: {response.text}")
@@ -86,9 +89,12 @@ async def verify_clerk_token(token: str) -> Optional[dict]:
             options={"verify_exp": True}
         )
         
-        # Debug: print all fields in the token to see what's available
-        print(f"DEBUG: Decoded token fields: {decoded.keys()}")
-        print(f"DEBUG: Full decoded token: {decoded}")
+        # SECURITY: Removed debug logging of token contents
+        # Only log in development mode if explicitly enabled
+        import os
+        if os.getenv("ENVIRONMENT", "production").lower() == "development" and os.getenv("DEBUG_TOKENS", "false").lower() == "true":
+            print(f"DEBUG: Decoded token fields: {decoded.keys()}")
+        # Never log full token contents
         
         # Extract user ID and email from token
         # Clerk tokens usually have email in these fields

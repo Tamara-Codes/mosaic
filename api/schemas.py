@@ -1,12 +1,19 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, EmailStr, validator
 from typing import Optional, List
+import re
 
 class RestaurantInfoBase(BaseModel):
-    name: str
-    description: Optional[str] = None
-    address: Optional[str] = None
-    phone: Optional[str] = None
-    email: Optional[str] = None
+    name: str = Field(..., min_length=1, max_length=200, description="Restaurant name")
+    description: Optional[str] = Field(None, max_length=2000, description="Restaurant description")
+    address: Optional[str] = Field(None, max_length=500, description="Restaurant address")
+    phone: Optional[str] = Field(None, max_length=50, description="Phone number")
+    email: Optional[EmailStr] = Field(None, max_length=255, description="Email address")
+    
+    @validator('phone')
+    def validate_phone(cls, v):
+        if v and not re.match(r'^[\d\s\-\+\(\)]+$', v):
+            raise ValueError('Invalid phone number format')
+        return v
 
 class RestaurantInfoCreate(RestaurantInfoBase):
     pass
@@ -77,10 +84,10 @@ class TranslationResponse(TranslationBase):
         from_attributes = True
 
 class MenuItemBase(BaseModel):
-    name_hr: str
-    description_hr: Optional[str] = None
-    price: float
-    category: Optional[str] = None
+    name_hr: str = Field(..., min_length=1, max_length=200, description="Item name in Croatian")
+    description_hr: Optional[str] = Field(None, max_length=2000, description="Item description")
+    price: float = Field(..., ge=0, le=10000, description="Price (must be between 0 and 10000)")
+    category: Optional[str] = Field(None, max_length=100, description="Category name")
     is_available: bool = True
     is_vegetarian: bool = False
     is_vegan: bool = False
