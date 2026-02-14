@@ -11,32 +11,34 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { useState } from "react"
 import axios from "axios"
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Ime mora imati barem 2 slova.",
+  restaurantName: z.string().min(2, {
+    message: "Ime restorana mora imati barem 2 slova.",
   }),
-  email: z.string().email({
-    message: "Unesite valjanu email adresu.",
+  mobile: z.string().min(8, {
+    message: "Unesite valjan broj mobitela.",
   }),
-  message: z.string().min(10, {
-    message: "Poruka mora imati barem 10 slova.",
+  location: z.string().min(2, {
+    message: "Unesite lokaciju (grad).",
   }),
+  menu: z.instanceof(File).optional(),
 })
 
 export function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      message: "",
+      restaurantName: "",
+      mobile: "",
+      location: "",
+      menu: undefined,
     },
   })
 
@@ -46,9 +48,14 @@ export function ContactForm() {
     try {
       // Create FormData for the API
       const formData = new FormData()
-      formData.append('name', values.name)
-      formData.append('email', values.email)
-      formData.append('message', values.message)
+      formData.append('restaurantName', values.restaurantName)
+      formData.append('mobile', values.mobile)
+      formData.append('location', values.location)
+      
+      // Add menu file if provided
+      if (selectedFile) {
+        formData.append('menu', selectedFile)
+      }
       
       // Send to backend API
       const response = await axios.post('/api/v1/contact', formData, {
@@ -58,16 +65,17 @@ export function ContactForm() {
       })
       
       if (response.data.success) {
-        toast.success("Poruka poslana!", {
+        toast.success("VIP zahtjev poslan!", {
           description: "Javit ćemo vam se uskoro.",
         })
         form.reset()
+        setSelectedFile(null)
       } else {
-        throw new Error('Failed to send message')
+        throw new Error('Failed to send VIP request')
       }
     } catch (error) {
-      console.error('Contact form error:', error)
-      toast.error("Greška pri slanju poruke", {
+      console.error('VIP form error:', error)
+      toast.error("Greška pri slanju zahtjeva", {
         description: "Molimo pokušajte ponovno kasnije.",
       })
     } finally {
@@ -76,22 +84,20 @@ export function ContactForm() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-8 rounded-2xl bg-zinc-900 border border-white/5 shadow-xl">
-      <div className="mb-8 text-center">
-        <h3 className="text-2xl font-bold text-white mb-2">Kontaktirajte nas</h3>
-      </div>
+    <div className="w-full max-w-md">
+      <h3 className="text-2xl font-bold text-white mb-6">Prijavi se za VIP status</h3>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
             control={form.control}
-            name="name"
+            name="restaurantName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-zinc-300">Ime</FormLabel>
+                <FormLabel className="text-zinc-300">Ime restorana</FormLabel>
                 <FormControl>
                   <Input 
-                    placeholder="Vaše ime" 
+                    placeholder="Ime restorana" 
                     {...field} 
                     className="bg-black/50 border-white/10 text-white placeholder:text-zinc-600 focus:border-orange-500/50 focus:ring-orange-500/20"
                   />
@@ -102,13 +108,14 @@ export function ContactForm() {
           />
           <FormField
             control={form.control}
-            name="email"
+            name="mobile"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-zinc-300">Email</FormLabel>
+                <FormLabel className="text-zinc-300">Vaš broj mobitela</FormLabel>
                 <FormControl>
                   <Input 
-                    placeholder="vas@email.com" 
+                    type="tel"
+                    placeholder="+385 91 123 4567" 
                     {...field} 
                     className="bg-black/50 border-white/10 text-white placeholder:text-zinc-600 focus:border-orange-500/50 focus:ring-orange-500/20"
                   />
@@ -119,16 +126,78 @@ export function ContactForm() {
           />
           <FormField
             control={form.control}
-            name="message"
+            name="location"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-zinc-300">Poruka</FormLabel>
+                <FormLabel className="text-zinc-300">Lokacija</FormLabel>
                 <FormControl>
-                  <Textarea 
-                    placeholder="Kako vam možemo pomoći?" 
+                  <Input 
+                    placeholder="Grad" 
                     {...field} 
-                    className="bg-black/50 border-white/10 text-white placeholder:text-zinc-600 min-h-[120px] focus:border-orange-500/50 focus:ring-orange-500/20 resize-none"
+                    className="bg-black/50 border-white/10 text-white placeholder:text-zinc-600 focus:border-orange-500/50 focus:ring-orange-500/20"
                   />
+                </FormControl>
+                <FormMessage className="text-red-400" />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="menu"
+            render={() => (
+              <FormItem>
+                <FormLabel className="text-zinc-300">Jelovnik (opcionalno)</FormLabel>
+                <FormControl>
+                  <div className="space-y-2">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/10 rounded-lg cursor-pointer bg-black/30 hover:bg-black/50 hover:border-orange-500/30 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg className="w-8 h-8 mb-2 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <p className="mb-2 text-sm text-zinc-400">
+                          <span className="font-semibold text-orange-400">Kliknite za upload</span> ili povucite datoteku
+                        </p>
+                        <p className="text-xs text-zinc-500">PDF ili slika (JPG, PNG, WEBP)</p>
+                      </div>
+                      <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png,.webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            setSelectedFile(file)
+                            form.setValue('menu', file)
+                          } else {
+                            setSelectedFile(null)
+                            form.setValue('menu', undefined)
+                          }
+                        }}
+                      />
+                    </label>
+                    {selectedFile && (
+                      <div className="flex items-center gap-2 p-3 bg-zinc-900/50 rounded-lg border border-white/5">
+                        <svg className="w-5 h-5 text-orange-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <p className="text-sm text-zinc-300 flex-1 truncate">
+                          {selectedFile.name}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedFile(null)
+                            form.setValue('menu', undefined)
+                          }}
+                          className="text-zinc-400 hover:text-red-400 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage className="text-red-400" />
               </FormItem>
@@ -139,7 +208,7 @@ export function ContactForm() {
             className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-6"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Šalje se..." : "Pošalji poruku"}
+            {isSubmitting ? "Šalje se..." : "Pošalji VIP zahtjev"}
           </Button>
         </form>
       </Form>

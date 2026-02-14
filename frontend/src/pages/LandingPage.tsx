@@ -1,12 +1,28 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Sparkles, Globe, DollarSign, Clock, Plus, QrCode, Smartphone } from 'lucide-react'
 
 import { ContactForm } from '@/components/ContactForm'
-import { PricingSection } from '@/components/PricingSection'
 import { SEO } from '@/components/SEO'
+import { BorderBeam } from '@/components/magicui/border-beam'
+import { Pointer } from '@/components/magicui/pointer'
+import { ShimmerButton } from '@/components/magicui/shimmer-button'
+import { FocusCards } from '@/components/ui/focus-cards'
 
 export function LandingPage() {
+  const [openItems, setOpenItems] = useState<Set<number>>(new Set())
+
+  const toggleItem = (index: number) => {
+    setOpenItems(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(index)) {
+        newSet.delete(index)
+      } else {
+        newSet.add(index)
+      }
+      return newSet
+    })
+  }
   return (
     <>
       <SEO
@@ -16,6 +32,7 @@ export function LandingPage() {
         type="website"
       />
     <div className="min-h-screen bg-[#18181b] text-white font-sans selection:bg-orange-500/30">
+      <Pointer className="fill-orange-500 text-orange-500" />
       {/* Navigation */}
       <nav className="fixed top-0 w-full bg-[#18181b]/80 backdrop-blur-md border-b border-white/10 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,53 +56,47 @@ export function LandingPage() {
       {/* Hero Section */}
       <section className="pt-24 pb-20 lg:pt-32 lg:pb-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="flex justify-center mb-12 animate-in fade-in zoom-in duration-700">
-              <img src="/ferros-logo.png" alt="Ferros Logo" className="h-48 w-48 md:h-64 md:w-64 object-contain drop-shadow-[0_0_50px_rgba(249,115,22,0.3)]" />
-            </div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 text-orange-500 text-sm font-medium mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 border border-orange-500/20">
-              <Sparkles className="h-4 w-4" />
-              <span>Pokreće AI tehnologija</span>
-            </div>
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-8 leading-tight animate-in fade-in slide-in-from-bottom-8 duration-700">
-              Iskovan za <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400 drop-shadow-[0_0_10px_rgba(249,115,22,0.3)]">
-                vrhunsku uslugu.
-              </span>
-            </h1>
-            <p className="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
-              QR jelovnik koji govori 100+ jezika. Mijenjajte cijene, sakrijte nedostupna jela, istaknite alergene — instant, bez tiskanja.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-16 bg-[#18181b] border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-            <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-500/10 mb-4 group-hover:bg-purple-500/20 transition-colors">
-                <Globe className="w-8 h-8 text-purple-500" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left side - Content */}
+            <div className="flex flex-col items-start">
+              {/* Logo - Left aligned */}
+              <div className="mb-8 animate-in fade-in zoom-in duration-700">
+                <img src="/ferros-logo.png" alt="Ferros Logo" className="h-32 w-32 md:h-48 md:w-48 object-contain drop-shadow-[0_0_50px_rgba(249,115,22,0.3)]" />
               </div>
-              <div className="text-5xl font-bold text-white mb-2">100+</div>
-              <p className="text-zinc-400 text-lg">jezika podržano</p>
+              
+              {/* Title Section - Left aligned */}
+              <div className="text-left w-full">
+                <p className="text-lg md:text-xl font-medium text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400 mb-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                  Iskovan za vrhunsku uslugu
+                </p>
+                <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-6 leading-tight animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                  Digitalni jelovnik koji prodaje više i štedi vaše vrijeme.
+                </h1>
+                <p className="text-lg md:text-xl text-zinc-300 font-light tracking-normal leading-7 mb-8 max-w-2xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+                  Integrirana AI tehnologija trenutno prevodi na 100+ jezika i generira fotografije jela. Upravljajte ponudom u stvarnom vremenu – od promjene cijena do micanja jela jednim klikom.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
+                  <a href="#contact">
+                    <ShimmerButton
+                      background="rgba(249, 115, 22, 1)"
+                      shimmerColor="#fff"
+                      className="px-8 py-4 text-lg font-semibold shadow-2xl"
+                    >
+                      Osiguraj VIP status
+                    </ShimmerButton>
+                  </a>
+                  <Button size="lg" className="bg-orange-400/10 hover:bg-orange-400/15 text-orange-300 border border-orange-400/20 px-8 !h-auto py-4 text-lg font-semibold rounded-full">
+                    Isprobaj demo
+                  </Button>
+                </div>
+              </div>
             </div>
             
-            <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 mb-4 group-hover:bg-green-500/20 transition-colors">
-                <DollarSign className="w-8 h-8 text-green-500" />
+            {/* Right side - Placeholder Image */}
+            <div className="flex justify-center lg:justify-end animate-in fade-in duration-700">
+              <div className="w-full max-w-lg aspect-square bg-zinc-800/50 rounded-2xl border border-white/10 flex items-center justify-center overflow-hidden">
+                <span className="text-zinc-500 text-lg">Placeholder Image</span>
               </div>
-              <div className="text-5xl font-bold text-white mb-2">0€</div>
-              <p className="text-zinc-400 text-lg">za tiskanje</p>
-            </div>
-            
-            <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 mb-4 group-hover:bg-orange-500/20 transition-colors">
-                <Clock className="w-8 h-8 text-orange-500" />
-              </div>
-              <div className="text-5xl font-bold text-white mb-2">5 min</div>
-              <p className="text-zinc-400 text-lg">za postavljanje</p>
             </div>
           </div>
         </div>
@@ -93,197 +104,214 @@ export function LandingPage() {
 
       {/* Problems We Solve */}
       <section className="py-16 bg-[#18181b]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-white mb-12 text-center">Zašto Ferros?</h2>
-          <div className="flex flex-col gap-6">
-            <div className="flex gap-4 bg-zinc-900/50 p-6 rounded-xl border border-white/5 hover:border-orange-500/30 transition-colors">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                1
-              </div>
-              <div>
-                <h3 className="text-white font-semibold text-lg mb-2">Nema škampa danas?</h3>
-                <p className="text-zinc-400 leading-relaxed">Nema problema! Jednim klikom sva jela koja sadrže škampe nestaju s jelovnika.</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4 bg-zinc-900/50 p-6 rounded-xl border border-white/5 hover:border-purple-500/30 transition-colors">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                2
-              </div>
-              <div>
-                <h3 className="text-white font-semibold text-lg mb-2">Govorite jezikom svakog gosta</h3>
-                <p className="text-zinc-400 leading-relaxed">Automatski prijevod na 100+ jezika. Nema više jezičnih barijera — svaki turist se osjeća dobrodošlim i razumije vašu ponudu u potpunosti.</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4 bg-zinc-900/50 p-6 rounded-xl border border-white/5 hover:border-green-500/30 transition-colors">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                3
-              </div>
-              <div>
-                <h3 className="text-white font-semibold text-lg mb-2">AI generacija slika</h3>
-                <p className="text-zinc-400 leading-relaxed">Nemate fotografije? AI će vam generirati privlačne slike jela za sekundu.</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4 bg-zinc-900/50 p-6 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                4
-              </div>
-              <div>
-                <h3 className="text-white font-semibold text-lg mb-2">Ažurirajte cijene u sekundi</h3>
-                <p className="text-zinc-400 leading-relaxed">Zaboravite nalijepnice i korektor. Ažurirajte cijene instant na svim jelovnicima odjednom — uredno i točno.</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4 bg-zinc-900/50 p-6 rounded-xl border border-white/5 hover:border-amber-500/30 transition-colors">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                5
-              </div>
-              <div>
-                <h3 className="text-white font-semibold text-lg mb-2">Transparentni alergeni</h3>
-                <p className="text-zinc-400 leading-relaxed">Gosti jasno vide sve alergene za svako jelo. Sigurnost na prvom mjestu.</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4 bg-zinc-900/50 p-6 rounded-xl border border-white/5 hover:border-cyan-500/30 transition-colors">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                6
-              </div>
-              <div>
-                <h3 className="text-white font-semibold text-lg mb-2">Higijena je prioritet</h3>
-                <p className="text-zinc-400 leading-relaxed">Zaboravite na prljave, pocijepane jelovnike. Digitalno rješenje je uvijek čisto.</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4 bg-zinc-900/50 p-6 rounded-xl border border-white/5 hover:border-rose-500/30 transition-colors">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                7
-              </div>
-              <div>
-                <h3 className="text-white font-semibold text-lg mb-2">Jednostavno skeniranje</h3>
-                <p className="text-zinc-400 leading-relaxed">Gost skenira QR kod i odmah vidi jelovnik. Brzo, moderno, beskontaktno.</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4 bg-zinc-900/50 p-6 rounded-xl border border-white/5 hover:border-orange-500/30 transition-colors">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-orange-600 to-red-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                8
-              </div>
-              <div>
-                <h3 className="text-white font-semibold text-lg mb-2">WhatsApp chatbot</h3>
-                <p className="text-zinc-400 leading-relaxed">Upravljajte svim s mobitela preko WhatsAppa. Sve postaje još lakše!</p>
-              </div>
-            </div>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-4xl md:text-5xl font-bold text-orange-500 mb-16 text-center tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>Zašto Ferros?</h2>
+          <FocusCards cards={[
+            { title: "Nema škampa? Nema problema.", description: "Jedan klik i sva jela sa skampima nestaju s jelovnika u istom trenutku. Bez neugodnih \"nažalost, nemamo\" za stolom. Imate li dnevnu juhu ili kolac? Vaša ponuda je uvijek točno onakva kakva je danas." },
+            { title: "Jelovnik koji govori 100+ jezika - Vi ne morate", description: "Turist iz Njemačke ne bi trebao pogađati što je \"buzara\" — jer ono što ne razumije, neće naručiti. Jelovnik se automatski prevodi na 100+ jezika, što znači da gosti razumiju svako jelo, naručuju sigurnije i naručuju više. Manje pozivanja konobara, brže naručivanje i gosti koji se vraćaju." },
+            { title: "Profesionalne slike jela — bez fotografa.", description: "Jela sa slikom prodaju se do 30% više. Naš AI generira visokokvalitetne fotografije za svaku stavku jelovnika, pa više ne morate birati između skupog fotografa i praznog prostora uz naziv jela." },
+            { title: "Zaboravite na korektore, naljepnice i tisak", description: "Nova cijena ribe? Sezonska akcija? Ažuriranje jelovnika nikada nije bilo lakše. Vaša ponuda je uvijek točna, a jelovnik uvijek izgleda profesionalno." },
+            { title: "14 alergena. 0 nagađanja.", description: "Alergeni su jasno označeni uz svako jelo. Gost s alergijom se osjeća sigurno, konobar ne mora pamtiti svaki sastojak, a vi izbjegavate rizik koji si nijedan restoran ne može priuštiti." },
+            { title: "Beskontaktno. Besprijekorno.", description: "QR kod umjesto papira. Bez masnih otisaka, bez pohabanih stranica. Gost skenira i čita. Čisto, moderno i beskontaktno." },
+          ]} />
         </div>
       </section>
-
-      {/* How It Works */}
-      <section className="py-20 bg-[#18181b]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">Kako funkcionira?</h2>
-            <p className="text-zinc-400 text-lg">Tri jednostavna koraka do vašeg digitalnog jelovnika</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-            {/* Step 1 */}
-            <div className="relative">
-              <div className="bg-zinc-900/50 p-8 rounded-2xl border border-white/5 hover:border-orange-500/30 transition-all h-full">
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mb-6 shadow-lg">
-                    <Plus className="w-10 h-10 text-white" />
-                  </div>
-                  <div className="text-orange-500 font-bold text-sm mb-2">KORAK 1</div>
-                  <h3 className="text-white font-semibold text-xl mb-3">Dodajte jela i cijene</h3>
-                  <p className="text-zinc-400 leading-relaxed">
-                    Jednostavno unesite nazive jela, cijene i opise. AI automatski prevodi na sve jezike.
-                  </p>
-                </div>
-              </div>
-              {/* Arrow for desktop */}
-              <div className="hidden md:block absolute top-1/2 -translate-y-1/2 -right-8 text-orange-500/50">
-                <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                  <path d="M8 32 L48 32 M48 32 L36 20 M48 32 L36 44" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-            </div>
-            
-            {/* Step 2 */}
-            <div className="relative">
-              <div className="bg-zinc-900/50 p-8 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all h-full">
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-6 shadow-lg">
-                    <QrCode className="w-10 h-10 text-white" />
-                  </div>
-                  <div className="text-purple-500 font-bold text-sm mb-2">KORAK 2</div>
-                  <h3 className="text-white font-semibold text-xl mb-3">Dobivate QR kod i držače</h3>
-                  <p className="text-zinc-400 leading-relaxed">
-                    Mi vam besplatno dostavljamo QR kod i elegantne držače za stolove. Vi samo postavite — bez brige, bez dodatnih troškova.
-                  </p>
-                </div>
-              </div>
-              {/* Arrow for desktop */}
-              <div className="hidden md:block absolute top-1/2 -translate-y-1/2 -right-8 text-purple-500/50">
-                <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                  <path d="M8 32 L48 32 M48 32 L36 20 M48 32 L36 44" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-            </div>
-            
-            {/* Step 3 */}
-            <div>
-              <div className="bg-zinc-900/50 p-8 rounded-2xl border border-white/5 hover:border-green-500/30 transition-all h-full">
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mb-6 shadow-lg">
-                    <Smartphone className="w-10 h-10 text-white" />
-                  </div>
-                  <div className="text-green-500 font-bold text-sm mb-2">KORAK 3</div>
-                  <h3 className="text-white font-semibold text-xl mb-3">Gosti skeniraju i pregledavaju</h3>
-                  <p className="text-zinc-400 leading-relaxed">
-                    Gost skenira kod, vidi fotografije dezerta i naručuje. Sve na svom jeziku, instant.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <PricingSection />
 
       {/* Contact Section */}
-      <section className="py-24 bg-[#18181b] relative overflow-hidden" id="contact">
-        <div className="absolute inset-0 bg-orange-500/5 blur-3xl rounded-full transform -translate-x-1/2 translate-y-1/2"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-4xl font-bold text-white mb-6 leading-tight">
-              Spremni za <br />
-              <span className="text-orange-500">digitalnu budućnost?</span>
-            </h2>
-            <p className="text-zinc-400 text-lg mb-8 leading-relaxed">
-              Pridružite se restoranima koji već koriste Ferros za poboljšanje iskustva svojih gostiju. Kontaktirajte nas i odaberite plan koji najbolje odgovara vašem restoranu.
-            </p>
+      <section className="py-20 bg-[#18181b] relative overflow-hidden" id="contact">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative overflow-hidden bg-gradient-to-br from-zinc-900/90 to-zinc-800/60 border border-orange-500/20 rounded-3xl p-8 lg:p-12 shadow-2xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              {/* FOMO Section */}
+              <div>
+                <div className="inline-block px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/30 mb-6">
+                  <span className="text-orange-400 text-sm font-semibold">Ekskluzivna ponuda</span>
+                </div>
+                <h2 className="text-4xl md:text-5xl font-bold text-white mb-3 leading-tight">
+                  Postanite jedan od <br />10 VIP partnera
+                </h2>
+                <p className="text-lg text-orange-400 mb-8 font-medium">
+                  Posebna ponuda za prve korisnike u sezoni 2026.
+                </p>
+                
+                <p className="text-zinc-300 text-base mb-8 leading-relaxed">
+                  Zaboravite na postavljanje sustava. Mi radimo sve za vas. Prvih 10 restorana dobiva <span className="text-orange-400 font-semibold">VIP tretman</span>:
+                </p>
+                
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500/20 flex items-center justify-center mt-1">
+                      <span className="text-orange-400 text-sm font-bold">✓</span>
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold mb-1">Ključ u ruke:</p>
+                      <p className="text-zinc-400 text-sm leading-relaxed">Pošaljite nam PDF ili sliku svog cjenika – mi unosimo sve stavke i opise.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500/20 flex items-center justify-center mt-1">
+                      <span className="text-orange-400 text-sm font-bold">✓</span>
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold mb-1">Prioritetna podrška pri pokretanju:</p>
+                      <p className="text-zinc-400 text-sm leading-relaxed">Izravna pomoć dok god vaš prvi gost ne skenira kod.</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="pt-6 border-t border-orange-500/20">
+                  <p className="text-center">
+                    <span className="text-orange-400 text-3xl font-bold">7/10</span>
+                    <span className="text-zinc-300 text-base ml-2">mjesta preostalo</span>
+                  </p>
+                </div>
+              </div>
+              
+              {/* Contact Form */}
+              <div className="flex justify-center lg:justify-end">
+                <ContactForm />
+              </div>
+            </div>
+            <BorderBeam duration={8} size={100} colorFrom="#f97316" colorTo="#fb923c" />
           </div>
-          
-          <div className="max-w-2xl mx-auto">
-            <ContactForm />
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 bg-[#18181b]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-4xl font-bold text-orange-500 mb-12 text-center">Često postavljana pitanja</h2>
+          <div className="flex flex-col gap-4">
+            {[
+              {
+                question: "1. Što ako moji gosti ne znaju koristiti QR kod?",
+                answer: "Vaš papirnati cjenik i dalje ostaje na stolu (zakonska obveza!), ali digitalni jelovnik preuzima 90% posla. On je tu za turiste koji žele vidjeti slike, razumjeti sastojke na svom jeziku i naručiti više."
+              },
+              {
+                question: '2. "A što ako mi se konobari bune da im je to komplicirano?" (Strah od pobune osoblja)',
+                answer: "Konobari će Vas obožavati. Više ne moraju 50 puta dnevno objašnjavati što su \"pljukanci\" na njemačkom ili nabrajati alergene. Sustav radi taj dosadni dio posla, a oni se fokusiraju na bržu uslugu i veće napojnice."
+              },
+              {
+                question: "3. Moram li kupovati nove tablete ili uređaje za restoran?",
+                answer: "Ne. Vaši gosti koriste vlastite mobitele, a Vi sustavom upravljate sa svog mobitela, tableta ili računala koje već imate."
+              },
+              {
+                question: "4. Kako funkcionira prijevod na 100+ jezika? Je li to Google Translate?",
+                answer: "Koristimo napredne AI modele specijalizirane za gastronomiju koji razumiju kontekst (npr. razliku između \"plate\" kao tanjura i \"plate\" kao hladne plate). Vaš jelovnik će zvučati profesionalno na njemačkom, talijanskom, poljskom ili bilo kojem drugom jeziku."
+              },
+              {
+                question: "5. Mogu li stvarno promijeniti cijenu usred radnog vremena?",
+                answer: "Da. Promjena je vidljiva istog trenutka čim kliknete \"Spremi\" na svom mobitelu ili pošaljete poruku našem WhatsApp botu. Nema više križanja cijena kemijskom olovkom pred gostima."
+              },
+              {
+                question: "6. Koliko mi vremena treba da postavim cijeli jelovnik?",
+                answer: (
+                  <>
+                    Točno <span className="text-orange-400 font-semibold">0 minuta</span>. Mi postavljamo jelovnik umjesto Vas - Vi samo nam pošaljete PDF ili sliku.
+                  </>
+                )
+              }
+            ].map((faq, index) => {
+              const isOpen = openItems.has(index)
+              return (
+                <div
+                  key={index}
+                  className="bg-zinc-900/50 rounded-xl border border-white/5 hover:border-orange-500/30 transition-colors overflow-hidden"
+                >
+                  <button
+                    onClick={() => toggleItem(index)}
+                    className="w-full p-6 flex items-center justify-between text-left gap-4 hover:bg-zinc-800/50 transition-colors"
+                  >
+                    <h3 className="text-white font-semibold text-lg pr-4">{faq.question}</h3>
+                    <svg
+                      className={`w-5 h-5 text-orange-400 flex-shrink-0 transition-transform duration-200 ${
+                        isOpen ? 'rotate-180' : ''
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                      isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                    }`}
+                  >
+                    <div className="px-6 pb-6 pt-0">
+                      {typeof faq.answer === 'string' ? (
+                        <p className="text-zinc-400 leading-relaxed">{faq.answer}</p>
+                      ) : (
+                        <div className="text-zinc-400 leading-relaxed">{faq.answer}</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-[#18181b]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-center">
+            <Button size="lg" className="bg-orange-400/10 hover:bg-orange-400/15 text-orange-300 border border-orange-400/20 px-8 !h-auto py-4 text-lg font-semibold rounded-full">
+              Isprobaj demo
+            </Button>
           </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="bg-[#18181b] border-t border-white/10 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <img src="/ferros-logo.png" alt="Ferros Logo" className="h-10 w-10 object-contain" />
-            <span className="text-lg font-bold text-white">Ferros</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-20 lg:gap-32">
+            {/* Left Column - Brand */}
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 mb-3">
+                <img src="/ferros-logo.png" alt="Ferros Logo" className="h-10 w-10 object-contain" />
+                <span className="text-lg font-bold text-white">Ferros</span>
+              </div>
+              <p className="text-zinc-400 text-sm mb-4">Iskovan za vrhunsku uslugu.</p>
+              <p className="text-zinc-500 text-xs md:mt-auto mt-6">© 2026 Sva prava pridržana.</p>
+            </div>
+
+            {/* Middle Column - Legal */}
+            <div className="flex flex-col md:mx-auto">
+              <h4 className="text-white font-semibold text-sm mb-4">Pravno</h4>
+              <div className="space-y-3">
+                <a href="#" className="block text-zinc-400 hover:text-orange-400 text-sm transition-colors">
+                  Opći uvjeti poslovanja
+                </a>
+                <a href="#" className="block text-zinc-400 hover:text-orange-400 text-sm transition-colors">
+                  Izjava o privatnosti
+                </a>
+                <a href="#" className="block text-zinc-400 hover:text-orange-400 text-sm transition-colors">
+                  Kolačići
+                </a>
+              </div>
+            </div>
+
+            {/* Right Column - Contact */}
+            <div className="flex flex-col md:ml-auto">
+              <h4 className="text-white font-semibold text-sm mb-4">Kontakt</h4>
+              <div className="space-y-3">
+                <a href="mailto:info@ferros.menu" className="block text-zinc-400 hover:text-orange-400 text-sm transition-colors">
+                  info@ferros.menu
+                </a>
+                <a href="tel:+385912345678" className="block text-zinc-400 hover:text-orange-400 text-sm transition-colors">
+                  +385 9X XXX XXXX
+                </a>
+                <p className="text-zinc-400 text-sm">
+                  Adresa, Grad, OIB
+                </p>
+              </div>
+            </div>
           </div>
-          <p className="text-zinc-500 text-sm">
-            © 2026 Ferros. Sva prava pridržana.
-          </p>
         </div>
       </footer>
     </div>

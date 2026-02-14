@@ -38,13 +38,13 @@ from core.config import CORS_ORIGINS, MENU_URL
 from services.auth import get_clerk_user_info, get_clerk_user_email, get_restaurant_by_clerk_user, require_auth
 from services.webhooks import verify_signature, handle_user_created, handle_user_deleted
 from services.gemini_translator import translate_menu_item, translate_category, translate_batch
-from services.email_service import send_contact_email
+from services.email_service import send_vip_form_email
 from services.language_service import get_all_languages, get_restaurant_languages, add_restaurant_language, remove_restaurant_language
 
 # SECURITY: Import security middleware
 from middleware.security_headers import SecurityHeadersMiddleware
 from middleware.rate_limiter import RateLimiterMiddleware
-from schemas.contact import ContactFormRequest
+from schemas.contact import VIPFormRequest
 
 app = FastAPI(
     title="Restaurant Menu API",
@@ -285,7 +285,7 @@ async def generate_sitemap():
     
     return Response(content=sitemap, media_type="application/xml")
 
-# Public Contact Form Endpoint
+# Public VIP Form Endpoint
 # Admin Endpoints for Orders and Messages
 # Restaurant Info Endpoints (Authenticated)
 @app.get("/api/v1/restaurant-info")
@@ -1523,58 +1523,77 @@ async def remove_language(language_code: str, clerk_user_id: str = Depends(requi
 
 @app.post("/api/v1/contact")
 async def submit_contact_form(
-    name: str = Form(...),
-    email: str = Form(...),
-    message: str = Form(...)
+    restaurantName: str = Form(...),
+    mobile: str = Form(...),
+    location: str = Form(...),
+    menu: Optional[UploadFile] = File(None)
 ):
     """
-    Public endpoint for contact form submissions
+    Public endpoint for VIP form submissions
     SECURITY: Protected by rate limiting (3 requests per hour per IP)
-    Sends email to info@ferros.menu
+    Sends email to info@ferros.menu with optional menu file attachment
     """
     try:
         # SECURITY: Validate input using Pydantic model
         try:
-            contact_data = ContactFormRequest(
-                name=name,
-                email=email,
-                message=message
+            vip_data = VIPFormRequest(
+                restaurantName=restaurantName,
+                mobile=mobile,
+                location=location
             )
         except Exception as e:
             # Return generic error to avoid information disclosure
-            logger.warning(f"Contact form validation failed: {str(e)}")
+            logger.warning(f"VIP form validation failed: {str(e)}")
             raise HTTPException(
                 status_code=400,
                 detail="Invalid form data. Please check your input and try again."
             )
         
-        # Send email
-        success, error_message = await send_contact_email(
-            name=contact_data.name,
-            email=contact_data.email,
-            message=contact_data.message
+        # Validate file if provided
+        menu_file_data = None
+        if menu:
+            # Read file content
+            contents = await menu.read()
+            if len(contents) > 10 * 1024 * 1024:  # 10MB limit
+                raise HTTPException(
+                    status_code=400,
+                    detail="File size exceeds 10MB limit."
+                )
+            menu_file_data = {
+                "filename": menu.filename,
+                "content": contents,
+                "content_type": menu.content_type or "application/octet-stream"
+            }
+            logger.info(f"Menu file received: {menu.filename} ({len(contents)} bytes)")
+        
+        # Send email with optional attachment
+        success, error_message = await send_vip_form_email(
+            restaurant_name=vip_data.restaurantName,
+            mobile=vip_data.mobile,
+            location=vip_data.location,
+            menu_file=menu_file_data
         )
         
         if success:
             return JSONResponse({
                 "success": True,
-                "message": "Poruka uspješno poslana"
+                "message": "VIP zahtjev uspješno poslan"
             })
         else:
             # Log the actual error for debugging
-            logger.error(f"Contact form email failed: {error_message}")
+            logger.error(f"VIP form email failed: {error_message}")
             raise HTTPException(
                 status_code=500,
-                detail="Greška pri slanju poruke. Molimo pokušajte kasnije."
+                detail="Greška pri slanju zahtjeva. Molimo pokušajte kasnije."
             )
     except HTTPException:
         raise
     except Exception as e:
         # SECURITY: Don't expose internal error details
-        logger.error(f"Contact form error: {str(e)}")
+        logger.error(f"VIP form error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail="Greška pri slanju poruke. Molimo pokušajte kasnije."
+            detail="Greška pri slanju zahtjeva. Molimo pokušajte kasnije."
         )
 
 if __name__ == "__main__":
