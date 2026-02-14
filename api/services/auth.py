@@ -86,7 +86,8 @@ async def verify_clerk_token(token: str) -> Optional[dict]:
             token,
             signing_key.key,
             algorithms=["RS256"],
-            options={"verify_exp": True}
+            options={"verify_exp": True},
+            leeway=30
         )
         
         # SECURITY: Removed debug logging of token contents

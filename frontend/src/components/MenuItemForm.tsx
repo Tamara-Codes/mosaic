@@ -132,7 +132,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
       }
 
       if (item) {
-        await apiClient.put(`/api/menu-items/${item.id}`, formDataToSend, {
+        await apiClient.put(`/menu-items/${item.id}`, formDataToSend, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         toast.success('Stavka je ažurirana')
@@ -440,7 +440,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
               onChange={(e) => setFormData({ ...formData, contains_gluten: e.target.checked })}
               className="w-4 h-4"
             />
-            <Label htmlFor="contains_gluten" className="cursor-pointer">Sadrži gluten</Label>
+            <Label htmlFor="contains_gluten" className="cursor-pointer">Gluten</Label>
           </div>
           <div className="flex items-center space-x-2">
             <input
@@ -450,7 +450,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
               onChange={(e) => setFormData({ ...formData, contains_dairy: e.target.checked })}
               className="w-4 h-4"
             />
-            <Label htmlFor="contains_dairy" className="cursor-pointer">Sadrži mliječne proizvode</Label>
+            <Label htmlFor="contains_dairy" className="cursor-pointer">Mliječni</Label>
           </div>
           <div className="flex items-center space-x-2">
             <input
@@ -460,7 +460,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
               onChange={(e) => setFormData({ ...formData, contains_nuts: e.target.checked })}
               className="w-4 h-4"
             />
-            <Label htmlFor="contains_nuts" className="cursor-pointer">Sadrži orašaste plodove</Label>
+            <Label htmlFor="contains_nuts" className="cursor-pointer">Orašasti</Label>
           </div>
           <div className="flex items-center space-x-2">
             <input
@@ -470,7 +470,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
               onChange={(e) => setFormData({ ...formData, contains_fish: e.target.checked })}
               className="w-4 h-4"
             />
-            <Label htmlFor="contains_fish" className="cursor-pointer">Sadrži ribu</Label>
+            <Label htmlFor="contains_fish" className="cursor-pointer">Riba</Label>
           </div>
           <div className="flex items-center space-x-2">
             <input
@@ -480,7 +480,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
               onChange={(e) => setFormData({ ...formData, contains_shellfish: e.target.checked })}
               className="w-4 h-4"
             />
-            <Label htmlFor="contains_shellfish" className="cursor-pointer">Sadrži školjke</Label>
+            <Label htmlFor="contains_shellfish" className="cursor-pointer">Školjke</Label>
           </div>
           <div className="flex items-center space-x-2">
             <input
@@ -490,7 +490,7 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
               onChange={(e) => setFormData({ ...formData, contains_eggs: e.target.checked })}
               className="w-4 h-4"
             />
-            <Label htmlFor="contains_eggs" className="cursor-pointer">Sadrži jaja</Label>
+            <Label htmlFor="contains_eggs" className="cursor-pointer">Jaja</Label>
           </div>
           <div className="flex items-center space-x-2">
             <input

@@ -190,7 +190,7 @@ export function MenuItemsPage() {
   const handleDelete = async () => {
     if (!itemToDelete) return
     try {
-      await apiClient.delete(`/api/menu-items/${itemToDelete}`)
+      await apiClient.delete(`/menu-items/${itemToDelete}`)
       toast.success('Stavka je obrisana')
 
       // Broadcast menu change
@@ -282,7 +282,7 @@ export function MenuItemsPage() {
 
     try {
       setGenerating(true)
-      const response = await apiClient.post(`/api/translations/generate/${selectedItemForTranslation.id}`, selectedLanguages)
+      const response = await apiClient.post(`/translations/generate/${selectedItemForTranslation.id}`, selectedLanguages)
       const data = response.data
       
       if (data.success) {
@@ -309,7 +309,7 @@ export function MenuItemsPage() {
       formData.append('name', editTranslationName)
       formData.append('description', editTranslationDescription)
       
-      await apiClient.put(`/api/translations/${selectedTranslation.id}`, formData)
+      await apiClient.put(`/translations/${selectedTranslation.id}`, formData)
       toast.success("Prijevod je ažuriran")
       loadItems(false)
       setShowEditTranslationDialog(false)
@@ -353,7 +353,7 @@ export function MenuItemsPage() {
     if (!categoryToDelete) return
 
     try {
-      await apiClient.delete(`/api/categories/${categoryToDelete.id}`)
+      await apiClient.delete(`/categories/${categoryToDelete.id}`)
       toast.success("Kategorija je obrisana")
       setShowDeleteCategoryDialog(false)
       setCategoryToDelete(null)
@@ -379,7 +379,7 @@ export function MenuItemsPage() {
 
     try {
       setGenerating(true)
-      const response = await apiClient.post(`/api/category-translations/generate/${selectedCategoryForTranslation.id}`, selectedLanguages)
+      const response = await apiClient.post(`/category-translations/generate/${selectedCategoryForTranslation.id}`, selectedLanguages)
       const data = response.data
       
       if (data.success) {
@@ -594,7 +594,7 @@ export function MenuItemsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {filteredItems.map((item) => (
-                <Card key={item.id} className="overflow-hidden flex flex-col h-[580px]">
+                <Card key={item.id} className="overflow-hidden flex flex-col">
                   {item.image_path ? (
                     <img
                       src={getImageUrl(item.image_path)}
@@ -606,16 +606,16 @@ export function MenuItemsPage() {
                       <span className="text-muted-foreground">Nema slike</span>
                     </div>
                   )}
-                  <CardHeader className="flex-shrink-0">
-                    <div className="flex items-start justify-between">
+                  <CardHeader className="flex-shrink-0 pb-2">
+                    <div className="flex items-start justify-between h-[52px]">
                       <div className="flex-1">
-                        <CardTitle className="text-lg">{item.name_hr}</CardTitle>
+                        <CardTitle className="text-lg line-clamp-2">{item.name_hr}</CardTitle>
                       </div>
-                      <Badge variant={item.is_available ? 'default' : 'secondary'}>
+                      <Badge variant={item.is_available ? 'default' : 'secondary'} className="flex-shrink-0 ml-2">
                         {item.is_available ? 'Dostupno' : 'Nedostupno'}
                       </Badge>
                     </div>
-                    <div className="h-[72px] mt-2">
+                    <div className="h-[60px] mt-1">
                       {item.description_hr ? (
                         <CardDescription className="line-clamp-3">{item.description_hr}</CardDescription>
                       ) : (
@@ -623,8 +623,7 @@ export function MenuItemsPage() {
                       )}
                     </div>
                   </CardHeader>
-                  <div className="flex-[0.5] min-h-2"></div>
-                  <CardContent className="flex-shrink-0 pt-0 pb-6">
+                  <CardContent className="flex-shrink-0 pt-0 mt-auto pb-4">
                     <div className="space-y-3">
                       {/* Price and Allergen Tags on same line */}
                       <div className="flex items-center justify-between gap-3">
@@ -633,12 +632,12 @@ export function MenuItemsPage() {
                           {item.is_vegan && <span className="text-2xl" title="Vegansko">🌱</span>}
                           {!item.is_vegan && item.is_vegetarian && <span className="text-2xl" title="Vegetarijansko">🥬</span>}
                           {item.is_spicy && <span className="text-2xl" title="Ljuto">🌶️</span>}
-                          {item.contains_gluten && <span className="text-2xl" title="Sadrži gluten">🌾</span>}
-                          {item.contains_dairy && <span className="text-2xl" title="Sadrži mliječne proizvode">🥛</span>}
-                          {item.contains_nuts && <span className="text-2xl" title="Sadrži orašaste plodove">🥜</span>}
-                          {item.contains_fish && <span className="text-2xl" title="Sadrži ribu">🐟</span>}
-                          {item.contains_shellfish && <span className="text-2xl" title="Sadrži školjke">🦐</span>}
-                          {item.contains_eggs && <span className="text-2xl" title="Sadrži jaja">🥚</span>}
+                          {item.contains_gluten && <span className="text-2xl" title="Gluten">🌾</span>}
+                          {item.contains_dairy && <span className="text-2xl" title="Mliječni">🥛</span>}
+                          {item.contains_nuts && <span className="text-2xl" title="Orašasti">🥜</span>}
+                          {item.contains_fish && <span className="text-2xl" title="Riba">🐟</span>}
+                          {item.contains_shellfish && <span className="text-2xl" title="Školjke">🦐</span>}
+                          {item.contains_eggs && <span className="text-2xl" title="Jaja">🥚</span>}
                         </div>
                       </div>
 
@@ -1266,7 +1265,7 @@ export function MenuItemsPage() {
         onConfirm={async () => {
           if (languageToRemove) {
             try {
-              await apiClient.delete(`/api/languages/remove/${languageToRemove.code}`)
+              await apiClient.delete(`/languages/remove/${languageToRemove.code}`)
               toast.success(`Jezik ${languageToRemove.name} je uklonjen`)
               loadItems(false)
               setShowRemoveLanguageConfirm(false)

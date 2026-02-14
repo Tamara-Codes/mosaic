@@ -57,7 +57,7 @@ export default function LanguageSelector({ availableLanguages }: LanguageSelecto
     name: LANGUAGE_METADATA[code]?.name || code
   }))
 
-  const currentLang = languages.find(l => l.code === language)
+  const currentLang = languages.find(l => l.code === language) || languages[0]
 
   return (
     <div className="relative">

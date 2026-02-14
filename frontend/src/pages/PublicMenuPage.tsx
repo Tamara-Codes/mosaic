@@ -344,9 +344,6 @@ export default function MenuPage() {
           </h1>
 
           <div className="max-w-2xl mx-auto">
-            <p className="font-serif text-2xl text-[#5c5043] italic leading-relaxed mb-4">
-              {t('intro_text_1')}
-            </p>
             <p className="font-serif text-xl text-[#6b5d4f] leading-relaxed">
               {t('intro_text_2')}
             </p>

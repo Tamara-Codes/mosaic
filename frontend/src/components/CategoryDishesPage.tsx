@@ -56,7 +56,7 @@ export function CategoryDishesPage({ categoryId, categoryName, onBack }: Categor
   const handleDelete = async () => {
     if (!itemToDelete) return
     try {
-      await apiClient.delete(`/api/menu-items/${itemToDelete}`)
+      await apiClient.delete(`/menu-items/${itemToDelete}`)
       toast.success('Stavka je obrisana')
 
       // Broadcast menu change

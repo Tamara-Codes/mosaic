@@ -1110,78 +1110,16 @@ async def delete_category_translation(translation_id: str, clerk_user_id: str = 
     return JSONResponse({"message": "Category translation deleted"})
 
 # UI Translations Endpoint
-UI_TRANSLATIONS = {
-    "food": {"hr": "Hrana", "en": "Food", "de": "Essen", "it": "Cibo", "fr": "Nourriture",
-             "es": "Comida", "sl": "Hrana", "cs": "Jídlo", "pl": "Jedzenie", "hu": "Étel", "zh": "食物"},
-    "drink": {"hr": "Pića", "en": "Drinks", "de": "Getränke", "it": "Bevande", "fr": "Boissons",
-              "es": "Bebidas", "sl": "Pijače", "cs": "Nápoje", "pl": "Napoje", "hu": "Italok", "zh": "饮料"},
-    "vegetarian": {"hr": "Vegetarijansko", "en": "Vegetarian", "de": "Vegetarisch", "it": "Vegetariano",
-                   "fr": "Végétarien", "es": "Vegetariano", "sl": "Vegetarijansko", "cs": "Vegetariánské",
-                   "pl": "Wegetariańskie", "hu": "Vegetáriánus", "zh": "素食"},
-    "vegan": {"hr": "Veganski", "en": "Vegan", "de": "Vegan", "it": "Vegano", "fr": "Végétalien",
-              "es": "Vegano", "sl": "Veganski", "cs": "Veganské", "pl": "Wegańskie", "hu": "Vegán", "zh": "纯素"},
-    "contains_gluten": {"hr": "Sadrži gluten", "en": "Contains gluten", "de": "Enthält Gluten", "it": "Contiene glutine",
-                        "fr": "Contient du gluten", "es": "Contiene gluten", "sl": "Vsebuje gluten",
-                        "cs": "Obsahuje lepek", "pl": "Zawiera gluten", "hu": "Glutént tartalmaz", "zh": "含麸质"},
-    "contains_dairy": {"hr": "Sadrži mliječne proizvode", "en": "Contains dairy", "de": "Enthält Milchprodukte", "it": "Contiene latticini",
-                       "fr": "Contient des produits laitiers", "es": "Contiene lácteos", "sl": "Vsebuje mlečne izdelke",
-                       "cs": "Obsahuje mléčné výrobky", "pl": "Zawiera nabiał", "hu": "Tejtermékeket tartalmaz", "zh": "含乳制品"},
-    "gluten_free": {"hr": "Bez glutena", "en": "Gluten-free", "de": "Glutenfrei", "it": "Senza glutine",
-                    "fr": "Sans gluten", "es": "Sin gluten", "sl": "Brez glutena", "cs": "Bezlepkové",
-                    "pl": "Bezglutenowe", "hu": "Gluténmentes", "zh": "无麸质"},
-    "dairy_free": {"hr": "Bez mliječnih proizvoda", "en": "Dairy-free", "de": "Laktosefrei", "it": "Senza latticini",
-                   "fr": "Sans produits laitiers", "es": "Sin lácteos", "sl": "Brez mlečnih izdelkov", "cs": "Bez mléka",
-                   "pl": "Bez nabiału", "hu": "Tejtermékmentes", "zh": "无乳制品"},
-    "contains_nuts": {"hr": "Sadrži orašaste plodove", "en": "Contains nuts", "de": "Enthält Nüsse", "it": "Contiene noci",
-                      "fr": "Contient des fruits à coque", "es": "Contiene frutos secos", "sl": "Vsebuje oreške",
-                      "cs": "Obsahuje ořechy", "pl": "Zawiera orzechy", "hu": "Dióféléket tartalmaz", "zh": "含坚果"},
-    "contains_fish": {"hr": "Sadrži ribu", "en": "Contains fish", "de": "Enthält Fisch", "it": "Contiene pesce",
-                      "fr": "Contient du poisson", "es": "Contiene pescado", "sl": "Vsebuje ribo",
-                      "cs": "Obsahuje ryby", "pl": "Zawiera ryby", "hu": "Halat tartalmaz", "zh": "含鱼"},
-    "contains_shellfish": {"hr": "Sadrži školjke", "en": "Contains shellfish", "de": "Enthält Schalentiere", "it": "Contiene crostacei",
-                           "fr": "Contient des crustacés", "es": "Contiene mariscos", "sl": "Vsebuje školjke",
-                           "cs": "Obsahuje korýše", "pl": "Zawiera skorupiaki", "hu": "Kagylót tartalmaz", "zh": "含贝类"},
-    "contains_eggs": {"hr": "Sadrži jaja", "en": "Contains eggs", "de": "Enthält Eier", "it": "Contiene uova",
-                      "fr": "Contient des œufs", "es": "Contiene huevos", "sl": "Vsebuje jajca",
-                      "cs": "Obsahuje vejce", "pl": "Zawiera jajka", "hu": "Tojást tartalmaz", "zh": "含鸡蛋"},
-    "spicy": {"hr": "Ljuto", "en": "Spicy", "de": "Scharf", "it": "Piccante",
-              "fr": "Épicé", "es": "Picante", "sl": "Pikantno", "cs": "Pálivé",
-              "pl": "Ostre", "hu": "Csípős", "zh": "辣"},
-    "intro_text_1": {
-        "hr": "Sve naše specijalitete pripremamo od najsvježijih sastojaka, pažljivo odabranih iz lokalnih izvora.",
-        "en": "All our specialties are prepared from the freshest ingredients, carefully selected from local sources.",
-        "de": "Alle unsere Spezialitäten werden aus frischesten Zutaten zubereitet, sorgfältig ausgewählt aus lokalen Quellen.",
-        "it": "Tutte le nostre specialità sono preparate con gli ingredienti più freschi, accuratamente selezionati da fonti locali.",
-        "fr": "Toutes nos spécialités sont préparées avec les ingrédients les plus frais, soigneusement sélectionnés auprès de sources locales.",
-        "es": "Todas nuestras especialidades se preparan con los ingredientes más frescos, cuidadosamente seleccionados de fuentes locales.",
-        "sl": "Vse naše specialitete pripravljamo iz najsvežejših sestavin, skrbno izbranih iz lokalnih virov.",
-        "cs": "Všechny naše speciality připravujeme z nejčerstvějších surovin, pečlivě vybraných z místních zdrojů.",
-        "pl": "Wszystkie nasze specjały przygotowujemy z najświeższych składników, starannie wyselekcjonowanych z lokalnych źródeł.",
-        "hu": "Minden különlegességünket a legfrissebb alapanyagokból készítjük, amelyeket gondosan helyi forrásokból választunk ki.",
-        "zh": "我们所有的特色菜肴均采用最新鲜的食材制作，精心挑选自当地供应商。"
-    },
-    "intro_text_2": {
-        "hr": "Tradicija, kvaliteta i strast za kulinarstvom čine srž našeg identiteta.",
-        "en": "Tradition, quality, and passion for culinary arts form the core of our identity.",
-        "de": "Tradition, Qualität und Leidenschaft für die Kochkunst bilden den Kern unserer Identität.",
-        "it": "Tradizione, qualità e passione per l'arte culinaria costituiscono il nucleo della nostra identità.",
-        "fr": "La tradition, la qualité et la passion pour l'art culinaire constituent le cœur de notre identité.",
-        "es": "La tradición, la calidad y la pasión por el arte culinario forman el núcleo de nuestra identidad.",
-        "sl": "Tradicija, kakovost in strast do kulinarike tvorijo jedro naše identitete.",
-        "cs": "Tradice, kvalita a vášeň pro kulinářské umění tvoří jádro naší identity.",
-        "pl": "Tradycja, jakość i pasja do sztuki kulinarnej stanowią rdzeń naszej tożsamości.",
-        "hu": "A hagyomány, a minőség és a gasztronómia iránti szenvedély alkotja identitásunk magvát.",
-        "zh": "传统、品质和对烹饪艺术的热情构成了我们的核心特质。"
-    },
-}
-
 @app.get("/api/v1/ui-translations/{language_code}")
 async def get_ui_translations(language_code: str):
-    """Get UI translations for a specific language"""
-    result = {}
-    for key, translations in UI_TRANSLATIONS.items():
-        result[key] = translations.get(language_code, translations.get("hr"))
-    return result
+    """Get UI translations for a specific language from Supabase"""
+    supabase = get_supabase_client()
+    # Get all restaurants' UI translations for this language
+    result = supabase.table('ui_translations').select('translation_key, translation_value').eq('language_code', language_code).execute()
+    translations = {}
+    for row in (result.data or []):
+        translations[row['translation_key']] = row['translation_value']
+    return translations
 
 # Analytics Endpoint
 @app.get("/api/v1/analytics")
@@ -1351,12 +1289,22 @@ async def add_language(request: Request, clerk_user_id: str = Depends(require_au
     restaurant_description_translated = 0
     ui_translations_added = 0
 
-    # Prepare UI texts for batch translation
+    # Prepare UI texts for batch translation (Croatian base values)
     ui_keys = {
         "food": "Hrana",
         "drink": "Pića",
-        "intro_text_1": "Sve naše specijalitete pripremamo od najsvježijih sastojaka, pažljivo odabranih iz lokalnih izvora.",
-        "intro_text_2": "Tradicija, kvaliteta i strast za kulinarstvom čine srž našeg identiteta."
+        "intro_text_2": "Tradicija, kvaliteta i strast za kulinarstvom čine srž našeg identiteta.",
+        "vegetarian": "Vegetarijansko",
+        "vegan": "Vegansko",
+        "spicy": "Ljuto",
+        "contains_gluten": "Gluten",
+        "contains_dairy": "Mliječno",
+        "contains_nuts": "Orašasti plodovi",
+        "contains_fish": "Riba",
+        "contains_shellfish": "Školjke",
+        "contains_eggs": "Jaja",
+        "gluten_free": "Bez glutena",
+        "dairy_free": "Bez mliječnih proizvoda",
     }
 
     # Check which UI translations don't exist yet

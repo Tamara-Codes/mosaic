@@ -8,6 +8,7 @@ import { BorderBeam } from '@/components/magicui/border-beam'
 import { Pointer } from '@/components/magicui/pointer'
 import { ShimmerButton } from '@/components/magicui/shimmer-button'
 import { FocusCards } from '@/components/ui/focus-cards'
+import { EyeOff, Globe, Camera, PencilLine, ShieldAlert, QrCode, Palette, Package } from 'lucide-react'
 
 export function LandingPage() {
   const [openItems, setOpenItems] = useState<Set<number>>(new Set())
@@ -92,27 +93,27 @@ export function LandingPage() {
               </div>
             </div>
             
-            {/* Right side - Placeholder Image */}
-            <div className="flex justify-center lg:justify-end animate-in fade-in duration-700">
-              <div className="w-full max-w-lg aspect-square bg-zinc-800/50 rounded-2xl border border-white/10 flex items-center justify-center overflow-hidden">
-                <span className="text-zinc-500 text-lg">Placeholder Image</span>
-              </div>
+            {/* Right side - Phone Mockup */}
+            <div className="overflow-visible animate-in fade-in duration-700 mt-[2cm]">
+              <img src="/phone-mockup.png?v=3" alt="Ferros digitalni jelovnik na mobitelu" className="w-[160%] max-w-none object-contain drop-shadow-2xl ml-auto" />
             </div>
           </div>
         </div>
       </section>
 
       {/* Problems We Solve */}
-      <section className="py-16 bg-[#18181b]">
+      <section className="py-16 bg-[#18181b] mt-[2cm]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl md:text-5xl font-bold text-orange-500 mb-16 text-center tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>Zašto Ferros?</h2>
           <FocusCards cards={[
-            { title: "Nema škampa? Nema problema.", description: "Jedan klik i sva jela sa skampima nestaju s jelovnika u istom trenutku. Bez neugodnih \"nažalost, nemamo\" za stolom. Imate li dnevnu juhu ili kolac? Vaša ponuda je uvijek točno onakva kakva je danas." },
-            { title: "Jelovnik koji govori 100+ jezika - Vi ne morate", description: "Turist iz Njemačke ne bi trebao pogađati što je \"buzara\" — jer ono što ne razumije, neće naručiti. Jelovnik se automatski prevodi na 100+ jezika, što znači da gosti razumiju svako jelo, naručuju sigurnije i naručuju više. Manje pozivanja konobara, brže naručivanje i gosti koji se vraćaju." },
-            { title: "Profesionalne slike jela — bez fotografa.", description: "Jela sa slikom prodaju se do 30% više. Naš AI generira visokokvalitetne fotografije za svaku stavku jelovnika, pa više ne morate birati između skupog fotografa i praznog prostora uz naziv jela." },
-            { title: "Zaboravite na korektore, naljepnice i tisak", description: "Nova cijena ribe? Sezonska akcija? Ažuriranje jelovnika nikada nije bilo lakše. Vaša ponuda je uvijek točna, a jelovnik uvijek izgleda profesionalno." },
-            { title: "14 alergena. 0 nagađanja.", description: "Alergeni su jasno označeni uz svako jelo. Gost s alergijom se osjeća sigurno, konobar ne mora pamtiti svaki sastojak, a vi izbjegavate rizik koji si nijedan restoran ne može priuštiti." },
-            { title: "Beskontaktno. Besprijekorno.", description: "QR kod umjesto papira. Bez masnih otisaka, bez pohabanih stranica. Gost skenira i čita. Čisto, moderno i beskontaktno." },
+            { lucideIcon: EyeOff, title: "Nema škampa? Nema problema.", description: "Jedan klik i sva jela sa skampima nestaju s jelovnika u istom trenutku. Bez neugodnih \"nažalost, nemamo\" za stolom. Vaša ponuda je uvijek točno onakva kakva je danas." },
+            { lucideIcon: Globe, title: "Jelovnik koji govori 100+ jezika", description: "Turist iz Njemačke ne bi trebao pogađati što je \"buzara\". Jelovnik se automatski prevodi na 100+ jezika — gosti razumiju svako jelo, naručuju sigurnije i naručuju više." },
+            { lucideIcon: Camera, title: "Profesionalne slike jela — bez fotografa.", description: "Jela sa slikom prodaju se do 30% više. Naš AI generira visokokvalitetne fotografije za svaku stavku jelovnika." },
+            { lucideIcon: PencilLine, title: "Zaboravite na korektore, naljepnice i tisak", description: "Nova cijena ribe? Sezonska akcija? Ažuriranje jelovnika nikada nije bilo lakše. Vaša ponuda je uvijek točna, a jelovnik uvijek izgleda profesionalno." },
+            { lucideIcon: ShieldAlert, title: "14 alergena. 0 nagađanja.", description: "Alergeni su jasno označeni uz svako jelo. Gost s alergijom se osjeća sigurno, konobar ne mora pamtiti svaki sastojak." },
+            { lucideIcon: QrCode, title: "Beskontaktno. Besprijekorno.", description: "QR kod umjesto papira. Bez masnih otisaka, bez pohabanih stranica. Gost skenira i čita. Čisto, moderno i beskontaktno." },
+            { lucideIcon: Palette, title: "Svaki jelovnik je unikat.", description: "Svaki digitalni jelovnik dizajniramo u skladu s identitetom vašeg restorana — boje, fontovi i stil koji odražavaju vašu priču." },
+            { lucideIcon: Package, title: "Dostavljamo QR stalke za stolove.", description: "Uz digitalni jelovnik dobivate i elegantne QR držače za stolove — spremni za korištenje od prvog dana, bez dodatnog troška." },
           ]} />
         </div>
       </section>
@@ -189,7 +190,7 @@ export function LandingPage() {
                 answer: "Vaš papirnati cjenik i dalje ostaje na stolu (zakonska obveza!), ali digitalni jelovnik preuzima 90% posla. On je tu za turiste koji žele vidjeti slike, razumjeti sastojke na svom jeziku i naručiti više."
               },
               {
-                question: '2. "A što ako mi se konobari bune da im je to komplicirano?" (Strah od pobune osoblja)',
+                question: '2. Što ako konobari misle da je sustav previše kompliciran?',
                 answer: "Konobari će Vas obožavati. Više ne moraju 50 puta dnevno objašnjavati što su \"pljukanci\" na njemačkom ili nabrajati alergene. Sustav radi taj dosadni dio posla, a oni se fokusiraju na bržu uslugu i veće napojnice."
               },
               {
@@ -202,7 +203,7 @@ export function LandingPage() {
               },
               {
                 question: "5. Mogu li stvarno promijeniti cijenu usred radnog vremena?",
-                answer: "Da. Promjena je vidljiva istog trenutka čim kliknete \"Spremi\" na svom mobitelu ili pošaljete poruku našem WhatsApp botu. Nema više križanja cijena kemijskom olovkom pred gostima."
+                answer: "Da. Promjena je vidljiva istog trenutka čim kliknete \"Spremi\". Nema više križanja cijena kemijskom olovkom pred gostima."
               },
               {
                 question: "6. Koliko mi vremena treba da postavim cijeli jelovnik?",

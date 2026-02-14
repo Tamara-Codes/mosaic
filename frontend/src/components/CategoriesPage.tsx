@@ -131,7 +131,7 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
         if (categoryToUpdate) {
           const formData = new FormData()
           formData.append('name', newCategoryName)
-          await apiClient.put(`/api/categories/${categoryToUpdate.id}`, formData)
+          await apiClient.put(`/categories/${categoryToUpdate.id}`, formData)
           toast.success('Kategorija je ažurirana')
         }
       } else {
@@ -162,7 +162,7 @@ export function CategoriesPage({ onCategoryClick }: CategoriesPageProps) {
     if (!categoryToDelete) return
 
     try {
-      await apiClient.delete(`/api/categories/${categoryToDelete.id}`)
+      await apiClient.delete(`/categories/${categoryToDelete.id}`)
       toast.success('Kategorija je obrisana')
 
       loadData()

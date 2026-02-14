@@ -21,8 +21,18 @@ const SUPPORTED_LANGUAGES = ['hr', 'en', 'de', 'it', 'fr', 'es', 'sl', 'cs', 'pl
 const DEFAULT_TRANSLATIONS: Record<string, string> = {
   'food': 'Hrana',
   'drink': 'Pića',
-  'intro_text_1': 'Sve naše specijalitete pripremamo od najsvježijih sastojaka, pažljivo odabranih iz lokalnih izvora.',
-  'intro_text_2': 'Tradicija, kvaliteta i strast za kulinarstvom čine srž našeg identiteta.'
+  'intro_text_2': 'Tradicija, kvaliteta i strast za kulinarstvom čine srž našeg identiteta.',
+  'vegetarian': 'Vegetarijansko',
+  'vegan': 'Vegansko',
+  'spicy': 'Ljuto',
+  'contains_gluten': 'Gluten',
+  'contains_dairy': 'Mliječno',
+  'contains_nuts': 'Orašasti plodovi',
+  'contains_fish': 'Riba',
+  'contains_shellfish': 'Školjke',
+  'contains_eggs': 'Jaja',
+  'gluten_free': 'Bez glutena',
+  'dairy_free': 'Bez mliječnih proizvoda',
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
