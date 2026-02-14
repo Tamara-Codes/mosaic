@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 
@@ -7,11 +7,31 @@ import { SEO } from '@/components/SEO'
 import { BorderBeam } from '@/components/magicui/border-beam'
 import { Pointer } from '@/components/magicui/pointer'
 import { ShimmerButton } from '@/components/magicui/shimmer-button'
-import { FocusCards } from '@/components/ui/focus-cards'
-import { EyeOff, Globe, Camera, PencilLine, ShieldAlert, QrCode, Palette, Package } from 'lucide-react'
+import { BentoGrid, BentoCard } from '@/components/magicui/bento-grid'
+import { Globe, Camera, PencilLine, ShieldAlert, QrCode, Palette, Package, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react'
 
 export function LandingPage() {
   const [openItems, setOpenItems] = useState<Set<number>>(new Set())
+
+  // Remove padding from root element for full-width landing page
+  useEffect(() => {
+    const rootElement = document.getElementById('root')
+    if (rootElement) {
+      const originalPadding = rootElement.style.padding
+      const originalMaxWidth = rootElement.style.maxWidth
+      const originalMargin = rootElement.style.margin
+      rootElement.style.padding = '0'
+      rootElement.style.maxWidth = '100%'
+      rootElement.style.margin = '0'
+      
+      return () => {
+        // Restore original styles when component unmounts
+        rootElement.style.padding = originalPadding
+        rootElement.style.maxWidth = originalMaxWidth
+        rootElement.style.margin = originalMargin
+      }
+    }
+  }, [])
 
   const toggleItem = (index: number) => {
     setOpenItems(prev => {
@@ -55,28 +75,28 @@ export function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-24 pb-20 lg:pt-32 lg:pb-32 overflow-hidden">
+      <section className="pt-40 pb-0 lg:pt-32 lg:pb-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left side - Content */}
-            <div className="flex flex-col items-start">
-              {/* Logo - Left aligned */}
+            <div className="flex flex-col items-center lg:items-start">
+              {/* Logo */}
               <div className="mb-8 animate-in fade-in zoom-in duration-700">
                 <img src="/ferros-logo.png" alt="Ferros Logo" className="h-32 w-32 md:h-48 md:w-48 object-contain drop-shadow-[0_0_50px_rgba(249,115,22,0.3)]" />
               </div>
-              
-              {/* Title Section - Left aligned */}
-              <div className="text-left w-full">
+
+              {/* Title Section */}
+              <div className="text-center lg:text-left w-full">
                 <p className="text-lg md:text-xl font-medium text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400 mb-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
                   Iskovan za vrhunsku uslugu
                 </p>
                 <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-6 leading-tight animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100" style={{ fontFamily: "'DM Sans', sans-serif" }}>
                   Digitalni jelovnik koji prodaje više i štedi vaše vrijeme.
                 </h1>
-                <p className="text-lg md:text-xl text-zinc-300 font-light tracking-normal leading-7 mb-8 max-w-2xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+                <p className="text-lg md:text-xl text-zinc-300 font-light tracking-normal leading-7 mb-8 max-w-2xl mx-auto lg:mx-0 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
                   Integrirana AI tehnologija trenutno prevodi na 100+ jezika i generira fotografije jela. Upravljajte ponudom u stvarnom vremenu – od promjene cijena do micanja jela jednim klikom.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-center lg:justify-start animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
                   <a href="#contact">
                     <ShimmerButton
                       background="rgba(249, 115, 22, 1)"
@@ -94,27 +114,72 @@ export function LandingPage() {
             </div>
             
             {/* Right side - Phone Mockup */}
-            <div className="overflow-visible animate-in fade-in duration-700 mt-[2cm]">
-              <img src="/phone-mockup.png?v=3" alt="Ferros digitalni jelovnik na mobitelu" className="w-[160%] max-w-none object-contain drop-shadow-2xl ml-auto" />
+            <div className="overflow-visible animate-in fade-in duration-700 mt-20 lg:mt-[2cm] flex justify-center -ml-4 lg:ml-[3cm]">
+              <img src="/phone-mockup.png?v=3" alt="Ferros digitalni jelovnik na mobitelu" className="w-full lg:w-[145%] max-w-none object-contain drop-shadow-2xl" />
             </div>
           </div>
         </div>
       </section>
 
       {/* Problems We Solve */}
-      <section className="py-16 bg-[#18181b] mt-[2cm]">
+      <section className="py-16 bg-[#18181b] mt-0 lg:mt-[2cm]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl md:text-5xl font-bold text-orange-500 mb-16 text-center tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>Zašto Ferros?</h2>
-          <FocusCards cards={[
-            { lucideIcon: EyeOff, title: "Nema škampa? Nema problema.", description: "Jedan klik i sva jela sa skampima nestaju s jelovnika u istom trenutku. Bez neugodnih \"nažalost, nemamo\" za stolom. Vaša ponuda je uvijek točno onakva kakva je danas." },
-            { lucideIcon: Globe, title: "Jelovnik koji govori 100+ jezika", description: "Turist iz Njemačke ne bi trebao pogađati što je \"buzara\". Jelovnik se automatski prevodi na 100+ jezika — gosti razumiju svako jelo, naručuju sigurnije i naručuju više." },
-            { lucideIcon: Camera, title: "Profesionalne slike jela — bez fotografa.", description: "Jela sa slikom prodaju se do 30% više. Naš AI generira visokokvalitetne fotografije za svaku stavku jelovnika." },
-            { lucideIcon: PencilLine, title: "Zaboravite na korektore, naljepnice i tisak", description: "Nova cijena ribe? Sezonska akcija? Ažuriranje jelovnika nikada nije bilo lakše. Vaša ponuda je uvijek točna, a jelovnik uvijek izgleda profesionalno." },
-            { lucideIcon: ShieldAlert, title: "14 alergena. 0 nagađanja.", description: "Alergeni su jasno označeni uz svako jelo. Gost s alergijom se osjeća sigurno, konobar ne mora pamtiti svaki sastojak." },
-            { lucideIcon: QrCode, title: "Beskontaktno. Besprijekorno.", description: "QR kod umjesto papira. Bez masnih otisaka, bez pohabanih stranica. Gost skenira i čita. Čisto, moderno i beskontaktno." },
-            { lucideIcon: Palette, title: "Svaki jelovnik je unikat.", description: "Svaki digitalni jelovnik dizajniramo u skladu s identitetom vašeg restorana — boje, fontovi i stil koji odražavaju vašu priču." },
-            { lucideIcon: Package, title: "Dostavljamo QR stalke za stolove.", description: "Uz digitalni jelovnik dobivate i elegantne QR držače za stolove — spremni za korištenje od prvog dana, bez dodatnog troška." },
-          ]} />
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-16 text-center tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>Zašto <span className="text-orange-500">F</span>erros?</h2>
+          <BentoGrid>
+            {/* Hero feature — AI Translation (2 cols, 2 rows) */}
+            <BentoCard
+              className="md:col-span-2 md:row-span-2 md:min-h-[400px]"
+              Icon={Globe}
+              image="/bento-ai-translation.png"
+              title="Jelovnik koji govori 100+ jezika"
+              description={'Turist iz Njemačke ne bi trebao pogađati što je "buzara". Jelovnik se automatski prevodi na 100+ jezika — gosti razumiju svako jelo, naručuju sigurnije i naručuju više.'}
+            />
+            {/* Instant Updates — merged hide + edit (1 col, 2 rows) */}
+            <BentoCard
+              className="md:row-span-2 md:min-h-[400px]"
+              Icon={PencilLine}
+              image="/bento-updates.png"
+              title="Ažuriranja u trenutku"
+              description="Nema škampa? Jedan klik i nestaju s jelovnika. Nova cijena ribe? Sezonska akcija? Promjena je vidljiva istog trenutka. Bez križanja cijena kemijskom, bez ponovnog tiskanja."
+            />
+            {/* AI Photos — standard */}
+            <BentoCard
+              className="md:min-h-[400px]"
+              Icon={Camera}
+              image="/bento-ai-photo.png"
+              title="Profesionalne slike jela — bez fotografa."
+              description="Jela sa slikom prodaju se do 30% više. Naš AI generira visokokvalitetne fotografije za svaku stavku jelovnika."
+            />
+            {/* Custom Menu Design — wide card (2 cols) */}
+            <BentoCard
+              className="md:col-span-2 md:min-h-[400px]"
+              Icon={Palette}
+              image="/bento-custom-menu.png"
+              title="Svaki jelovnik je unikat."
+              description="Svaki digitalni jelovnik dizajniramo u skladu s identitetom vašeg restorana — boje, fontovi i stil koji odražavaju vašu priču."
+            />
+            {/* Allergens — standard */}
+            <BentoCard
+              Icon={ShieldAlert}
+              image="/bento-allergens.png"
+              title="14 alergena. 0 nagađanja."
+              description="Alergeni su jasno označeni uz svako jelo. Gost s alergijom se osjeća sigurno, konobar ne mora pamtiti svaki sastojak."
+            />
+            {/* QR Contactless — standard */}
+            <BentoCard
+              Icon={QrCode}
+              image="/bento-hygiene.png"
+              title="Higijena bez kompromisa."
+              description="Nema masnih otisaka, nema pohabanih stranica koje prolaze kroz stotine ruku. Gost skenira QR kod vlastitim mobitelom — čisto, sigurno i bez dodira."
+            />
+            {/* QR Stands — standard */}
+            <BentoCard
+              Icon={Package}
+              image="/bento-qrcode.png"
+              title="Sve je uključeno. Samo postavite na stol."
+              description="Uz digitalni jelovnik dobivate i elegantne QR držače za stolove — spremni za korištenje od prvog dana, bez dodatnog troška."
+            />
+          </BentoGrid>
         </div>
       </section>
 
@@ -128,8 +193,8 @@ export function LandingPage() {
                 <div className="inline-block px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/30 mb-6">
                   <span className="text-orange-400 text-sm font-semibold">Ekskluzivna ponuda</span>
                 </div>
-                <h2 className="text-4xl md:text-5xl font-bold text-white mb-3 leading-tight">
-                  Postanite jedan od <br />10 VIP partnera
+                <h2 className="text-3xl md:text-5xl font-bold text-white mb-3 leading-tight">
+                  Postanite jedan od <span className="hidden md:inline"><br /></span><span className="whitespace-nowrap">10 VIP partnera</span>
                 </h2>
                 <p className="text-lg text-orange-400 mb-8 font-medium">
                   Posebna ponuda za prve korisnike u sezoni 2026.
@@ -257,7 +322,7 @@ export function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-[#18181b]">
+      <section className="pt-8 pb-20 lg:pt-8 lg:pb-20 bg-[#18181b]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center">
             <Button size="lg" className="bg-orange-400/10 hover:bg-orange-400/15 text-orange-300 border border-orange-400/20 px-8 !h-auto py-4 text-lg font-semibold rounded-full">
@@ -277,7 +342,7 @@ export function LandingPage() {
                 <img src="/ferros-logo.png" alt="Ferros Logo" className="h-10 w-10 object-contain" />
                 <span className="text-lg font-bold text-white">Ferros</span>
               </div>
-              <p className="text-zinc-400 text-sm mb-4">Iskovan za vrhunsku uslugu.</p>
+              <p className="text-orange-400 text-sm mb-4">Iskovan za vrhunsku uslugu.</p>
               <p className="text-zinc-500 text-xs md:mt-auto mt-6">© 2026 Sva prava pridržana.</p>
             </div>
 
@@ -304,12 +369,20 @@ export function LandingPage() {
                 <a href="mailto:info@ferros.menu" className="block text-zinc-400 hover:text-orange-400 text-sm transition-colors">
                   info@ferros.menu
                 </a>
-                <a href="tel:+385912345678" className="block text-zinc-400 hover:text-orange-400 text-sm transition-colors">
-                  +385 9X XXX XXXX
-                </a>
-                <p className="text-zinc-400 text-sm">
-                  Adresa, Grad, OIB
-                </p>
+                <div className="flex items-center gap-4 mt-4">
+                  <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-orange-400 transition-colors">
+                    <Facebook className="w-5 h-5" />
+                  </a>
+                  <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-orange-400 transition-colors">
+                    <Twitter className="w-5 h-5" />
+                  </a>
+                  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-orange-400 transition-colors">
+                    <Instagram className="w-5 h-5" />
+                  </a>
+                  <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-orange-400 transition-colors">
+                    <Linkedin className="w-5 h-5" />
+                  </a>
+                </div>
               </div>
             </div>
           </div>
