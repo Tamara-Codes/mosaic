@@ -195,7 +195,7 @@ export function LandingPage() {
           </div>
 
           {/* CTA Button */}
-          <div className="mt-8 sm:mt-10 lg:mt-12 flex justify-center px-4">
+          <div className="mt-16 sm:mt-20 lg:mt-24 flex justify-center px-4">
             <a href="#contact" className="w-auto sm:w-auto">
               <ShimmerButton
                 background="rgba(249, 115, 22, 1)"
