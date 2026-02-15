@@ -25,12 +25,12 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'nav.tagline': 'Iskovan za vrhunsku uslugu',
     
     // Hero Section
-    'hero.title': 'Prvi AI jelovnik kojim upravljate putem WhatsAppa',
+    'hero.title': 'AI jelovnik kojim upravljate putem WhatsAppa',
     'hero.title.ai': 'AI',
     'hero.subtitle.line1': 'AI prevodi na <span class="text-orange-400 font-normal">100+ jezika</span> i generira profesionalne <span class="text-orange-400 font-normal">fotografije jela</span>.',
     'hero.subtitle.line2': '<span class="text-orange-400 font-normal">Unikatan dizajn</span> kreiran za Vaš restoran, bez generičkih šablona.',
     'hero.subtitle.line3': 'Upravljajte ponudom u stvarnom vremenu – od promjene cijena do micanja jela - preko <span class="text-orange-400 font-normal">WhatsAppa</span>.',
-    'hero.cta.vip': 'Postani VIP korisnik',
+    'hero.cta.vip': 'Postani osnivački partner',
     'hero.cta.demo': 'Pogledaj Ferros u akciji',
     
     // Features Section
@@ -62,19 +62,21 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'benefits.contactless.desc': 'Uključeni premium QR držači. Gosti skeniraju vlastitim mobitelom – higijenski i bez masnih papira.',
     
     // Contact Section
-    'contact.badge': 'Ekskluzivna ponuda',
-    'contact.title': 'Postanite jedan od',
-    'contact.title.vip': '10 VIP partnera',
-    'contact.subtitle': 'Posebna ponuda za prve korisnike u sezoni 2026.',
-    'contact.intro': 'Zaboravite na postavljanje sustava. Mi radimo sve za vas. Prvih 10 restorana dobiva',
-    'contact.intro.vip': 'VIP tretman',
+    'contact.badge': 'Osnivački program',
+    'contact.title': 'Postanite',
+    'contact.title.vip': 'Osnivački partner',
+    'contact.subtitle': 'Pomozite nam oblikovati budućnost digitalnih jelovnika.',
+    'contact.intro': 'Tražimo 5 restorana koji će nam pomoći u razvoju Ferrosa. Vaš feedback oblikuje proizvod, a vi dobivate',
+    'contact.intro.vip': 'osnivačke benefite',
     'contact.intro.colon': ':',
-    'contact.benefit1.title': 'Ključ u ruke:',
+    'contact.benefit1.title': 'Ključ u ruke',
     'contact.benefit1.desc': 'Pošaljite nam PDF ili sliku svog cjenika, mi unosimo sve stavke i opise.',
-    'contact.benefit2.title': 'Prioritetna podrška pri pokretanju:',
-    'contact.benefit2.desc': 'Izravna pomoć dok god vaš prvi gost ne skenira kod.',
-    'contact.benefit3.title': 'Bez troškova postavljanja:',
-    'contact.benefit3.desc': 'Troškovi postavljanja su u potpunosti ukinuti za VIP partnere.',
+    'contact.benefit2.title': 'Bez troškova postavljanja',
+    'contact.benefit2.desc': 'Troškovi početnog postavljanja su u potpunosti ukinuti za osnivačke partnere.',
+    'contact.benefit3.title': 'Vaš feedback oblikuje proizvod',
+    'contact.benefit3.desc': 'Vaše ideje i prijedlozi direktno utječu na razvoj. Vi ste naši suradnici, ne samo korisnici.',
+    'contact.benefit4.title': 'Vaš logo na našoj web stranici',
+    'contact.benefit4.desc': 'Iskazujemo zahvalnost prikazivanjem vašeg logotipa kao osnivačkog partnera.',
     'contact.spots': 'mjesta preostalo',
     
     // FAQ Section
@@ -118,7 +120,7 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'seo.description': 'QR jelovnik koji automatski prevodi na 100+ jezika. Mijenjajte cijene, sakrijte nedostupna jela, istaknite alergene — instant, bez tiskanja. Besplatno postavljanje za restorane.',
     
     // Contact Form
-    'form.title': 'Prijavi se za VIP status',
+    'form.title': 'Prijavi se kao osnivački partner',
     'form.restaurant_name': 'Ime restorana',
     'form.restaurant_name.placeholder': 'Ime restorana',
     'form.restaurant_name.error': 'Ime restorana mora imati barem 2 slova.',
@@ -132,9 +134,9 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'form.menu.upload': 'Kliknite za upload',
     'form.menu.drag': 'ili povucite datoteku',
     'form.menu.types': 'PDF ili slika (JPG, PNG, WEBP)',
-    'form.submit': 'Pošalji VIP zahtjev',
+    'form.submit': 'Pošalji zahtjev',
     'form.submitting': 'Šalje se...',
-    'form.success.title': 'VIP zahtjev poslan!',
+    'form.success.title': 'Zahtjev poslan!',
     'form.success.description': 'Javit ćemo vam se uskoro.',
     'form.error.title': 'Greška pri slanju zahtjeva',
     'form.error.description': 'Molimo pokušajte ponovno kasnije.',
@@ -145,12 +147,12 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'nav.tagline': 'Forged for excellence',
     
     // Hero Section
-    'hero.title': 'The first AI menu managed via WhatsApp',
+    'hero.title': 'The AI menu<br />managed via WhatsApp',
     'hero.title.ai': 'AI',
     'hero.subtitle.line1': 'AI translates to <span class="text-orange-400 font-normal">100+ languages</span> and generates professional <span class="text-orange-400 font-normal">food photos</span>.',
     'hero.subtitle.line2': '<span class="text-orange-400 font-normal">Unique design</span> created for your restaurant, without generic templates.',
     'hero.subtitle.line3': 'Manage your menu in real-time – from changing prices to removing items – via <span class="text-orange-400 font-normal">WhatsApp</span>.',
-    'hero.cta.vip': 'Become a VIP user',
+    'hero.cta.vip': 'Become a Founding Partner',
     'hero.cta.demo': 'See Ferros in action',
     
     // Features Section
@@ -182,19 +184,21 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'benefits.contactless.desc': 'Premium QR holders included. Guests scan with their own phones – hygienic and without greasy papers.',
     
     // Contact Section
-    'contact.badge': 'Exclusive offer',
-    'contact.title': 'Become one of',
-    'contact.title.vip': '10 VIP partners',
-    'contact.subtitle': 'Special offer for first users in the 2026 season.',
-    'contact.intro': 'Forget about system setup. We do everything for you. The first 10 restaurants get',
-    'contact.intro.vip': 'VIP treatment',
+    'contact.badge': 'Founding Partner Program',
+    'contact.title': 'Become a',
+    'contact.title.vip': 'Founding Partner',
+    'contact.subtitle': 'Help us shape the future of digital menus.',
+    'contact.intro': 'We\'re looking for 5 restaurants to help us develop Ferros. Your feedback shapes the product, and you get',
+    'contact.intro.vip': 'founding partner benefits',
     'contact.intro.colon': ':',
-    'contact.benefit1.title': 'Turnkey solution:',
+    'contact.benefit1.title': 'Turnkey setup',
     'contact.benefit1.desc': 'Send us a PDF or image of your menu, we enter all items and descriptions.',
-    'contact.benefit2.title': 'Priority support at launch:',
-    'contact.benefit2.desc': 'Direct assistance until your first guest scans the code.',
-    'contact.benefit3.title': 'No setup costs:',
-    'contact.benefit3.desc': 'Setup costs are completely waived for VIP partners.',
+    'contact.benefit2.title': 'No setup costs',
+    'contact.benefit2.desc': 'Initial setup costs are completely waived for founding partners.',
+    'contact.benefit3.title': 'Your feedback shapes the product',
+    'contact.benefit3.desc': 'Your ideas and suggestions directly influence development. You\'re our collaborators, not just users.',
+    'contact.benefit4.title': 'Your logo on our website',
+    'contact.benefit4.desc': 'We show our appreciation by displaying your logo as a founding partner.',
     'contact.spots': 'spots remaining',
     
     // FAQ Section
@@ -238,7 +242,7 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'seo.description': 'QR menu that automatically translates to 100+ languages. Change prices, hide unavailable dishes, highlight allergens — instantly, without printing. Free setup for restaurants.',
     
     // Contact Form
-    'form.title': 'Apply for VIP status',
+    'form.title': 'Apply as a founding partner',
     'form.restaurant_name': 'Restaurant name',
     'form.restaurant_name.placeholder': 'Restaurant name',
     'form.restaurant_name.error': 'Restaurant name must be at least 2 characters.',
@@ -252,9 +256,9 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'form.menu.upload': 'Click to upload',
     'form.menu.drag': 'or drag and drop',
     'form.menu.types': 'PDF or image (JPG, PNG, WEBP)',
-    'form.submit': 'Send VIP request',
+    'form.submit': 'Send request',
     'form.submitting': 'Sending...',
-    'form.success.title': 'VIP request sent!',
+    'form.success.title': 'Request sent!',
     'form.success.description': 'We will contact you soon.',
     'form.error.title': 'Error sending request',
     'form.error.description': 'Please try again later.',

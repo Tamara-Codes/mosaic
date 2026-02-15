@@ -9,7 +9,7 @@ import { Pointer } from '@/components/magicui/pointer'
 import { ShimmerButton } from '@/components/magicui/shimmer-button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { Globe, Zap, Utensils, Rocket, Sparkles, Smartphone, Facebook, Twitter, Instagram, Linkedin, X, Languages, ScanLine, MessageSquare } from 'lucide-react'
+import { Globe, Zap, Utensils, Rocket, Sparkles, Smartphone, Facebook, Twitter, Linkedin, X, Languages, ScanLine, MessageSquare } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import LanguageSelector from '@/components/LanguageSelector'
 
@@ -101,11 +101,55 @@ export function LandingPage() {
                     const title = t('hero.title')
                     const parts = title.split('AI')
                     if (parts.length === 2) {
+                      const hasLineBreak = title.includes('<br />')
+                      const firstPart = parts[0]
+                      const secondPart = parts[1]
+                      
+                      if (hasLineBreak) {
+                        // Handle line break - split on <br /> and render accordingly
+                        const firstLineParts = firstPart.split('<br />')
+                        const secondLineParts = secondPart.split('<br />')
+                        
+                        if (firstLineParts.length > 1) {
+                          // <br /> is in first part
+                          return (
+                            <>
+                              {firstLineParts[0]}
+                              <br />
+                              <span className="text-orange-500">AI</span>
+                              {firstLineParts[1]}{secondPart}
+                            </>
+                          )
+                        } else if (secondLineParts.length > 1) {
+                          // <br /> is in second part
+                          return (
+                            <>
+                              {firstPart}
+                              <span className="text-orange-500">AI</span>
+                              {secondLineParts[0]}
+                              <br />
+                              {secondLineParts[1]}
+                            </>
+                          )
+                        }
+                      }
+                      
                       return (
                         <>
-                          {parts[0]}
+                          {firstPart}
                           <span className="text-orange-500">AI</span>
-                          {parts[1]}
+                          {secondPart}
+                        </>
+                      )
+                    }
+                    // If no AI split, check for line break
+                    if (title.includes('<br />')) {
+                      const lines = title.split('<br />')
+                      return (
+                        <>
+                          {lines[0]}
+                          <br />
+                          {lines[1]}
                         </>
                       )
                     }
@@ -405,11 +449,21 @@ export function LandingPage() {
                       <p className="text-zinc-400 text-sm leading-relaxed">{t('contact.benefit3.desc')}</p>
                     </div>
                   </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500/20 flex items-center justify-center mt-1">
+                      <span className="text-orange-400 text-sm font-bold">✓</span>
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold mb-1">{t('contact.benefit4.title')}</p>
+                      <p className="text-zinc-400 text-sm leading-relaxed">{t('contact.benefit4.desc')}</p>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="pt-6 border-t border-orange-500/20">
                   <p className="text-center">
-                    <span className="text-orange-400 text-3xl font-bold">7/10</span>
+                    <span className="text-orange-400 text-3xl font-bold">3/5</span>
                     <span className="text-zinc-300 text-base ml-2">{t('contact.spots')}</span>
                   </p>
                 </div>
@@ -560,9 +614,6 @@ export function LandingPage() {
                   </a>
                   <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-orange-400 transition-colors">
                     <Twitter className="w-5 h-5" />
-                  </a>
-                  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-orange-400 transition-colors">
-                    <Instagram className="w-5 h-5" />
                   </a>
                   <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-orange-400 transition-colors">
                     <Linkedin className="w-5 h-5" />
