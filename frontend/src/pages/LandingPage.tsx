@@ -8,10 +8,12 @@ import { BorderBeam } from '@/components/magicui/border-beam'
 import { Pointer } from '@/components/magicui/pointer'
 import { ShimmerButton } from '@/components/magicui/shimmer-button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Globe, Zap, Utensils, Rocket, Sparkles, Smartphone, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Globe, Zap, Utensils, Rocket, Sparkles, Smartphone, Facebook, Twitter, Instagram, Linkedin, X } from 'lucide-react'
 
 export function LandingPage() {
   const [openItems, setOpenItems] = useState<Set<number>>(new Set())
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false)
 
   // Remove padding from root element for full-width landing page
   useEffect(() => {
@@ -103,11 +105,15 @@ export function LandingPage() {
                       shimmerColor="#fff"
                       className="w-auto sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold shadow-2xl"
                     >
-                      Osiguraj VIP status
+                      Postani VIP korisnik
                     </ShimmerButton>
                   </a>
-                  <Button size="lg" className="w-auto sm:w-auto bg-orange-400/10 hover:bg-orange-400/15 text-orange-300 border border-orange-400/20 px-6 sm:px-8 !h-auto py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full">
-                    Isprobaj demo
+                  <Button 
+                    size="lg" 
+                    className="w-auto sm:w-auto bg-orange-400/10 hover:bg-orange-400/15 text-orange-300 border border-orange-400/20 px-6 sm:px-8 !h-auto py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full"
+                    onClick={() => setIsDemoModalOpen(true)}
+                  >
+                    Pogledaj Ferros u akciji
                   </Button>
                 </div>
               </div>
@@ -202,7 +208,7 @@ export function LandingPage() {
                 shimmerColor="#fff"
                 className="w-auto sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold shadow-2xl"
               >
-                Osiguraj VIP status
+                Postani VIP korisnik
               </ShimmerButton>
             </a>
           </div>
@@ -479,8 +485,12 @@ export function LandingPage() {
       <section className="pt-8 pb-20 lg:pt-8 lg:pb-20 bg-[#18181b]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center">
-            <Button size="lg" className="bg-orange-400/10 hover:bg-orange-400/15 text-orange-300 border border-orange-400/20 px-8 !h-auto py-4 text-lg font-semibold rounded-full">
-              Isprobaj demo
+            <Button 
+              size="lg" 
+              className="bg-orange-400/10 hover:bg-orange-400/15 text-orange-300 border border-orange-400/20 px-8 !h-auto py-4 text-lg font-semibold rounded-full"
+              onClick={() => setIsDemoModalOpen(true)}
+            >
+              Pogledaj Ferros u akciji
             </Button>
           </div>
         </div>
@@ -543,6 +553,88 @@ export function LandingPage() {
         </div>
       </footer>
     </div>
+
+    {/* Demo Modal */}
+    <Dialog open={isDemoModalOpen} onOpenChange={setIsDemoModalOpen} maxWidth="max-w-6xl">
+      <DialogContent 
+        onClose={() => setIsDemoModalOpen(false)}
+        className="max-w-6xl w-full bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border-orange-500/30 p-0 overflow-hidden shadow-2xl rounded-2xl"
+      >
+        <div className="relative">
+          <button
+            onClick={() => setIsDemoModalOpen(false)}
+            className="absolute right-6 top-6 z-10 w-10 h-10 rounded-full bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/50 hover:border-orange-500/50 flex items-center justify-center transition-all text-zinc-400 hover:text-white backdrop-blur-sm"
+          >
+            <X className="h-5 w-5" />
+            <span className="sr-only">Close</span>
+          </button>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2">
+            {/* Left side - Video placeholder */}
+            <div className="relative bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 p-8 lg:p-12 flex items-center justify-center border-r border-orange-500/10">
+              <div className="relative w-full max-w-lg">
+                <div className="relative aspect-video bg-gradient-to-br from-zinc-800/50 via-zinc-900/80 to-zinc-950 rounded-xl border-2 border-orange-500/30 overflow-hidden shadow-[0_0_50px_rgba(249,115,22,0.15)]">
+                  {/* Video placeholder content */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <button className="group relative w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-[0_0_30px_rgba(249,115,22,0.4)] hover:shadow-[0_0_40px_rgba(249,115,22,0.6)] transition-all hover:scale-110">
+                        <svg className="w-10 h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        <div className="absolute inset-0 rounded-full bg-orange-400/20 animate-ping opacity-75"></div>
+                      </button>
+                      <p className="text-zinc-400 text-sm font-medium">Video u pripremi</p>
+                    </div>
+                  </div>
+                  
+                  {/* Decorative gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/50 via-transparent to-transparent pointer-events-none"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right side - Text content */}
+            <div className="p-10 lg:p-14 flex flex-col justify-center bg-gradient-to-br from-zinc-900 to-zinc-950">
+              <div className="mb-6">
+                <div className="inline-block px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/30 mb-6">
+                  <span className="text-orange-400 text-sm font-semibold">Demo</span>
+                </div>
+                
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                  Vaš jelovnik, na svim jezicima svijeta.
+                </h2>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <p className="text-lg text-zinc-300 leading-relaxed">
+                  Naš AI prevodi Vaša jela i generira profesionalne opise koji prodaju.
+                </p>
+                <p className="text-lg text-zinc-300 leading-relaxed">
+                  Gosti skeniraju, biraju na svom jeziku i naručuju s povjerenjem.
+                </p>
+                <p className="text-lg text-zinc-300 leading-relaxed">
+                  Vi samo šaljete poruku <span className="text-orange-400 font-semibold">Ferros AI asistentu</span>, on radi sve ostalo.
+                </p>
+              </div>
+
+              <div className="pt-4 flex justify-center">
+                <a href="#contact" onClick={() => setIsDemoModalOpen(false)}>
+                  <ShimmerButton
+                    background="rgba(249, 115, 22, 1)"
+                    shimmerColor="#fff"
+                    className="w-full sm:w-auto px-8 py-4 text-lg font-semibold shadow-2xl"
+                  >
+                    Postani VIP korisnik
+                  </ShimmerButton>
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <BorderBeam duration={8} size={100} colorFrom="#f97316" colorTo="#fb923c" />
+        </div>
+      </DialogContent>
+    </Dialog>
     </>
   )
 }

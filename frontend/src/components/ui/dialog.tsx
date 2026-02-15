@@ -6,9 +6,10 @@ export interface DialogProps {
   open?: boolean
   onOpenChange?: (open: boolean) => void
   children: React.ReactNode
+  maxWidth?: string
 }
 
-const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
+const Dialog = ({ open, onOpenChange, children, maxWidth = "max-w-lg" }: DialogProps) => {
   React.useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden"
@@ -27,9 +28,9 @@ const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
       className="fixed inset-0 z-50 flex items-center justify-center"
       onClick={() => onOpenChange?.(false)}
     >
-      <div className="fixed inset-0 bg-black/50" />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-md" />
       <div
-        className="relative z-50 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className={cn("relative z-50 w-full", maxWidth, "max-h-[90vh] overflow-y-auto")}
         onClick={(e) => e.stopPropagation()}
         style={{ pointerEvents: 'auto' }}
       >
