@@ -53,9 +53,9 @@ export function LandingPage() {
         type="website"
       />
     <div className="min-h-screen bg-[#18181b] text-white font-sans selection:bg-orange-500/30">
-      <Pointer className="fill-orange-500 text-orange-500" />
+      <Pointer className="fill-orange-500 text-orange-500 hidden md:block" />
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-[#18181b]/80 backdrop-blur-md border-b border-white/10 z-50">
+      <nav className="fixed top-0 w-full bg-[#18181b]/80 backdrop-blur-md z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -75,38 +75,38 @@ export function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-40 pb-0 lg:pt-32 lg:pb-32 overflow-hidden">
+      <section className="pt-24 pb-8 sm:pt-32 sm:pb-12 lg:pt-32 lg:pb-32 bg-gradient-to-b from-[#18181b] via-zinc-950 to-zinc-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
             {/* Left side - Content */}
             <div className="flex flex-col items-center lg:items-start">
               {/* Logo */}
-              <div className="mb-8 animate-in fade-in zoom-in duration-700 text-center lg:text-left">
-                <img src="/ferros-logo.png" alt="Ferros Logo" className="h-32 w-32 md:h-48 md:w-48 object-contain drop-shadow-[0_0_50px_rgba(249,115,22,0.3)] mx-auto lg:mx-0" />
-                <p className="text-base md:text-lg font-medium text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400 mt-6">
+              <div className="mb-6 sm:mb-8 animate-in fade-in zoom-in duration-700 text-center lg:text-left">
+                <img src="/ferros-logo.png" alt="Ferros Logo" className="h-24 w-24 sm:h-32 sm:w-32 md:h-48 md:w-48 object-contain drop-shadow-[0_0_50px_rgba(249,115,22,0.3)] mx-auto lg:mx-0" />
+                <p className="text-sm sm:text-base md:text-lg font-medium text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400 mt-4 sm:mt-6">
                   Iskovan za vrhunsku uslugu
                 </p>
               </div>
 
               {/* Title Section */}
               <div className="text-center lg:text-left w-full">
-                <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-6 leading-tight animate-in fade-in slide-in-from-bottom-8 duration-700" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-4 sm:mb-6 leading-tight animate-in fade-in slide-in-from-bottom-8 duration-700 px-2 sm:px-0" style={{ fontFamily: "'DM Sans', sans-serif" }}>
                   Prvi <span className="text-orange-500">AI</span> jelovnik dizajniran samo za Vas
                 </h1>
-                <p className="text-lg md:text-xl text-zinc-300 font-light tracking-normal leading-7 mb-8 max-w-2xl mx-auto lg:mx-0 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-                  AI prevodi na <span className="text-orange-400 font-normal">100+ jezika</span> i generira profesionalne <span className="text-orange-400 font-normal">fotografije jela</span>.<br /><span className="text-orange-400 font-normal">Unikatan dizajn</span> kreiran za Vaš restoran, bez generičkih šablona.<br />Upravljajte ponudom u stvarnom vremenu – od promjene cijena do micanja jela - preko <span className="text-orange-400 font-normal">WhatsAppa</span>.
+                <p className="text-base sm:text-lg md:text-xl text-zinc-300 font-light tracking-normal leading-6 sm:leading-7 mb-6 sm:mb-8 max-w-2xl mx-auto lg:mx-0 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 px-2 sm:px-0">
+                  AI prevodi na <span className="text-orange-400 font-normal">100+ jezika</span> i generira profesionalne <span className="text-orange-400 font-normal">fotografije jela</span>.<br className="hidden sm:block" /><span className="text-orange-400 font-normal"> Unikatan dizajn</span> kreiran za Vaš restoran, bez generičkih šablona.<br className="hidden sm:block" /> Upravljajte ponudom u stvarnom vremenu – od promjene cijena do micanja jela - preko <span className="text-orange-400 font-normal">WhatsAppa</span>.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 items-center justify-center lg:justify-start animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
-                  <a href="#contact">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center lg:justify-start animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 px-2 sm:px-0">
+                  <a href="#contact" className="w-auto sm:w-auto">
                     <ShimmerButton
                       background="rgba(249, 115, 22, 1)"
                       shimmerColor="#fff"
-                      className="px-8 py-4 text-lg font-semibold shadow-2xl"
+                      className="w-auto sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold shadow-2xl"
                     >
                       Osiguraj VIP status
                     </ShimmerButton>
                   </a>
-                  <Button size="lg" className="bg-orange-400/10 hover:bg-orange-400/15 text-orange-300 border border-orange-400/20 px-8 !h-auto py-4 text-lg font-semibold rounded-full">
+                  <Button size="lg" className="w-auto sm:w-auto bg-orange-400/10 hover:bg-orange-400/15 text-orange-300 border border-orange-400/20 px-6 sm:px-8 !h-auto py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full">
                     Isprobaj demo
                   </Button>
                 </div>
@@ -114,80 +114,80 @@ export function LandingPage() {
             </div>
             
             {/* Right side - Phone Mockup */}
-            <div className="overflow-visible animate-in fade-in duration-700 mt-20 lg:mt-[2cm] flex justify-center -ml-4 lg:ml-[3cm]">
-              <img src="/phone-mockup.png?v=3" alt="Ferros digitalni jelovnik na mobitelu" className="w-full lg:w-[145%] max-w-none object-contain drop-shadow-2xl" />
+            <div className="overflow-visible animate-in fade-in duration-700 mt-8 sm:mt-12 lg:mt-[2cm] flex justify-center lg:ml-[3cm]">
+              <img src="/phone-mockup.png?v=3" alt="Ferros digitalni jelovnik na mobitelu" className="w-full max-w-sm sm:max-w-md lg:w-[145%] lg:max-w-none object-contain drop-shadow-2xl -ml-4 sm:-ml-2 lg:ml-0" />
             </div>
           </div>
         </div>
       </section>
 
       {/* Why We're Different - AI Features */}
-      <section className="py-24 bg-gradient-to-b from-[#18181b] via-zinc-900/50 to-[#18181b] mt-0 lg:mt-[2cm]">
+      <section className="pt-6 pb-6 sm:pt-8 sm:pb-8 lg:pt-12 lg:pb-12 bg-gradient-to-b from-zinc-900 via-zinc-900 to-zinc-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-block px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/30 mb-6">
-              <span className="text-orange-400 text-sm font-semibold flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
+          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+            <div className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-orange-500/10 border border-orange-500/30 mb-4 sm:mb-6">
+              <span className="text-orange-400 text-xs sm:text-sm font-semibold flex items-center gap-2">
+                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
                 Revolucionaran pristup
               </span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6 tracking-tight px-2 sm:px-0" style={{ fontFamily: "'DM Sans', sans-serif" }}>
               Ovo nije još jedan generički jelovnik.
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {/* WhatsApp AI Chatbot */}
-            <div className="group relative bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
-              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-full blur-2xl group-hover:blur-3xl transition-all" />
-              <div className="w-full h-80 overflow-hidden flex items-start justify-center bg-gradient-to-br from-zinc-950 via-orange-950/30 to-zinc-900">
+            <div className="group relative bg-zinc-900/50 border border-white/5 rounded-xl sm:rounded-2xl overflow-hidden hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+              <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-full blur-2xl group-hover:blur-3xl transition-all" />
+              <div className="w-full h-48 sm:h-64 lg:h-80 overflow-hidden flex items-start justify-center bg-gradient-to-br from-zinc-950 via-orange-950/30 to-zinc-900">
                 <img src="/ferros-asistent.png" alt="WhatsApp AI chat" className="w-[170%] h-[170%] object-contain object-top" />
               </div>
-              <div className="p-8">
-                <h3 className="text-xl font-bold text-orange-500 mb-3">Ferros AI asistent</h3>
-                <p className="text-zinc-400 leading-relaxed">
+              <div className="p-4 sm:p-6 lg:p-8">
+                <h3 className="text-lg sm:text-xl font-bold text-orange-500 mb-2 sm:mb-3">Ferros AI asistent</h3>
+                <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
                   Upravljajte ponudom u hodu preko WhatsAppa. Pošaljite <span className="text-orange-300 italic">"Makni sva jela sa kozicama s jelovnika"</span> i Ferros AI asistent odmah izvršava naredbu.
                 </p>
               </div>
             </div>
 
             {/* Custom Design */}
-            <div className="group relative bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
-              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-full blur-2xl group-hover:blur-3xl transition-all" />
-              <div className="w-full h-80 overflow-hidden">
+            <div className="group relative bg-zinc-900/50 border border-white/5 rounded-xl sm:rounded-2xl overflow-hidden hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+              <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-full blur-2xl group-hover:blur-3xl transition-all" />
+              <div className="w-full h-48 sm:h-64 lg:h-80 overflow-hidden">
                 <img src="/bento-custom-menu.png" alt="Unikatan dizajn" className="w-full h-full object-cover" />
               </div>
-              <div className="p-8">
-                <h3 className="text-xl font-bold text-orange-500 mb-3">100% personalizirani dizajn</h3>
-                <p className="text-zinc-400 leading-relaxed">
+              <div className="p-4 sm:p-6 lg:p-8">
+                <h3 className="text-lg sm:text-xl font-bold text-orange-500 mb-2 sm:mb-3">100% personalizirani dizajn</h3>
+                <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
                 Dizajn koji prati karakter Vašeg restorana. Bez generičkih predložaka, Vaš digitalni meni odražava Vaš identitet.
                 </p>
               </div>
             </div>
 
             {/* AI Image Generation */}
-            <div className="group relative bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
-              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-full blur-2xl group-hover:blur-3xl transition-all" />
-              <div className="w-full h-80 overflow-hidden">
+            <div className="group relative bg-zinc-900/50 border border-white/5 rounded-xl sm:rounded-2xl overflow-hidden hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+              <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-full blur-2xl group-hover:blur-3xl transition-all" />
+              <div className="w-full h-48 sm:h-64 lg:h-80 overflow-hidden">
                 <img src="/bento-ai-photo.png" alt="AI fotografije jela" className="w-full h-full object-cover" />
               </div>
-              <div className="p-8">
-                <h3 className="text-xl font-bold text-orange-500 mb-3">AI generirane fotografije jela</h3>
-                <p className="text-zinc-400 leading-relaxed">
+              <div className="p-4 sm:p-6 lg:p-8">
+                <h3 className="text-lg sm:text-xl font-bold text-orange-500 mb-2 sm:mb-3">AI generirane fotografije jela</h3>
+                <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
                 Pretvorite sastojke u umjetnost bez angažiranja fotografa. Jela sa slikama prodaju se do 30% više. Idealno za sezonske promjene i dnevne ponude.
                 </p>
               </div>
             </div>
 
             {/* AI Translation */}
-            <div className="group relative bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
-              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-full blur-2xl group-hover:blur-3xl transition-all" />
-              <div className="w-full h-80 overflow-hidden">
+            <div className="group relative bg-zinc-900/50 border border-white/5 rounded-xl sm:rounded-2xl overflow-hidden hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+              <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-full blur-2xl group-hover:blur-3xl transition-all" />
+              <div className="w-full h-48 sm:h-64 lg:h-80 overflow-hidden">
                 <img src="/bento-ai-translation.png" alt="AI prijevodi" className="w-full h-full object-cover" />
               </div>
-              <div className="p-8">
-                <h3 className="text-xl font-bold text-orange-500 mb-3">AI prijevodi na 100+ jezika</h3>
-                <p className="text-zinc-400 leading-relaxed">
+              <div className="p-4 sm:p-6 lg:p-8">
+                <h3 className="text-lg sm:text-xl font-bold text-orange-500 mb-2 sm:mb-3">AI prijevodi na 100+ jezika</h3>
+                <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
                   Napredni AI modeli razumiju gastronomski kontekst i održavaju profesionalnost na svakom jeziku.
                 </p>
               </div>
@@ -195,12 +195,12 @@ export function LandingPage() {
           </div>
 
           {/* CTA Button */}
-          <div className="mt-24 flex justify-center">
-            <a href="#contact">
+          <div className="mt-8 sm:mt-10 lg:mt-12 flex justify-center px-4">
+            <a href="#contact" className="w-auto sm:w-auto">
               <ShimmerButton
                 background="rgba(249, 115, 22, 1)"
                 shimmerColor="#fff"
-                className="px-8 py-4 text-lg font-semibold shadow-2xl"
+                className="w-auto sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold shadow-2xl"
               >
                 Osiguraj VIP status
               </ShimmerButton>
@@ -210,30 +210,30 @@ export function LandingPage() {
       </section>
 
       {/* Problems We Solve */}
-      <section className="py-16 bg-[#18181b] mt-0 lg:mt-[2cm]">
+      <section className="pt-16 pb-12 sm:pt-20 sm:pb-16 bg-gradient-to-b from-zinc-950 via-zinc-950 to-[#18181b]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4 tracking-tight px-2 sm:px-0" style={{ fontFamily: "'DM Sans', sans-serif" }}>
               Budućnost ugostiteljstva u jednom QR kodu
             </h2>
-            <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-zinc-400 max-w-2xl mx-auto px-2 sm:px-0">
               Sve što Vam je potrebno za brže poslovanje i veću zaradu.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Jezične barijere */}
             <Card className="group relative bg-zinc-900/50 border border-white/5 hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
-              <CardHeader>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center">
-                    <Globe className="w-6 h-6 text-orange-400" />
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
+                    <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
                   </div>
-                  <CardTitle className="text-orange-500 text-xl">Jezici bez barijera</CardTitle>
+                  <CardTitle className="text-orange-500 text-lg sm:text-xl">Jezici bez barijera</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <CardDescription className="text-zinc-400 leading-relaxed">
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <CardDescription className="text-sm sm:text-base text-zinc-400 leading-relaxed">
                   Automatski prijevodi na 100+ jezika. Turist više ne pogađa što je "buzara" – on naručuje s povjerenjem.
                 </CardDescription>
               </CardContent>
@@ -241,16 +241,16 @@ export function LandingPage() {
 
             {/* Ažuriranja u sekundi */}
             <Card className="group relative bg-zinc-900/50 border border-white/5 hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
-              <CardHeader>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center">
-                    <Zap className="w-6 h-6 text-orange-400" />
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
+                    <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
                   </div>
-                  <CardTitle className="text-orange-500 text-xl">Ažuriranja u sekundi</CardTitle>
+                  <CardTitle className="text-orange-500 text-lg sm:text-xl">Ažuriranja u sekundi</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <CardDescription className="text-zinc-400 leading-relaxed">
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <CardDescription className="text-sm sm:text-base text-zinc-400 leading-relaxed">
                   Nestalo je škampa? Nova cijena ribe? Promijenite ponudu odmah, bez križanja kemijskom ili ponovnog tiska.
                 </CardDescription>
               </CardContent>
@@ -258,16 +258,16 @@ export function LandingPage() {
 
             {/* 14 alergena, 0 nagađanja */}
             <Card className="group relative bg-zinc-900/50 border border-white/5 hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
-              <CardHeader>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center">
-                    <Utensils className="w-6 h-6 text-orange-400" />
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
+                    <Utensils className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
                   </div>
-                  <CardTitle className="text-orange-500 text-xl">14 alergena, 0 nagađanja</CardTitle>
+                  <CardTitle className="text-orange-500 text-lg sm:text-xl">14 alergena, 0 nagađanja</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <CardDescription className="text-zinc-400 leading-relaxed">
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <CardDescription className="text-sm sm:text-base text-zinc-400 leading-relaxed">
                   Jasno istaknuti alergeni uz svako jelo. Gost se osjeća sigurno, a konobar ne mora pamtiti svaki sastojak.
                 </CardDescription>
               </CardContent>
@@ -275,16 +275,16 @@ export function LandingPage() {
 
             {/* Istaknite dnevnu ponudu */}
             <Card className="group relative bg-zinc-900/50 border border-white/5 hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
-              <CardHeader>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center">
-                    <Rocket className="w-6 h-6 text-orange-400" />
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
+                    <Rocket className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
                   </div>
-                  <CardTitle className="text-orange-500 text-xl">Istaknite dnevnu ponudu</CardTitle>
+                  <CardTitle className="text-orange-500 text-lg sm:text-xl">Istaknite dnevnu ponudu</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <CardDescription className="text-zinc-400 leading-relaxed">
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <CardDescription className="text-sm sm:text-base text-zinc-400 leading-relaxed">
                   Pop-up obavijest koja dočekuje goste. Savršeno za promociju ulova dana ili sezonskih akcija čim otvore meni.
                 </CardDescription>
               </CardContent>
@@ -292,16 +292,16 @@ export function LandingPage() {
 
             {/* Premium vizualni identitet */}
             <Card className="group relative bg-zinc-900/50 border border-white/5 hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
-              <CardHeader>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center">
-                    <Sparkles className="w-6 h-6 text-orange-400" />
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
                   </div>
-                  <CardTitle className="text-orange-500 text-xl">Premium vizualni identitet</CardTitle>
+                  <CardTitle className="text-orange-500 text-lg sm:text-xl">Premium vizualni identitet</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <CardDescription className="text-zinc-400 leading-relaxed">
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <CardDescription className="text-sm sm:text-base text-zinc-400 leading-relaxed">
                   Svaki jelovnik dizajniramo od nule. Boje i tipografija koji savršeno prate stil Vašeg restorana.
                 </CardDescription>
               </CardContent>
@@ -309,16 +309,16 @@ export function LandingPage() {
 
             {/* Elegantno i beskontaktno */}
             <Card className="group relative bg-zinc-900/50 border border-white/5 hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
-              <CardHeader>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center">
-                    <Smartphone className="w-6 h-6 text-orange-400" />
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
+                    <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
                   </div>
-                  <CardTitle className="text-orange-500 text-xl">Elegantno i beskontaktno</CardTitle>
+                  <CardTitle className="text-orange-500 text-lg sm:text-xl">Elegantno i beskontaktno</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <CardDescription className="text-zinc-400 leading-relaxed">
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <CardDescription className="text-sm sm:text-base text-zinc-400 leading-relaxed">
                   Uključeni premium QR držači. Gosti skeniraju vlastitim mobitelom – higijenski i bez masnih papira.
                 </CardDescription>
               </CardContent>
