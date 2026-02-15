@@ -91,7 +91,7 @@ export function LandingPage() {
               {/* Title Section */}
               <div className="text-center lg:text-left w-full">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-4 sm:mb-6 leading-tight animate-in fade-in slide-in-from-bottom-8 duration-700 px-2 sm:px-0" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                  Prvi <span className="text-orange-500">AI</span> jelovnik dizajniran samo za Vas
+                  Prvi <span className="text-orange-500">AI</span> jelovnik kojim upravljate putem WhatsAppa
                 </h1>
                 <p className="text-base sm:text-lg md:text-xl text-zinc-300 font-light tracking-normal leading-6 sm:leading-7 mb-6 sm:mb-8 max-w-2xl mx-auto lg:mx-0 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 px-2 sm:px-0">
                   AI prevodi na <span className="text-orange-400 font-normal">100+ jezika</span> i generira profesionalne <span className="text-orange-400 font-normal">fotografije jela</span>.<br className="hidden sm:block" /><span className="text-orange-400 font-normal"> Unikatan dizajn</span> kreiran za Vaš restoran, bez generičkih šablona.<br className="hidden sm:block" /> Upravljajte ponudom u stvarnom vremenu – od promjene cijena do micanja jela - preko <span className="text-orange-400 font-normal">WhatsAppa</span>.
