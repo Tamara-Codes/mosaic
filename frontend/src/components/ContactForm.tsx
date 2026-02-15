@@ -12,25 +12,27 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import axios from "axios"
-
-const formSchema = z.object({
-  restaurantName: z.string().min(2, {
-    message: "Ime restorana mora imati barem 2 slova.",
-  }),
-  mobile: z.string().min(8, {
-    message: "Unesite valjan broj mobitela.",
-  }),
-  location: z.string().min(2, {
-    message: "Unesite lokaciju (grad).",
-  }),
-  menu: z.instanceof(File).optional(),
-})
+import { useLanguage } from "@/contexts/LanguageContext"
 
 export function ContactForm() {
+  const { t, language } = useLanguage()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  
+  const formSchema = useMemo(() => z.object({
+    restaurantName: z.string().min(2, {
+      message: t('form.restaurant_name.error'),
+    }),
+    mobile: z.string().min(8, {
+      message: t('form.mobile.error'),
+    }),
+    location: z.string().min(2, {
+      message: t('form.location.error'),
+    }),
+    menu: z.instanceof(File).optional(),
+  }), [t, language])
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -65,8 +67,8 @@ export function ContactForm() {
       })
       
       if (response.data.success) {
-        toast.success("VIP zahtjev poslan!", {
-          description: "Javit ćemo vam se uskoro.",
+        toast.success(t('form.success.title'), {
+          description: t('form.success.description'),
         })
         form.reset()
         setSelectedFile(null)
@@ -75,8 +77,8 @@ export function ContactForm() {
       }
     } catch (error) {
       console.error('VIP form error:', error)
-      toast.error("Greška pri slanju zahtjeva", {
-        description: "Molimo pokušajte ponovno kasnije.",
+      toast.error(t('form.error.title'), {
+        description: t('form.error.description'),
       })
     } finally {
       setIsSubmitting(false)
@@ -85,7 +87,7 @@ export function ContactForm() {
 
   return (
     <div className="w-full max-w-md">
-      <h3 className="text-2xl font-bold text-white mb-6">Prijavi se za VIP status</h3>
+      <h3 className="text-2xl font-bold text-white mb-6">{t('form.title')}</h3>
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -94,10 +96,10 @@ export function ContactForm() {
             name="restaurantName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-zinc-300">Ime restorana</FormLabel>
+                <FormLabel className="text-zinc-300">{t('form.restaurant_name')}</FormLabel>
                 <FormControl>
                   <Input 
-                    placeholder="Ime restorana" 
+                    placeholder={t('form.restaurant_name.placeholder')} 
                     {...field} 
                     className="bg-black/50 border-white/10 text-white placeholder:text-zinc-600 focus:border-orange-500/50 focus:ring-orange-500/20"
                   />
@@ -111,11 +113,11 @@ export function ContactForm() {
             name="mobile"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-zinc-300">Vaš broj mobitela</FormLabel>
+                <FormLabel className="text-zinc-300">{t('form.mobile')}</FormLabel>
                 <FormControl>
                   <Input 
                     type="tel"
-                    placeholder="091 123 4567" 
+                    placeholder={t('form.mobile.placeholder')} 
                     {...field} 
                     className="bg-black/50 border-white/10 text-white placeholder:text-zinc-600 focus:border-orange-500/50 focus:ring-orange-500/20"
                   />
@@ -129,10 +131,10 @@ export function ContactForm() {
             name="location"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-zinc-300">Lokacija</FormLabel>
+                <FormLabel className="text-zinc-300">{t('form.location')}</FormLabel>
                 <FormControl>
                   <Input 
-                    placeholder="Grad" 
+                    placeholder={t('form.location.placeholder')} 
                     {...field} 
                     className="bg-black/50 border-white/10 text-white placeholder:text-zinc-600 focus:border-orange-500/50 focus:ring-orange-500/20"
                   />
@@ -146,7 +148,7 @@ export function ContactForm() {
             name="menu"
             render={() => (
               <FormItem>
-                <FormLabel className="text-zinc-300">Jelovnik (opcionalno)</FormLabel>
+                <FormLabel className="text-zinc-300">{t('form.menu')}</FormLabel>
                 <FormControl>
                   <div className="space-y-2">
                     <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/10 rounded-lg cursor-pointer bg-black/30 hover:bg-black/50 hover:border-orange-500/30 transition-colors">
@@ -155,9 +157,9 @@ export function ContactForm() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
                         <p className="mb-2 text-sm text-zinc-400">
-                          <span className="font-semibold text-orange-400">Kliknite za upload</span> ili povucite datoteku
+                          <span className="font-semibold text-orange-400">{t('form.menu.upload')}</span> {t('form.menu.drag')}
                         </p>
-                        <p className="text-xs text-zinc-500">PDF ili slika (JPG, PNG, WEBP)</p>
+                        <p className="text-xs text-zinc-500">{t('form.menu.types')}</p>
                       </div>
                       <input
                         type="file"
@@ -208,7 +210,7 @@ export function ContactForm() {
             className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-6"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Šalje se..." : "Pošalji VIP zahtjev"}
+            {isSubmitting ? t('form.submitting') : t('form.submit')}
           </Button>
         </form>
       </Form>

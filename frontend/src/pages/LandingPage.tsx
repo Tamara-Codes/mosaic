@@ -9,9 +9,12 @@ import { Pointer } from '@/components/magicui/pointer'
 import { ShimmerButton } from '@/components/magicui/shimmer-button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { Globe, Zap, Utensils, Rocket, Sparkles, Smartphone, Facebook, Twitter, Instagram, Linkedin, X } from 'lucide-react'
+import { Globe, Zap, Utensils, Rocket, Sparkles, Smartphone, Facebook, Twitter, Instagram, Linkedin, X, Languages, ScanLine, MessageSquare } from 'lucide-react'
+import { useLanguage } from '@/contexts/LanguageContext'
+import LanguageSelector from '@/components/LanguageSelector'
 
 export function LandingPage() {
+  const { language, t } = useLanguage()
   const [openItems, setOpenItems] = useState<Set<number>>(new Set())
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false)
 
@@ -49,8 +52,8 @@ export function LandingPage() {
   return (
     <>
       <SEO
-        title="QR menu"
-        description="QR jelovnik koji automatski prevodi na 100+ jezika. Mijenjajte cijene, sakrijte nedostupna jela, istaknite alergene — instant, bez tiskanja. Besplatno postavljanje za restorane."
+        title={t('seo.title')}
+        description={t('seo.description')}
         url="/"
         type="website"
       />
@@ -66,9 +69,10 @@ export function LandingPage() {
               </span>
             </div>
             <div className="flex items-center gap-4">
+              <LanguageSelector availableLanguages={['hr', 'en']} variant="dark" />
               <Link to="/login">
                 <Button variant="ghost" className="text-zinc-400 hover:text-orange-500 hover:bg-white/5">
-                  Prijava
+                  {t('nav.login')}
                 </Button>
               </Link>
             </div>
@@ -86,17 +90,34 @@ export function LandingPage() {
               <div className="mb-6 sm:mb-8 animate-in fade-in zoom-in duration-700 text-center lg:text-left">
                 <img src="/ferros-logo.png" alt="Ferros Logo" className="h-24 w-24 sm:h-32 sm:w-32 md:h-48 md:w-48 object-contain drop-shadow-[0_0_50px_rgba(249,115,22,0.3)] mx-auto lg:mx-0" />
                 <p className="text-sm sm:text-base md:text-lg font-medium text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400 mt-4 sm:mt-6">
-                  Iskovan za vrhunsku uslugu
+                  {t('nav.tagline')}
                 </p>
               </div>
 
               {/* Title Section */}
               <div className="text-center lg:text-left w-full">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-4 sm:mb-6 leading-tight animate-in fade-in slide-in-from-bottom-8 duration-700 px-2 sm:px-0" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                  Prvi <span className="text-orange-500">AI</span> jelovnik kojim upravljate putem WhatsAppa
+                  {(() => {
+                    const title = t('hero.title')
+                    const parts = title.split('AI')
+                    if (parts.length === 2) {
+                      return (
+                        <>
+                          {parts[0]}
+                          <span className="text-orange-500">AI</span>
+                          {parts[1]}
+                        </>
+                      )
+                    }
+                    return title
+                  })()}
                 </h1>
                 <p className="text-base sm:text-lg md:text-xl text-zinc-300 font-light tracking-normal leading-6 sm:leading-7 mb-6 sm:mb-8 max-w-2xl mx-auto lg:mx-0 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 px-2 sm:px-0">
-                  AI prevodi na <span className="text-orange-400 font-normal">100+ jezika</span> i generira profesionalne <span className="text-orange-400 font-normal">fotografije jela</span>.<br className="hidden sm:block" /><span className="text-orange-400 font-normal"> Unikatan dizajn</span> kreiran za Vaš restoran, bez generičkih šablona.<br className="hidden sm:block" /> Upravljajte ponudom u stvarnom vremenu – od promjene cijena do micanja jela - preko <span className="text-orange-400 font-normal">WhatsAppa</span>.
+                  <span dangerouslySetInnerHTML={{ __html: t('hero.subtitle.line1') }} />{' '}
+                  {language === 'hr' && <><br className="hidden sm:block" /></>}
+                  <span dangerouslySetInnerHTML={{ __html: t('hero.subtitle.line2') }} />
+                  {language === 'hr' && <><br className="hidden sm:block" /></>}
+                  {' '}<span dangerouslySetInnerHTML={{ __html: t('hero.subtitle.line3') }} />
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center lg:justify-start animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 px-2 sm:px-0">
                   <a href="#contact" className="w-auto sm:w-auto">
@@ -105,7 +126,7 @@ export function LandingPage() {
                       shimmerColor="#fff"
                       className="w-auto sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold shadow-2xl"
                     >
-                      Postani VIP korisnik
+                      {t('hero.cta.vip')}
                     </ShimmerButton>
                   </a>
                   <Button 
@@ -113,7 +134,7 @@ export function LandingPage() {
                     className="w-auto sm:w-auto bg-orange-400/10 hover:bg-orange-400/15 text-orange-300 border border-orange-400/20 px-6 sm:px-8 !h-auto py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full"
                     onClick={() => setIsDemoModalOpen(true)}
                   >
-                    Pogledaj Ferros u akciji
+                    {t('hero.cta.demo')}
                   </Button>
                 </div>
               </div>
@@ -134,11 +155,11 @@ export function LandingPage() {
             <div className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-orange-500/10 border border-orange-500/30 mb-4 sm:mb-6">
               <span className="text-orange-400 text-xs sm:text-sm font-semibold flex items-center gap-2">
                 <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
-                Revolucionaran pristup
+                {t('features.badge')}
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6 tracking-tight px-2 sm:px-0" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-              Ovo nije još jedan generički jelovnik.
+              {t('features.title')}
             </h2>
           </div>
 
@@ -150,9 +171,9 @@ export function LandingPage() {
                 <img src="/ferros-asistent.png" alt="WhatsApp AI chat" className="w-[170%] h-[170%] object-contain object-top" />
               </div>
               <div className="p-4 sm:p-6 lg:p-8">
-                <h3 className="text-lg sm:text-xl font-bold text-orange-500 mb-2 sm:mb-3">Ferros AI asistent</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-orange-500 mb-2 sm:mb-3">{t('features.ai_assistant.title')}</h3>
                 <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-                  Upravljajte ponudom u hodu preko WhatsAppa. Pošaljite <span className="text-orange-300 italic">"Makni sva jela sa kozicama s jelovnika"</span> i Ferros AI asistent odmah izvršava naredbu.
+                  {t('features.ai_assistant.desc')}
                 </p>
               </div>
             </div>
@@ -164,9 +185,9 @@ export function LandingPage() {
                 <img src="/bento-custom-menu.png" alt="Unikatan dizajn" className="w-full h-full object-cover" />
               </div>
               <div className="p-4 sm:p-6 lg:p-8">
-                <h3 className="text-lg sm:text-xl font-bold text-orange-500 mb-2 sm:mb-3">100% personalizirani dizajn</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-orange-500 mb-2 sm:mb-3">{t('features.custom_design.title')}</h3>
                 <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-                Dizajn koji prati karakter Vašeg restorana. Bez generičkih predložaka, Vaš digitalni meni odražava Vaš identitet.
+                  {t('features.custom_design.desc')}
                 </p>
               </div>
             </div>
@@ -178,9 +199,9 @@ export function LandingPage() {
                 <img src="/bento-ai-photo.png" alt="AI fotografije jela" className="w-full h-full object-cover" />
               </div>
               <div className="p-4 sm:p-6 lg:p-8">
-                <h3 className="text-lg sm:text-xl font-bold text-orange-500 mb-2 sm:mb-3">AI generirane fotografije jela</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-orange-500 mb-2 sm:mb-3">{t('features.ai_photos.title')}</h3>
                 <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-                Pretvorite sastojke u umjetnost bez angažiranja fotografa. Jela sa slikama prodaju se do 30% više. Idealno za sezonske promjene i dnevne ponude.
+                  {t('features.ai_photos.desc')}
                 </p>
               </div>
             </div>
@@ -192,9 +213,9 @@ export function LandingPage() {
                 <img src="/bento-ai-translation.png" alt="AI prijevodi" className="w-full h-full object-cover" />
               </div>
               <div className="p-4 sm:p-6 lg:p-8">
-                <h3 className="text-lg sm:text-xl font-bold text-orange-500 mb-2 sm:mb-3">AI prijevodi na 100+ jezika</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-orange-500 mb-2 sm:mb-3">{t('features.ai_translation.title')}</h3>
                 <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-                  Napredni AI modeli razumiju gastronomski kontekst i održavaju profesionalnost na svakom jeziku.
+                  {t('features.ai_translation.desc')}
                 </p>
               </div>
             </div>
@@ -208,7 +229,7 @@ export function LandingPage() {
                 shimmerColor="#fff"
                 className="w-auto sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold shadow-2xl"
               >
-                Postani VIP korisnik
+                {t('hero.cta.vip')}
               </ShimmerButton>
             </a>
           </div>
@@ -220,10 +241,10 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4 tracking-tight px-2 sm:px-0" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-              Budućnost ugostiteljstva u jednom QR kodu
+              {t('benefits.title')}
             </h2>
             <p className="text-base sm:text-lg text-zinc-400 max-w-2xl mx-auto px-2 sm:px-0">
-              Sve što Vam je potrebno za brže poslovanje i veću zaradu.
+              {t('benefits.subtitle')}
             </p>
           </div>
           
@@ -235,12 +256,12 @@ export function LandingPage() {
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
                     <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
                   </div>
-                  <CardTitle className="text-orange-500 text-lg sm:text-xl">Jezici bez barijera</CardTitle>
+                  <CardTitle className="text-orange-500 text-lg sm:text-xl">{t('benefits.languages.title')}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-4 sm:p-6 pt-0">
                 <CardDescription className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-                  Automatski prijevodi na 100+ jezika. Turist više ne pogađa što je "buzara" – on naručuje s povjerenjem.
+                  {t('benefits.languages.desc')}
                 </CardDescription>
               </CardContent>
             </Card>
@@ -252,12 +273,12 @@ export function LandingPage() {
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
                     <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
                   </div>
-                  <CardTitle className="text-orange-500 text-lg sm:text-xl">Ažuriranja u sekundi</CardTitle>
+                  <CardTitle className="text-orange-500 text-lg sm:text-xl">{t('benefits.updates.title')}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-4 sm:p-6 pt-0">
                 <CardDescription className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-                  Nestalo je škampa? Nova cijena ribe? Promijenite ponudu odmah, bez križanja kemijskom ili ponovnog tiska.
+                  {t('benefits.updates.desc')}
                 </CardDescription>
               </CardContent>
             </Card>
@@ -269,12 +290,12 @@ export function LandingPage() {
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
                     <Utensils className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
                   </div>
-                  <CardTitle className="text-orange-500 text-lg sm:text-xl">14 alergena, 0 nagađanja</CardTitle>
+                  <CardTitle className="text-orange-500 text-lg sm:text-xl">{t('benefits.allergens.title')}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-4 sm:p-6 pt-0">
                 <CardDescription className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-                  Jasno istaknuti alergeni uz svako jelo. Gost se osjeća sigurno, a konobar ne mora pamtiti svaki sastojak.
+                  {t('benefits.allergens.desc')}
                 </CardDescription>
               </CardContent>
             </Card>
@@ -286,12 +307,12 @@ export function LandingPage() {
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
                     <Rocket className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
                   </div>
-                  <CardTitle className="text-orange-500 text-lg sm:text-xl">Istaknite dnevnu ponudu</CardTitle>
+                  <CardTitle className="text-orange-500 text-lg sm:text-xl">{t('benefits.promotions.title')}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-4 sm:p-6 pt-0">
                 <CardDescription className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-                  Pop-up obavijest koja dočekuje goste. Savršeno za promociju ulova dana ili sezonskih akcija čim otvore meni.
+                  {t('benefits.promotions.desc')}
                 </CardDescription>
               </CardContent>
             </Card>
@@ -303,12 +324,12 @@ export function LandingPage() {
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
                     <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
                   </div>
-                  <CardTitle className="text-orange-500 text-lg sm:text-xl">Premium vizualni identitet</CardTitle>
+                  <CardTitle className="text-orange-500 text-lg sm:text-xl">{t('benefits.identity.title')}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-4 sm:p-6 pt-0">
                 <CardDescription className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-                  Svaki jelovnik dizajniramo od nule. Boje i tipografija koji savršeno prate stil Vašeg restorana.
+                  {t('benefits.identity.desc')}
                 </CardDescription>
               </CardContent>
             </Card>
@@ -320,12 +341,12 @@ export function LandingPage() {
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
                     <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
                   </div>
-                  <CardTitle className="text-orange-500 text-lg sm:text-xl">Elegantno i beskontaktno</CardTitle>
+                  <CardTitle className="text-orange-500 text-lg sm:text-xl">{t('benefits.contactless.title')}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-4 sm:p-6 pt-0">
                 <CardDescription className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-                  Uključeni premium QR držači. Gosti skeniraju vlastitim mobitelom – higijenski i bez masnih papira.
+                  {t('benefits.contactless.desc')}
                 </CardDescription>
               </CardContent>
             </Card>
@@ -341,17 +362,17 @@ export function LandingPage() {
               {/* FOMO Section */}
               <div>
                 <div className="inline-block px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/30 mb-6">
-                  <span className="text-orange-400 text-sm font-semibold">Ekskluzivna ponuda</span>
+                  <span className="text-orange-400 text-sm font-semibold">{t('contact.badge')}</span>
                 </div>
                 <h2 className="text-3xl md:text-5xl font-bold text-white mb-3 leading-tight">
-                  Postanite jedan od <span className="hidden md:inline"><br /></span><span className="whitespace-nowrap">10 VIP partnera</span>
+                  {t('contact.title')} <span className="hidden md:inline"><br /></span><span className="whitespace-nowrap">{t('contact.title.vip')}</span>
                 </h2>
                 <p className="text-lg text-orange-400 mb-8 font-medium">
-                  Posebna ponuda za prve korisnike u sezoni 2026.
+                  {t('contact.subtitle')}
                 </p>
                 
                 <p className="text-zinc-300 text-base mb-8 leading-relaxed">
-                  Zaboravite na postavljanje sustava. Mi radimo sve za vas. Prvih 10 restorana dobiva <span className="text-orange-400 font-semibold">VIP tretman</span>:
+                  {t('contact.intro')} <span className="text-orange-400 font-semibold">{t('contact.intro.vip')}</span>{t('contact.intro.colon')}
                 </p>
                 
                 <div className="space-y-4 mb-8">
@@ -360,8 +381,8 @@ export function LandingPage() {
                       <span className="text-orange-400 text-sm font-bold">✓</span>
                     </div>
                     <div>
-                      <p className="text-white font-semibold mb-1">Ključ u ruke:</p>
-                      <p className="text-zinc-400 text-sm leading-relaxed">Pošaljite nam PDF ili sliku svog cjenika, mi unosimo sve stavke i opise.</p>
+                      <p className="text-white font-semibold mb-1">{t('contact.benefit1.title')}</p>
+                      <p className="text-zinc-400 text-sm leading-relaxed">{t('contact.benefit1.desc')}</p>
                     </div>
                   </div>
                   
@@ -370,8 +391,8 @@ export function LandingPage() {
                       <span className="text-orange-400 text-sm font-bold">✓</span>
                     </div>
                     <div>
-                      <p className="text-white font-semibold mb-1">Prioritetna podrška pri pokretanju:</p>
-                      <p className="text-zinc-400 text-sm leading-relaxed">Izravna pomoć dok god vaš prvi gost ne skenira kod.</p>
+                      <p className="text-white font-semibold mb-1">{t('contact.benefit2.title')}</p>
+                      <p className="text-zinc-400 text-sm leading-relaxed">{t('contact.benefit2.desc')}</p>
                     </div>
                   </div>
                   
@@ -380,8 +401,8 @@ export function LandingPage() {
                       <span className="text-orange-400 text-sm font-bold">✓</span>
                     </div>
                     <div>
-                      <p className="text-white font-semibold mb-1">Bez troškova postavljanja:</p>
-                      <p className="text-zinc-400 text-sm leading-relaxed">Troškovi postavljanja su u potpunosti ukinuti za VIP partnere.</p>
+                      <p className="text-white font-semibold mb-1">{t('contact.benefit3.title')}</p>
+                      <p className="text-zinc-400 text-sm leading-relaxed">{t('contact.benefit3.desc')}</p>
                     </div>
                   </div>
                 </div>
@@ -389,7 +410,7 @@ export function LandingPage() {
                 <div className="pt-6 border-t border-orange-500/20">
                   <p className="text-center">
                     <span className="text-orange-400 text-3xl font-bold">7/10</span>
-                    <span className="text-zinc-300 text-base ml-2">mjesta preostalo</span>
+                    <span className="text-zinc-300 text-base ml-2">{t('contact.spots')}</span>
                   </p>
                 </div>
               </div>
@@ -407,34 +428,34 @@ export function LandingPage() {
       {/* FAQ Section */}
       <section className="py-20 bg-[#18181b]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-orange-500 mb-12 text-center">Često postavljana pitanja</h2>
+          <h2 className="text-4xl font-bold text-orange-500 mb-12 text-center">{t('faq.title')}</h2>
           <div className="flex flex-col gap-4">
             {[
               {
-                question: "1. Što ako moji gosti ne znaju koristiti QR kod?",
-                answer: "Vaš papirnati cjenik i dalje ostaje na stolu (zakonska obveza!), ali digitalni jelovnik preuzima 90% posla. On je tu za turiste koji žele vidjeti slike, razumjeti sastojke na svom jeziku i naručiti više."
+                question: t('faq.q1'),
+                answer: t('faq.a1')
               },
               {
-                question: '2. Što ako konobari misle da je sustav previše kompliciran?',
-                answer: "Konobari će Vas obožavati. Više ne moraju 50 puta dnevno objašnjavati što su \"pljukanci\" na njemačkom ili nabrajati alergene. Sustav radi taj dosadni dio posla, a oni se fokusiraju na bržu uslugu i veće napojnice."
+                question: t('faq.q2'),
+                answer: t('faq.a2')
               },
               {
-                question: "3. Moram li kupovati nove tablete ili uređaje za restoran?",
-                answer: "Ne. Vaši gosti koriste vlastite mobitele, a Vi sustavom upravljate sa svog mobitela, tableta ili računala koje već imate."
+                question: t('faq.q3'),
+                answer: t('faq.a3')
               },
               {
-                question: "4. Kako funkcionira prijevod na 100+ jezika? Je li to Google Translate?",
-                answer: "Koristimo napredne AI modele specijalizirane za gastronomiju koji razumiju kontekst (npr. razliku između \"plate\" kao tanjura i \"plate\" kao hladne plate). Vaš jelovnik će zvučati profesionalno na njemačkom, talijanskom, poljskom ili bilo kojem drugom jeziku."
+                question: t('faq.q4'),
+                answer: t('faq.a4')
               },
               {
-                question: "5. Mogu li stvarno promijeniti cijenu usred radnog vremena?",
-                answer: "Da. Promjena je vidljiva istog trenutka čim kliknete \"Spremi\". Nema više križanja cijena kemijskom olovkom pred gostima."
+                question: t('faq.q5'),
+                answer: t('faq.a5')
               },
               {
-                question: "6. Koliko mi vremena treba da postavim cijeli jelovnik?",
+                question: t('faq.q6'),
                 answer: (
                   <>
-                    Točno <span className="text-orange-400 font-semibold">0 minuta</span>. Mi postavljamo jelovnik umjesto Vas. Vi nam samo pošaljete PDF ili sliku.
+                    {t('faq.a6.part1')} <span className="text-orange-400 font-semibold">{t('faq.a6.minutes')}</span>{t('faq.a6.part2')}
                   </>
                 )
               }
@@ -490,7 +511,7 @@ export function LandingPage() {
               className="bg-orange-400/10 hover:bg-orange-400/15 text-orange-300 border border-orange-400/20 px-8 !h-auto py-4 text-lg font-semibold rounded-full"
               onClick={() => setIsDemoModalOpen(true)}
             >
-              Pogledaj Ferros u akciji
+              {t('hero.cta.demo')}
             </Button>
           </div>
         </div>
@@ -506,29 +527,29 @@ export function LandingPage() {
                 <img src="/ferros-logo.png" alt="Ferros Logo" className="h-10 w-10 object-contain" />
                 <span className="text-lg font-bold text-white">Ferros</span>
               </div>
-              <p className="text-orange-400 text-sm mb-4">Iskovan za vrhunsku uslugu.</p>
-              <p className="text-zinc-500 text-xs md:mt-auto mt-6">© 2026 Sva prava pridržana.</p>
+              <p className="text-orange-400 text-sm mb-4">{t('footer.tagline')}</p>
+              <p className="text-zinc-500 text-xs md:mt-auto mt-6">{t('footer.copyright')}</p>
             </div>
 
             {/* Middle Column - Legal */}
             <div className="flex flex-col md:mx-auto">
-              <h4 className="text-white font-semibold text-sm mb-4">Pravno</h4>
+              <h4 className="text-white font-semibold text-sm mb-4">{t('footer.legal')}</h4>
               <div className="space-y-3">
                 <a href="#" className="block text-zinc-400 hover:text-orange-400 text-sm transition-colors">
-                  Opći uvjeti poslovanja
+                  {t('footer.terms')}
                 </a>
                 <a href="#" className="block text-zinc-400 hover:text-orange-400 text-sm transition-colors">
-                  Izjava o privatnosti
+                  {t('footer.privacy')}
                 </a>
                 <a href="#" className="block text-zinc-400 hover:text-orange-400 text-sm transition-colors">
-                  Kolačići
+                  {t('footer.cookies')}
                 </a>
               </div>
             </div>
 
             {/* Right Column - Contact */}
             <div className="flex flex-col md:ml-auto">
-              <h4 className="text-white font-semibold text-sm mb-4">Kontakt</h4>
+              <h4 className="text-white font-semibold text-sm mb-4">{t('footer.contact')}</h4>
               <div className="space-y-3">
                 <a href="mailto:info@ferros.menu" className="block text-zinc-400 hover:text-orange-400 text-sm transition-colors">
                   info@ferros.menu
@@ -555,9 +576,8 @@ export function LandingPage() {
     </div>
 
     {/* Demo Modal */}
-    <Dialog open={isDemoModalOpen} onOpenChange={setIsDemoModalOpen} maxWidth="max-w-6xl">
+    <Dialog open={isDemoModalOpen} onOpenChange={setIsDemoModalOpen} maxWidth="max-w-7xl">
       <DialogContent 
-        onClose={() => setIsDemoModalOpen(false)}
         className="max-w-6xl w-full bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border-orange-500/30 p-0 overflow-hidden shadow-2xl rounded-2xl"
       >
         <div className="relative">
@@ -569,7 +589,7 @@ export function LandingPage() {
             <span className="sr-only">Close</span>
           </button>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr]">
             {/* Left side - Video placeholder */}
             <div className="relative bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 p-8 lg:p-12 flex items-center justify-center border-r border-orange-500/10">
               <div className="relative w-full max-w-lg">
@@ -583,7 +603,7 @@ export function LandingPage() {
                         </svg>
                         <div className="absolute inset-0 rounded-full bg-orange-400/20 animate-ping opacity-75"></div>
                       </button>
-                      <p className="text-zinc-400 text-sm font-medium">Video u pripremi</p>
+                      <p className="text-zinc-400 text-sm font-medium">{t('modal.video.placeholder')}</p>
                     </div>
                   </div>
                   
@@ -597,24 +617,39 @@ export function LandingPage() {
             <div className="p-10 lg:p-14 flex flex-col justify-center bg-gradient-to-br from-zinc-900 to-zinc-950">
               <div className="mb-6">
                 <div className="inline-block px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/30 mb-6">
-                  <span className="text-orange-400 text-sm font-semibold">Demo</span>
+                  <span className="text-orange-400 text-sm font-semibold">{t('modal.badge')}</span>
                 </div>
                 
                 <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                  Vaš jelovnik, na svim jezicima svijeta.
+                  {t('modal.title')}
                 </h2>
               </div>
 
               <div className="space-y-4 mb-8">
-                <p className="text-lg text-zinc-300 leading-relaxed">
-                  Naš AI prevodi Vaša jela i generira profesionalne opise koji prodaju.
-                </p>
-                <p className="text-lg text-zinc-300 leading-relaxed">
-                  Gosti skeniraju, biraju na svom jeziku i naručuju s povjerenjem.
-                </p>
-                <p className="text-lg text-zinc-300 leading-relaxed">
-                  Vi samo šaljete poruku <span className="text-orange-400 font-semibold">Ferros AI asistentu</span>, on radi sve ostalo.
-                </p>
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center">
+                    <Languages className="w-5 h-5 text-orange-400" />
+                  </div>
+                  <p className="text-base text-zinc-300 leading-relaxed">
+                    {t('modal.text1')}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center">
+                    <ScanLine className="w-5 h-5 text-orange-400" />
+                  </div>
+                  <p className="text-base text-zinc-300 leading-relaxed">
+                    {t('modal.text2')}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5 text-orange-400" />
+                  </div>
+                  <p className="text-base text-zinc-300 leading-relaxed">
+                    {t('modal.text3')} <span className="text-orange-400 font-semibold">{t('modal.text3.ai')}</span>{t('modal.text3.rest')}
+                  </p>
+                </div>
               </div>
 
               <div className="pt-4 flex justify-center">
@@ -624,7 +659,7 @@ export function LandingPage() {
                     shimmerColor="#fff"
                     className="w-full sm:w-auto px-8 py-4 text-lg font-semibold shadow-2xl"
                   >
-                    Postani VIP korisnik
+                    {t('hero.cta.vip')}
                   </ShimmerButton>
                 </a>
               </div>
