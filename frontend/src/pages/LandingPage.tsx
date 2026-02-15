@@ -7,8 +7,8 @@ import { SEO } from '@/components/SEO'
 import { BorderBeam } from '@/components/magicui/border-beam'
 import { Pointer } from '@/components/magicui/pointer'
 import { ShimmerButton } from '@/components/magicui/shimmer-button'
-import { BentoGrid, BentoCard } from '@/components/magicui/bento-grid'
-import { Globe, Camera, PencilLine, ShieldAlert, QrCode, Palette, Package, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Globe, Zap, Utensils, Rocket, Sparkles, Smartphone, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react'
 
 export function LandingPage() {
   const [openItems, setOpenItems] = useState<Set<number>>(new Set())
@@ -81,20 +81,20 @@ export function LandingPage() {
             {/* Left side - Content */}
             <div className="flex flex-col items-center lg:items-start">
               {/* Logo */}
-              <div className="mb-8 animate-in fade-in zoom-in duration-700">
-                <img src="/ferros-logo.png" alt="Ferros Logo" className="h-32 w-32 md:h-48 md:w-48 object-contain drop-shadow-[0_0_50px_rgba(249,115,22,0.3)]" />
+              <div className="mb-8 animate-in fade-in zoom-in duration-700 text-center lg:text-left">
+                <img src="/ferros-logo.png" alt="Ferros Logo" className="h-32 w-32 md:h-48 md:w-48 object-contain drop-shadow-[0_0_50px_rgba(249,115,22,0.3)] mx-auto lg:mx-0" />
+                <p className="text-base md:text-lg font-medium text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400 mt-6">
+                  Iskovan za vrhunsku uslugu
+                </p>
               </div>
 
               {/* Title Section */}
               <div className="text-center lg:text-left w-full">
-                <p className="text-lg md:text-xl font-medium text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400 mb-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                  Iskovan za vrhunsku uslugu
-                </p>
-                <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-6 leading-tight animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                  Digitalni jelovnik koji prodaje više i štedi vaše vrijeme.
+                <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-6 leading-tight animate-in fade-in slide-in-from-bottom-8 duration-700" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                  Prvi <span className="text-orange-500">AI</span> jelovnik dizajniran samo za Vas
                 </h1>
                 <p className="text-lg md:text-xl text-zinc-300 font-light tracking-normal leading-7 mb-8 max-w-2xl mx-auto lg:mx-0 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-                  Integrirana AI tehnologija trenutno prevodi na 100+ jezika i generira fotografije jela. Upravljajte ponudom u stvarnom vremenu – od promjene cijena do micanja jela jednim klikom.
+                  AI prevodi na <span className="text-orange-400 font-normal">100+ jezika</span> i generira profesionalne <span className="text-orange-400 font-normal">fotografije jela</span>.<br /><span className="text-orange-400 font-normal">Unikatan dizajn</span> kreiran za Vaš restoran, bez generičkih šablona.<br />Upravljajte ponudom u stvarnom vremenu – od promjene cijena do micanja jela - preko <span className="text-orange-400 font-normal">WhatsAppa</span>.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 items-center justify-center lg:justify-start animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
                   <a href="#contact">
@@ -121,65 +121,209 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Why We're Different - AI Features */}
+      <section className="py-24 bg-gradient-to-b from-[#18181b] via-zinc-900/50 to-[#18181b] mt-0 lg:mt-[2cm]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <div className="inline-block px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/30 mb-6">
+              <span className="text-orange-400 text-sm font-semibold flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Revolucionaran pristup
+              </span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              Ovo nije još jedan generički jelovnik.
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* WhatsApp AI Chatbot */}
+            <div className="group relative bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-full blur-2xl group-hover:blur-3xl transition-all" />
+              <div className="w-full h-80 overflow-hidden flex items-start justify-center bg-gradient-to-br from-zinc-950 via-orange-950/30 to-zinc-900">
+                <img src="/ferros-asistent.png" alt="WhatsApp AI chat" className="w-[170%] h-[170%] object-contain object-top" />
+              </div>
+              <div className="p-8">
+                <h3 className="text-xl font-bold text-orange-500 mb-3">Ferros AI asistent</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                  Upravljajte ponudom u hodu preko WhatsAppa. Pošaljite <span className="text-orange-300 italic">"Makni sva jela sa kozicama s jelovnika"</span> i Ferros AI asistent odmah izvršava naredbu.
+                </p>
+              </div>
+            </div>
+
+            {/* Custom Design */}
+            <div className="group relative bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-full blur-2xl group-hover:blur-3xl transition-all" />
+              <div className="w-full h-80 overflow-hidden">
+                <img src="/bento-custom-menu.png" alt="Unikatan dizajn" className="w-full h-full object-cover" />
+              </div>
+              <div className="p-8">
+                <h3 className="text-xl font-bold text-orange-500 mb-3">100% personalizirani dizajn</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                Dizajn koji prati karakter Vašeg restorana. Bez generičkih predložaka, Vaš digitalni meni odražava Vaš identitet.
+                </p>
+              </div>
+            </div>
+
+            {/* AI Image Generation */}
+            <div className="group relative bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-full blur-2xl group-hover:blur-3xl transition-all" />
+              <div className="w-full h-80 overflow-hidden">
+                <img src="/bento-ai-photo.png" alt="AI fotografije jela" className="w-full h-full object-cover" />
+              </div>
+              <div className="p-8">
+                <h3 className="text-xl font-bold text-orange-500 mb-3">AI generirane fotografije jela</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                Pretvorite sastojke u umjetnost bez angažiranja fotografa. Jela sa slikama prodaju se do 30% više. Idealno za sezonske promjene i dnevne ponude.
+                </p>
+              </div>
+            </div>
+
+            {/* AI Translation */}
+            <div className="group relative bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-full blur-2xl group-hover:blur-3xl transition-all" />
+              <div className="w-full h-80 overflow-hidden">
+                <img src="/bento-ai-translation.png" alt="AI prijevodi" className="w-full h-full object-cover" />
+              </div>
+              <div className="p-8">
+                <h3 className="text-xl font-bold text-orange-500 mb-3">AI prijevodi na 100+ jezika</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                  Napredni AI modeli razumiju gastronomski kontekst i održavaju profesionalnost na svakom jeziku.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA Button */}
+          <div className="mt-24 flex justify-center">
+            <a href="#contact">
+              <ShimmerButton
+                background="rgba(249, 115, 22, 1)"
+                shimmerColor="#fff"
+                className="px-8 py-4 text-lg font-semibold shadow-2xl"
+              >
+                Osiguraj VIP status
+              </ShimmerButton>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Problems We Solve */}
       <section className="py-16 bg-[#18181b] mt-0 lg:mt-[2cm]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-16 text-center tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>Zašto <span className="text-orange-500">F</span>erros?</h2>
-          <BentoGrid>
-            {/* Hero feature — AI Translation (2 cols, 2 rows) */}
-            <BentoCard
-              className="md:col-span-2 md:row-span-2 md:min-h-[400px]"
-              Icon={Globe}
-              image="/bento-ai-translation.png"
-              title="Jelovnik koji govori 100+ jezika"
-              description={'Turist iz Njemačke ne bi trebao pogađati što je "buzara". Jelovnik se automatski prevodi na 100+ jezika — gosti razumiju svako jelo, naručuju sigurnije i naručuju više.'}
-            />
-            {/* Instant Updates — merged hide + edit (1 col, 2 rows) */}
-            <BentoCard
-              className="md:row-span-2 md:min-h-[400px]"
-              Icon={PencilLine}
-              image="/bento-updates.png"
-              title="Ažuriranja u trenutku"
-              description="Nema škampa? Jedan klik i nestaju s jelovnika. Nova cijena ribe? Sezonska akcija? Promjena je vidljiva istog trenutka. Bez križanja cijena kemijskom, bez ponovnog tiskanja."
-            />
-            {/* AI Photos — standard */}
-            <BentoCard
-              className="md:min-h-[400px]"
-              Icon={Camera}
-              image="/bento-ai-photo.png"
-              title="Profesionalne slike jela — bez fotografa."
-              description="Jela sa slikom prodaju se do 30% više. Naš AI generira visokokvalitetne fotografije za svaku stavku jelovnika."
-            />
-            {/* Custom Menu Design — wide card (2 cols) */}
-            <BentoCard
-              className="md:col-span-2 md:min-h-[400px]"
-              Icon={Palette}
-              image="/bento-custom-menu.png"
-              title="Svaki jelovnik je unikat."
-              description="Svaki digitalni jelovnik dizajniramo u skladu s identitetom vašeg restorana — boje, fontovi i stil koji odražavaju vašu priču."
-            />
-            {/* Allergens — standard */}
-            <BentoCard
-              Icon={ShieldAlert}
-              image="/bento-allergens.png"
-              title="14 alergena. 0 nagađanja."
-              description="Alergeni su jasno označeni uz svako jelo. Gost s alergijom se osjeća sigurno, konobar ne mora pamtiti svaki sastojak."
-            />
-            {/* QR Contactless — standard */}
-            <BentoCard
-              Icon={QrCode}
-              image="/bento-hygiene.png"
-              title="Higijena bez kompromisa."
-              description="Nema masnih otisaka, nema pohabanih stranica koje prolaze kroz stotine ruku. Gost skenira QR kod vlastitim mobitelom — čisto, sigurno i bez dodira."
-            />
-            {/* QR Stands — standard */}
-            <BentoCard
-              Icon={Package}
-              image="/bento-qrcode.png"
-              title="Sve je uključeno. Samo postavite na stol."
-              description="Uz digitalni jelovnik dobivate i elegantne QR držače za stolove — spremni za korištenje od prvog dana, bez dodatnog troška."
-            />
-          </BentoGrid>
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              Budućnost ugostiteljstva u jednom QR kodu
+            </h2>
+            <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
+              Sve što Vam je potrebno za brže poslovanje i veću zaradu.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Jezične barijere */}
+            <Card className="group relative bg-zinc-900/50 border border-white/5 hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center">
+                    <Globe className="w-6 h-6 text-orange-400" />
+                  </div>
+                  <CardTitle className="text-orange-500 text-xl">Jezici bez barijera</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-zinc-400 leading-relaxed">
+                  Automatski prijevodi na 100+ jezika. Turist više ne pogađa što je "buzara" – on naručuje s povjerenjem.
+                </CardDescription>
+              </CardContent>
+            </Card>
+
+            {/* Ažuriranja u sekundi */}
+            <Card className="group relative bg-zinc-900/50 border border-white/5 hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center">
+                    <Zap className="w-6 h-6 text-orange-400" />
+                  </div>
+                  <CardTitle className="text-orange-500 text-xl">Ažuriranja u sekundi</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-zinc-400 leading-relaxed">
+                  Nestalo je škampa? Nova cijena ribe? Promijenite ponudu odmah, bez križanja kemijskom ili ponovnog tiska.
+                </CardDescription>
+              </CardContent>
+            </Card>
+
+            {/* 14 alergena, 0 nagađanja */}
+            <Card className="group relative bg-zinc-900/50 border border-white/5 hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center">
+                    <Utensils className="w-6 h-6 text-orange-400" />
+                  </div>
+                  <CardTitle className="text-orange-500 text-xl">14 alergena, 0 nagađanja</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-zinc-400 leading-relaxed">
+                  Jasno istaknuti alergeni uz svako jelo. Gost se osjeća sigurno, a konobar ne mora pamtiti svaki sastojak.
+                </CardDescription>
+              </CardContent>
+            </Card>
+
+            {/* Istaknite dnevnu ponudu */}
+            <Card className="group relative bg-zinc-900/50 border border-white/5 hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center">
+                    <Rocket className="w-6 h-6 text-orange-400" />
+                  </div>
+                  <CardTitle className="text-orange-500 text-xl">Istaknite dnevnu ponudu</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-zinc-400 leading-relaxed">
+                  Pop-up obavijest koja dočekuje goste. Savršeno za promociju ulova dana ili sezonskih akcija čim otvore meni.
+                </CardDescription>
+              </CardContent>
+            </Card>
+
+            {/* Premium vizualni identitet */}
+            <Card className="group relative bg-zinc-900/50 border border-white/5 hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center">
+                    <Sparkles className="w-6 h-6 text-orange-400" />
+                  </div>
+                  <CardTitle className="text-orange-500 text-xl">Premium vizualni identitet</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-zinc-400 leading-relaxed">
+                  Svaki jelovnik dizajniramo od nule. Boje i tipografija koji savršeno prate stil Vašeg restorana.
+                </CardDescription>
+              </CardContent>
+            </Card>
+
+            {/* Elegantno i beskontaktno */}
+            <Card className="group relative bg-zinc-900/50 border border-white/5 hover:border-orange-500/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center">
+                    <Smartphone className="w-6 h-6 text-orange-400" />
+                  </div>
+                  <CardTitle className="text-orange-500 text-xl">Elegantno i beskontaktno</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-zinc-400 leading-relaxed">
+                  Uključeni premium QR držači. Gosti skeniraju vlastitim mobitelom – higijenski i bez masnih papira.
+                </CardDescription>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 
@@ -211,7 +355,7 @@ export function LandingPage() {
                     </div>
                     <div>
                       <p className="text-white font-semibold mb-1">Ključ u ruke:</p>
-                      <p className="text-zinc-400 text-sm leading-relaxed">Pošaljite nam PDF ili sliku svog cjenika – mi unosimo sve stavke i opise.</p>
+                      <p className="text-zinc-400 text-sm leading-relaxed">Pošaljite nam PDF ili sliku svog cjenika, mi unosimo sve stavke i opise.</p>
                     </div>
                   </div>
                   
@@ -222,6 +366,16 @@ export function LandingPage() {
                     <div>
                       <p className="text-white font-semibold mb-1">Prioritetna podrška pri pokretanju:</p>
                       <p className="text-zinc-400 text-sm leading-relaxed">Izravna pomoć dok god vaš prvi gost ne skenira kod.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500/20 flex items-center justify-center mt-1">
+                      <span className="text-orange-400 text-sm font-bold">✓</span>
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold mb-1">Bez troškova postavljanja:</p>
+                      <p className="text-zinc-400 text-sm leading-relaxed">Troškovi postavljanja su u potpunosti ukinuti za VIP partnere.</p>
                     </div>
                   </div>
                 </div>
@@ -274,7 +428,7 @@ export function LandingPage() {
                 question: "6. Koliko mi vremena treba da postavim cijeli jelovnik?",
                 answer: (
                   <>
-                    Točno <span className="text-orange-400 font-semibold">0 minuta</span>. Mi postavljamo jelovnik umjesto Vas - Vi samo nam pošaljete PDF ili sliku.
+                    Točno <span className="text-orange-400 font-semibold">0 minuta</span>. Mi postavljamo jelovnik umjesto Vas. Vi nam samo pošaljete PDF ili sliku.
                   </>
                 )
               }

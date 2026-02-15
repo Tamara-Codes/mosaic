@@ -49,6 +49,9 @@ CORS_ORIGINS = [
 # Gemini (AI provider for translations)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
+# OpenAI (DALL-E image generation)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 # Menu URL for QR codes - should point to the public menu domain
 MENU_URL = os.getenv("MENU_URL", "http://localhost:5180")
 

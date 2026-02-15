@@ -115,7 +115,7 @@ export function ContactForm() {
                 <FormControl>
                   <Input 
                     type="tel"
-                    placeholder="+385 91 123 4567" 
+                    placeholder="091 123 4567" 
                     {...field} 
                     className="bg-black/50 border-white/10 text-white placeholder:text-zinc-600 focus:border-orange-500/50 focus:ring-orange-500/20"
                   />

@@ -3,8 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { Building2, Lock } from 'lucide-react'
+import { Building2, Lock, Sparkles } from 'lucide-react'
 import { useApiClient } from '@/lib/apiHelpers'
 import { useUser } from '@clerk/clerk-react'
 
@@ -23,6 +24,7 @@ export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [aiImagePrompt, setAiImagePrompt] = useState('')
   const [loading, setLoading] = useState(false)
   const [passwordLoading, setPasswordLoading] = useState(false)
 
@@ -39,6 +41,7 @@ export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
       setAddress(info.address || '')
       setPhone(info.phone || '')
       setEmail(info.email || '')
+      setAiImagePrompt(info.ai_image_prompt || '')
     } catch (error: any) {
       if (error?.response?.status === 404) {
         const errorMessage = error?.response?.data?.detail || 'Restaurant not found'
@@ -68,6 +71,7 @@ export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
       formData.append('address', address)
       formData.append('phone', phone)
       formData.append('email', email)
+      formData.append('ai_image_prompt', aiImagePrompt)
       await apiClient.post('/restaurant-info', formData)
       toast.success('Informacije o restoranu su spremljene')
       // Notify parent that restaurant was created/updated
@@ -193,6 +197,37 @@ export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
           </div>
           <Button onClick={handleSaveRestaurantInfo} disabled={loading}>
             {loading ? 'Spremanje...' : 'Spremi Informacije'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* AI Image Generation Settings */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5" />
+            <CardTitle>AI Generiranje Slika</CardTitle>
+          </div>
+          <CardDescription>
+            Zadani stil za AI generirane slike jela
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="aiImagePrompt">Zadani stil fotografije</Label>
+            <Textarea
+              id="aiImagePrompt"
+              value={aiImagePrompt}
+              onChange={(e) => setAiImagePrompt(e.target.value)}
+              placeholder="npr. Profesionalna food fotografija, bijeli tanjur, rustikalni drveni stol, mekano prirodno osvjetljenje..."
+              rows={3}
+            />
+            <p className="text-sm text-muted-foreground">
+              Ovaj stil se primjenjuje na sve AI generirane slike. Ostavite prazno za zadani stil.
+            </p>
+          </div>
+          <Button onClick={handleSaveRestaurantInfo} disabled={loading}>
+            {loading ? 'Spremanje...' : 'Spremi Postavke'}
           </Button>
         </CardContent>
       </Card>

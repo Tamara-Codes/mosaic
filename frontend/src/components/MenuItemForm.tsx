@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { type MenuItem } from '@/lib/api'
+import { type MenuItem, type GenerateImageResponse } from '@/lib/api'
 import { useApiClient } from '@/lib/apiHelpers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@clerk/clerk-react'
-import { Utensils, Coffee } from 'lucide-react'
+import { Utensils, Coffee, Sparkles, Loader2 } from 'lucide-react'
 
 interface MenuItemFormProps {
   item?: MenuItem | null
@@ -45,6 +46,10 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
   const [categories, setCategories] = useState<{id: number, name: string}[]>([])
   const [categoryInput, setCategoryInput] = useState('')
   const [useCustomCategory, setUseCustomCategory] = useState(false)
+  const [showAiDialog, setShowAiDialog] = useState(false)
+  const [aiCustomStyle, setAiCustomStyle] = useState('')
+  const [aiGenerating, setAiGenerating] = useState(false)
+  const [aiPreviewUrl, setAiPreviewUrl] = useState<string | null>(null)
 
   useEffect(() => {
     loadCategories()
@@ -381,6 +386,19 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
           >
             Odaberi datoteku
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setAiPreviewUrl(null)
+              setAiCustomStyle('')
+              setShowAiDialog(true)
+            }}
+            className="w-fit"
+          >
+            <Sparkles className="h-4 w-4 mr-1" />
+            Generiraj sa AI
+          </Button>
           <span className="text-sm text-muted-foreground">
             {image ? image.name : 'Nema odabrane datoteke'}
           </span>
@@ -392,6 +410,15 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
             className="hidden"
           />
         </div>
+        {(image || aiPreviewUrl) && (
+          <div className="mt-2">
+            <img
+              src={image ? URL.createObjectURL(image) : aiPreviewUrl!}
+              alt="Pregled slike"
+              className="h-32 w-32 object-cover rounded-md border"
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex items-center space-x-2">
@@ -513,6 +540,112 @@ export function MenuItemForm({ item, presetCategory, onSuccess, onCancel }: Menu
           {loading ? 'Spremanje...' : 'Spremi'}
         </Button>
       </div>
+
+      <Dialog open={showAiDialog} onOpenChange={setShowAiDialog}>
+        <DialogContent onClose={() => setShowAiDialog(false)}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5" />
+              Generiraj sliku sa AI
+            </DialogTitle>
+            <DialogDescription>
+              AI će generirati fotografiju jela na temelju naziva i opisa.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-4">
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">Jelo</Label>
+              <p className="text-sm text-muted-foreground bg-muted p-2 rounded">
+                {formData.name_hr}{formData.description_hr ? `: ${formData.description_hr}` : ''}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ai-custom-style">Prilagođeni stil (opcionalno)</Label>
+              <Textarea
+                id="ai-custom-style"
+                value={aiCustomStyle}
+                onChange={(e) => setAiCustomStyle(e.target.value)}
+                placeholder="npr. rustikalni drveni stol, bijeli tanjur..."
+                rows={2}
+              />
+              <p className="text-xs text-muted-foreground">
+                Ovo se kombinira sa zadanim stilom restorana iz postavki.
+              </p>
+            </div>
+
+            {aiPreviewUrl && (
+              <div className="flex justify-center">
+                <img
+                  src={aiPreviewUrl}
+                  alt="AI generirana slika"
+                  className="h-48 w-48 object-cover rounded-md border"
+                />
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              {aiPreviewUrl && (
+                <Button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(aiPreviewUrl)
+                      const blob = await response.blob()
+                      const file = new File([blob], 'ai-generated.png', { type: 'image/png' })
+                      setImage(file)
+                      setShowAiDialog(false)
+                      toast.success('AI slika je postavljena')
+                    } catch {
+                      toast.error('Greška pri preuzimanju slike')
+                    }
+                  }}
+                >
+                  Koristi ovu sliku
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant={aiPreviewUrl ? 'outline' : 'default'}
+                disabled={aiGenerating || !formData.name_hr}
+                onClick={async () => {
+                  setAiGenerating(true)
+                  try {
+                    const response = await apiClient.post('/generate-image', {
+                      dish_name: formData.name_hr,
+                      dish_description: formData.description_hr,
+                      custom_style: aiCustomStyle,
+                    })
+                    const data = response.data as GenerateImageResponse
+                    if (data.success) {
+                      setAiPreviewUrl(data.image_url)
+                    } else {
+                      toast.error('Generiranje slike nije uspjelo')
+                    }
+                  } catch (error: any) {
+                    const msg = error.response?.data?.detail || 'Greška pri generiranju slike'
+                    toast.error(msg)
+                  } finally {
+                    setAiGenerating(false)
+                  }
+                }}
+              >
+                {aiGenerating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    Generiranje...
+                  </>
+                ) : aiPreviewUrl ? (
+                  'Generiraj ponovo'
+                ) : (
+                  'Generiraj'
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </form>
   )
 }

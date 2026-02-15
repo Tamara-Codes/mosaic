@@ -59,6 +59,11 @@ export interface Category {
   translations?: CategoryTranslation[]
 }
 
+export interface GenerateImageResponse {
+  success: boolean
+  image_url: string
+}
+
 export interface Analytics {
   total_items: number
   available_items: number

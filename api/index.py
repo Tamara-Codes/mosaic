@@ -35,11 +35,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 from core.config import CORS_ORIGINS, MENU_URL
-from services.auth import get_clerk_user_info, get_clerk_user_email, get_restaurant_by_clerk_user, require_auth
+from services.auth import get_clerk_user_email, get_restaurant_by_clerk_user, require_auth
 from services.webhooks import verify_signature, handle_user_created, handle_user_deleted
 from services.gemini_translator import translate_menu_item, translate_category, translate_batch
 from services.email_service import send_vip_form_email
 from services.language_service import get_all_languages, get_restaurant_languages, add_restaurant_language, remove_restaurant_language
+from services.image_generator import generate_food_image
 
 # SECURITY: Import security middleware
 from middleware.security_headers import SecurityHeadersMiddleware
@@ -353,7 +354,8 @@ async def get_restaurant_info(clerk_user_id: str = Depends(require_auth), author
         "address": restaurant['address'],
         "phone": restaurant['phone'],
         "email": restaurant['email'],
-        "theme_identifier": restaurant['theme_identifier']
+        "theme_identifier": restaurant['theme_identifier'],
+        "ai_image_prompt": restaurant.get('ai_image_prompt', '')
     })
 
 @app.post("/api/v1/restaurant-info")
@@ -364,6 +366,7 @@ async def save_restaurant_info(
     phone: Optional[str] = Form(None),
     email: Optional[str] = Form(None),
     theme_identifier: Optional[str] = Form(None),
+    ai_image_prompt: Optional[str] = Form(None),
     clerk_user_id: str = Depends(require_auth)
 ):
     """Save or update restaurant information"""
@@ -416,7 +419,10 @@ async def save_restaurant_info(
         
         if theme_identifier:
             update_data["theme_identifier"] = theme_identifier
-        
+
+        if ai_image_prompt is not None:
+            update_data["ai_image_prompt"] = ai_image_prompt
+
         # Update existing
         result = supabase.table('restaurants').update(update_data).eq('id', restaurant['id']).execute()
         if not result.data:
@@ -429,6 +435,58 @@ async def save_restaurant_info(
             status_code=404,
             detail=f"No restaurant found for your account. Please contact administrator to create a restaurant for email: {email or 'your email'}"
         )
+
+# AI Image Generation Endpoint
+@app.post("/api/v1/generate-image")
+async def generate_image(
+    request: Request,
+    clerk_user_id: str = Depends(require_auth)
+):
+    """Generate an AI food image using DALL-E 3"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+
+    body = await request.json()
+    dish_name = body.get("dish_name", "").strip()
+    dish_description = body.get("dish_description", "").strip()
+    custom_style = body.get("custom_style", "").strip()
+
+    if not dish_name:
+        raise HTTPException(status_code=400, detail="Naziv jela je obavezan")
+
+    restaurant_style = restaurant.get("ai_image_prompt", "")
+
+    try:
+        # Generate image with DALL-E 3
+        temp_url = generate_food_image(dish_name, dish_description, custom_style, restaurant_style)
+
+        # Download the temporary DALL-E image
+        import httpx
+        async with httpx.AsyncClient() as client:
+            img_response = await client.get(temp_url)
+            img_response.raise_for_status()
+            image_bytes = img_response.content
+
+        # Upload to Supabase Storage
+        import uuid as uuid_mod
+        file_name = f"{uuid_mod.uuid4()}.png"
+        file_path = f"{restaurant['id']}/ai-generated/{file_name}"
+
+        from utils.storage_utils import get_supabase_storage, BUCKET_NAME
+        storage = get_supabase_storage()
+        storage.from_(BUCKET_NAME).upload(
+            path=file_path,
+            file=image_bytes,
+            file_options={"content-type": "image/png", "upsert": "false"}
+        )
+        public_url = storage.from_(BUCKET_NAME).get_public_url(file_path)
+
+        return JSONResponse({"success": True, "image_url": public_url})
+
+    except Exception as e:
+        logger.error(f"Image generation failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Generiranje slike nije uspjelo: {str(e)}")
 
 # Menu Items Endpoints (Authenticated)
 @app.get("/api/v1/menu-items")
