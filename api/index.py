@@ -34,6 +34,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Suppress httpx INFO logs (only show WARNING and above)
+logging.getLogger('httpx').setLevel(logging.WARNING)
+
 from core.config import CORS_ORIGINS, MENU_URL
 from services.auth import get_clerk_user_email, get_restaurant_by_clerk_user, require_auth
 from services.webhooks import verify_signature, handle_user_created, handle_user_deleted
@@ -41,6 +44,7 @@ from services.gemini_translator import translate_menu_item, translate_category, 
 from services.email_service import send_vip_form_email
 from services.language_service import get_all_languages, get_restaurant_languages, add_restaurant_language, remove_restaurant_language
 from services.image_generator import generate_food_image
+from services.chatbot_agent import process_chat_message
 
 # SECURITY: Import security middleware
 from middleware.security_headers import SecurityHeadersMiddleware
@@ -302,40 +306,26 @@ async def get_restaurant_info(clerk_user_id: str = Depends(require_auth), author
         
         # Get user email from Clerk API (JWT doesn't contain email)
         user_email = await get_clerk_user_email(clerk_user_id)
-        logger.info(f"Fetched email from Clerk API: {user_email}")
         
         if user_email:
-            logger.info(f"Extracted email from token: {user_email}")
-            logger.info(f"Searching for restaurant with email: {user_email}")
-            
             # Find restaurant by email (that doesn't have a clerk_user_id yet)
             restaurants = supabase.table('restaurants').select('*').eq('email', user_email).execute()
-            logger.info(f"Found {len(restaurants.data or [])} restaurants with email {user_email}")
-            
-            if restaurants.data:
-                for idx, r in enumerate(restaurants.data):
-                    logger.info(f"Restaurant {idx}: id={r.get('id')}, name={r.get('name')}, clerk_user_id={r.get('clerk_user_id')}")
             
             available = [r for r in (restaurants.data or []) if not r.get('clerk_user_id')]
-            logger.info(f"Found {len(available)} unlinked restaurants")
             
             if available:
                 # Link the restaurant to this Clerk user
-                logger.info(f"Attempting to link restaurant {available[0]['id']} to Clerk user {clerk_user_id}")
                 result = supabase.table('restaurants').update({
                     'clerk_user_id': clerk_user_id
                 }).eq('id', available[0]['id']).execute()
                 
                 if result.data:
                     restaurant = result.data[0]
-                    logger.info(f"✅ Successfully linked restaurant {restaurant['name']} (ID: {restaurant['id']}) to Clerk user {clerk_user_id} via email {user_email}")
+                    logger.info(f"✅ Successfully linked restaurant {restaurant['name']} (ID: {restaurant['id']}) to Clerk user {clerk_user_id}")
                 else:
                     logger.error(f"❌ Failed to link restaurant - no data returned from update")
             else:
                 logger.warning(f"❌ No unlinked restaurant found for email: {user_email}")
-                # List all restaurants for debugging
-                all_restaurants = supabase.table('restaurants').select('id, name, email, clerk_user_id').execute()
-                logger.info(f"All restaurants in database: {all_restaurants.data}")
         else:
             logger.error(f"❌ Could not fetch email from Clerk API for user {clerk_user_id}")
     else:
@@ -1600,6 +1590,51 @@ async def submit_contact_form(
         raise HTTPException(
             status_code=500,
             detail="Greška pri slanju zahtjeva. Molimo pokušajte kasnije."
+        )
+
+# Chatbot Endpoint
+@app.post("/api/v1/chatbot/message")
+async def chatbot_message(
+    request: Request
+):
+    """
+    Chatbot endpoint for menu management assistance.
+    Uses LangGraph agent with Gemini to help users manage their menu.
+    For demo purposes, uses restaurant_slug instead of authentication.
+    """
+    try:
+        body = await request.json()
+        message = body.get("message", "").strip()
+        restaurant_slug = body.get("restaurant_slug", "").strip()
+        conversation_history = body.get("conversation_history", [])
+        
+        if not message:
+            raise HTTPException(status_code=400, detail="Message is required")
+        
+        if not restaurant_slug:
+            raise HTTPException(status_code=400, detail="restaurant_slug is required")
+        
+        # Process the message through the agent
+        result = await process_chat_message(
+            message=message,
+            restaurant_slug=restaurant_slug,
+            conversation_history=conversation_history
+        )
+        
+        return JSONResponse({
+            "response": result["response"],
+            "tool_calls": result.get("tool_calls", []),
+            "tools_were_called": result.get("tools_were_called", False),
+            "conversation_history": result.get("conversation_history", [])
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in chatbot endpoint: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Something went wrong with the chatbot. Please try again."
         )
 
 if __name__ == "__main__":

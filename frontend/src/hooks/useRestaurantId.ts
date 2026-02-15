@@ -16,7 +16,8 @@ export function useRestaurantId() {
     }
 
     loadRestaurantInfo()
-  }, [apiClient])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run once on mount - apiClient is now memoized
 
   return restaurantId
 }

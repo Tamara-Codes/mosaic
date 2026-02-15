@@ -99,6 +99,23 @@ export function AppSidebar({ currentView, onViewChange, onLogout, ...props }: Ap
             }))}
             currentView={currentView}
           />
+          {/* Chatbot Button - Centered below Postavke */}
+          <div className="mt-16 flex justify-center">
+            <button
+              onClick={() => {
+                // Trigger chatbot panel open via custom event
+                window.dispatchEvent(new CustomEvent('openChatbot'))
+              }}
+              className="flex items-center justify-center p-2 rounded-lg hover:bg-gray-50/50 transition-colors"
+              aria-label="Open Ferros AI"
+            >
+              <img 
+                src="/ferros-logo.png" 
+                alt="Ferros AI" 
+                className="w-32 h-32 object-contain"
+              />
+            </button>
+          </div>
         </div>
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border p-4 space-y-4">

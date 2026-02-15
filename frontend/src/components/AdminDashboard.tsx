@@ -7,6 +7,7 @@ import { SiteHeader } from '@/components/site-header'
 import { MenuItemsPage } from './MenuItemsPage'
 import { SettingsPage } from './SettingsPage'
 import { QRCodePage } from './QRCodePage'
+import { ChatbotPanel } from './ChatbotPanel'
 import { useApiClient } from '@/lib/apiHelpers'
 import { toast } from 'sonner'
 
@@ -154,6 +155,7 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
           {renderContent()}
         </div>
       </SidebarInset>
+      <ChatbotPanel />
     </SidebarProvider>
   )
 }

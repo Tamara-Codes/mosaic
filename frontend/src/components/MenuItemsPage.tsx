@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { type MenuItem } from '@/lib/api'
 import { useApiClient } from '@/lib/apiHelpers'
 import { getImageUrl } from '@/lib/utils'
@@ -80,13 +80,90 @@ export function MenuItemsPage() {
   const [showRemoveLanguageConfirm, setShowRemoveLanguageConfirm] = useState(false)
   const [availableLanguages, setAvailableLanguages] = useState<Language[]>([])
 
-  // Category reordering state (used in edit dialog)
+  // Category reordering state (used in edit categories dialog)
   const [draggedCategory, setDraggedCategory] = useState<number | null>(null)
   const [isReordering, setIsReordering] = useState(false)
 
+  // Define loadItems before it's used in useEffect hooks
+  const loadItems = useCallback(async (showLoading = true) => {
+    try {
+      if (showLoading) {
+        setLoading(true)
+      }
+      const [itemsData, langsData, categoriesData, availableLangsData] = await Promise.all([
+        apiClient.get('/menu-items-with-translations').then(r => r.data),
+        apiClient.get('/supported-languages').then(r => r.data),
+        apiClient.get('/categories').then(r => r.data),
+        apiClient.get('/available-languages').then(r => r.data)
+      ])
+      setItems(itemsData)
+      setLanguages(langsData.languages)
+      setAllCategories(categoriesData.categories_with_ids || [])
+      setAvailableLanguages(availableLangsData.languages || [])
+      if (showLoading) {
+        setLoading(false)
+      }
+    } catch (error: any) {
+      console.error('Failed to load items:', error)
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Unknown error'
+
+      if (error?.response?.status === 404) {
+        if (errorMessage.includes('Restaurant not found')) {
+          toast.error('Restoran nije pronađen. Provjerite je li vaš račun povezan s restoranom u postavkama.')
+        } else {
+          toast.error('Restoran nije pronađen. Molimo kontaktirajte podršku.')
+        }
+      } else if (error?.response?.status === 401) {
+        toast.error('Neautorizirani pristup. Molimo se ponovno prijavite.')
+      } else {
+        toast.error(`Greška pri učitavanju stavki: ${errorMessage}`)
+      }
+      if (showLoading) {
+        setLoading(false)
+      }
+    }
+  }, [apiClient])
+
   useEffect(() => {
     loadItems() // Initial load should show loading state
-  }, [])
+  }, [loadItems])
+
+  // Set up broadcast listener for menu items changes (e.g., price updates from chatbot)
+  useEffect(() => {
+    if (!restaurantId || !supabase) {
+      console.log('[BROADCAST] Skipping subscription - restaurantId:', restaurantId, 'supabase:', !!supabase)
+      return
+    }
+
+    const channelName = `menu-updates-${restaurantId}`
+    console.log('[BROADCAST] Setting up broadcast listener for restaurant:', restaurantId)
+
+    const channel = supabase
+      .channel(channelName, {
+        config: {
+          broadcast: { self: true, ack: false }
+        }
+      })
+      .on('broadcast', { event: 'menu_changed' }, (payload) => {
+        console.log('[BROADCAST] Menu change broadcast received!', payload)
+        // Reload items to reflect changes (e.g., price updates, availability changes from chatbot)
+        loadItems(false) // Don't show loading spinner for real-time updates
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ [BROADCAST] Subscribed to menu changes for restaurant:', restaurantId)
+        } else {
+          console.log('[BROADCAST] Channel status:', status)
+        }
+      })
+
+    return () => {
+      console.log('[BROADCAST] Cleaning up broadcast listener')
+      if (supabase) {
+        supabase.removeChannel(channel)
+      }
+    }
+  }, [restaurantId, loadItems, supabase])
 
   // Reset category selection when item type changes
   useEffect(() => {
@@ -140,45 +217,6 @@ export function MenuItemsPage() {
       loadItems(false)
     } finally {
       setIsReordering(false)
-    }
-  }
-
-  const loadItems = async (showLoading = true) => {
-    try {
-      if (showLoading) {
-        setLoading(true)
-      }
-      const [itemsData, langsData, categoriesData, availableLangsData] = await Promise.all([
-        apiClient.get('/menu-items-with-translations').then(r => r.data),
-        apiClient.get('/supported-languages').then(r => r.data),
-        apiClient.get('/categories').then(r => r.data),
-        apiClient.get('/available-languages').then(r => r.data)
-      ])
-      setItems(itemsData)
-      setLanguages(langsData.languages)
-      setAllCategories(categoriesData.categories_with_ids || [])
-      setAvailableLanguages(availableLangsData.languages || [])
-      if (showLoading) {
-        setLoading(false)
-      }
-    } catch (error: any) {
-      console.error('Failed to load items:', error)
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Unknown error'
-
-      if (error?.response?.status === 404) {
-        if (errorMessage.includes('Restaurant not found')) {
-          toast.error('Restoran nije pronađen. Provjerite je li vaš račun povezan s restoranom u postavkama.')
-        } else {
-          toast.error('Restoran nije pronađen. Molimo kontaktirajte podršku.')
-        }
-      } else if (error?.response?.status === 401) {
-        toast.error('Neautorizirani pristup. Molimo se ponovno prijavite.')
-      } else {
-        toast.error(`Greška pri učitavanju stavki: ${errorMessage}`)
-      }
-      if (showLoading) {
-        setLoading(false)
-      }
     }
   }
 
