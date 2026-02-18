@@ -38,7 +38,7 @@ Respond with ONLY valid JSON in this exact format:
         logger.debug(f"Calling Gemini API to translate item '{name_hr}' to {language_name}")
         response = model.generate_content(
             prompt,
-            generation_config={"temperature": 0.3, "response_mime_type": "application/json"}
+            generation_config={"temperature": 0.3}
         )
         result = json.loads(response.text)
         logger.debug(f"Gemini translation successful: '{name_hr}' -> '{result.get('name')}'")
@@ -73,7 +73,7 @@ Respond with ONLY valid JSON in this exact format:
         logger.debug(f"Calling Gemini API to translate category '{name}' to {language_name}")
         response = model.generate_content(
             prompt,
-            generation_config={"temperature": 0.3, "response_mime_type": "application/json"}
+            generation_config={"temperature": 0.3}
         )
         result = json.loads(response.text)
         logger.debug(f"Gemini translation successful: '{name}' -> '{result.get('name')}'")
@@ -137,7 +137,7 @@ Output format:
 
         response = model.generate_content(
             prompt,
-            generation_config={"temperature": 0.2, "response_mime_type": "application/json"}
+            generation_config={"temperature": 0.2}
         )
 
         api_elapsed = time.time() - start
