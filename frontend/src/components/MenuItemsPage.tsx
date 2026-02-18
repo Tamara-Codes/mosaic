@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { type MenuItem } from '@/lib/api'
 import { useApiClient } from '@/lib/apiHelpers'
 import { getImageUrl } from '@/lib/utils'
@@ -74,6 +74,8 @@ export function MenuItemsPage() {
   const [showTranslateCategoryDialog, setShowTranslateCategoryDialog] = useState(false)
   const [selectedCategoryForTranslation] = useState<{id: number, name: string, translations?: any[]} | null>(null)
 
+  const broadcastChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+
   // Language management state
   const [showLanguageManagementDialog, setShowLanguageManagementDialog] = useState(false)
   const [languageToRemove, setLanguageToRemove] = useState<{code: string, name: string} | null>(null)
@@ -146,12 +148,12 @@ export function MenuItemsPage() {
       })
       .on('broadcast', { event: 'menu_changed' }, (payload) => {
         console.log('[BROADCAST] Menu change broadcast received!', payload)
-        // Reload items to reflect changes (e.g., price updates, availability changes from chatbot)
-        loadItems(false) // Don't show loading spinner for real-time updates
+        loadItems(false)
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           console.log('✅ [BROADCAST] Subscribed to menu changes for restaurant:', restaurantId)
+          broadcastChannelRef.current = channel
         } else {
           console.log('[BROADCAST] Channel status:', status)
         }
@@ -159,6 +161,7 @@ export function MenuItemsPage() {
 
     return () => {
       console.log('[BROADCAST] Cleaning up broadcast listener')
+      broadcastChannelRef.current = null
       if (supabase) {
         supabase.removeChannel(channel)
       }
@@ -232,31 +235,14 @@ export function MenuItemsPage() {
       toast.success('Stavka je obrisana')
 
       // Broadcast menu change
-      if (restaurantId && supabase) {
+      if (broadcastChannelRef.current) {
         try {
-          const channelName = `menu-updates-${restaurantId}`
-          const channel = supabase!.channel(channelName, {
-            config: {
-              broadcast: { self: true, ack: false }
-            }
-          })
-
-          await new Promise<void>((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error('Channel subscribe timed out')), 5000)
-            channel.subscribe((status) => {
-              if (status === 'SUBSCRIBED') { clearTimeout(timeout); resolve() }
-              else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') { clearTimeout(timeout); reject(new Error(`Channel ${status}`)) }
-            })
-          })
-
-          await channel.send({
+          await broadcastChannelRef.current.send({
             type: 'broadcast',
             event: 'menu_changed',
             payload: { timestamp: Date.now(), restaurantId }
           })
-
-          console.log('✅ Broadcast sent to channel:', channelName)
-          setTimeout(() => channel.unsubscribe(), 100)
+          console.log('✅ Broadcast sent')
         } catch (error) {
           console.error('Failed to broadcast:', error)
         }
@@ -1222,35 +1208,19 @@ export function MenuItemsPage() {
                           loadItems(false)
 
                           // Broadcast menu change
-                          console.log('[BROADCAST] restaurantId:', restaurantId, 'supabase:', !!supabase)
-                          if (restaurantId && supabase) {
+                          if (broadcastChannelRef.current) {
                             try {
-                              const channelName = `menu-updates-${restaurantId}`
-                              const channel = supabase.channel(channelName, {
-                                config: {
-                                  broadcast: { self: true, ack: false }
-                                }
-                              })
-
-                              await new Promise<void>((resolve, reject) => {
-                                const timeout = setTimeout(() => reject(new Error('Channel subscribe timed out')), 5000)
-                                channel.subscribe((status) => {
-                                  if (status === 'SUBSCRIBED') { clearTimeout(timeout); resolve() }
-                                  else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') { clearTimeout(timeout); reject(new Error(`Channel ${status}`)) }
-                                })
-                              })
-
-                              await channel.send({
+                              await broadcastChannelRef.current.send({
                                 type: 'broadcast',
                                 event: 'menu_changed',
                                 payload: { timestamp: Date.now(), restaurantId }
                               })
-
-                              console.log('✅ Broadcast sent to channel:', channelName)
-                              setTimeout(() => channel.unsubscribe(), 100)
+                              console.log('✅ Broadcast sent')
                             } catch (error) {
                               console.error('Failed to broadcast:', error)
                             }
+                          } else {
+                            console.warn('[BROADCAST] No channel available to send broadcast')
                           }
                         } catch (error: any) {
                           toast.dismiss(loadingToast)
@@ -1315,31 +1285,14 @@ export function MenuItemsPage() {
               setLanguageToRemove(null)
 
               // Broadcast menu change
-              if (restaurantId && supabase) {
+              if (broadcastChannelRef.current) {
                 try {
-                  const channelName = `menu-updates-${restaurantId}`
-                  const channel = supabase.channel(channelName, {
-                    config: {
-                      broadcast: { self: true, ack: false }
-                    }
-                  })
-
-                  await new Promise<void>((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('Channel subscribe timed out')), 5000)
-                    channel.subscribe((status) => {
-                      if (status === 'SUBSCRIBED') { clearTimeout(timeout); resolve() }
-                      else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') { clearTimeout(timeout); reject(new Error(`Channel ${status}`)) }
-                    })
-                  })
-
-                  await channel.send({
+                  await broadcastChannelRef.current.send({
                     type: 'broadcast',
                     event: 'menu_changed',
                     payload: { timestamp: Date.now(), restaurantId }
                   })
-
-                  console.log('✅ Broadcast sent to channel:', channelName)
-                  setTimeout(() => channel.unsubscribe(), 100)
+                  console.log('✅ Broadcast sent')
                 } catch (error) {
                   console.error('Failed to broadcast:', error)
                 }
