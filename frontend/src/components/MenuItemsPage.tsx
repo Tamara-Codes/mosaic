@@ -241,9 +241,11 @@ export function MenuItemsPage() {
             }
           })
 
-          await new Promise<void>((resolve) => {
+          await new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Channel subscribe timed out')), 5000)
             channel.subscribe((status) => {
-              if (status === 'SUBSCRIBED') resolve()
+              if (status === 'SUBSCRIBED') { clearTimeout(timeout); resolve() }
+              else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') { clearTimeout(timeout); reject(new Error(`Channel ${status}`)) }
             })
           })
 
@@ -1220,6 +1222,7 @@ export function MenuItemsPage() {
                           loadItems(false)
 
                           // Broadcast menu change
+                          console.log('[BROADCAST] restaurantId:', restaurantId, 'supabase:', !!supabase)
                           if (restaurantId && supabase) {
                             try {
                               const channelName = `menu-updates-${restaurantId}`
@@ -1229,9 +1232,11 @@ export function MenuItemsPage() {
                                 }
                               })
 
-                              await new Promise<void>((resolve) => {
+                              await new Promise<void>((resolve, reject) => {
+                                const timeout = setTimeout(() => reject(new Error('Channel subscribe timed out')), 5000)
                                 channel.subscribe((status) => {
-                                  if (status === 'SUBSCRIBED') resolve()
+                                  if (status === 'SUBSCRIBED') { clearTimeout(timeout); resolve() }
+                                  else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') { clearTimeout(timeout); reject(new Error(`Channel ${status}`)) }
                                 })
                               })
 
@@ -1319,9 +1324,11 @@ export function MenuItemsPage() {
                     }
                   })
 
-                  await new Promise<void>((resolve) => {
+                  await new Promise<void>((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('Channel subscribe timed out')), 5000)
                     channel.subscribe((status) => {
-                      if (status === 'SUBSCRIBED') resolve()
+                      if (status === 'SUBSCRIBED') { clearTimeout(timeout); resolve() }
+                      else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') { clearTimeout(timeout); reject(new Error(`Channel ${status}`)) }
                     })
                   })
 
