@@ -176,26 +176,33 @@ export default function MenuPage() {
         .catch(err => console.error('❌ Failed to refetch menu:', err))
     }
 
-    console.log('🔌 Setting up language change listener for restaurant:', restaurantId)
-
     const channel = supabase
       .channel(`menu-lang-updates-${restaurantId}`)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'UPDATE',
           schema: 'public',
           table: 'restaurant_languages',
           filter: `restaurant_id=eq.${restaurantId}`
         },
         (payload) => {
-          console.log('🎉 Language change detected, refetching menu:', payload)
-          refetchMenu()
+          if (payload.new?.translations_complete === true) {
+            refetchMenu()
+          }
         }
       )
-      .subscribe((status) => {
-        console.log('📡 Language listener status:', status)
-      })
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'restaurant_languages',
+          filter: `restaurant_id=eq.${restaurantId}`
+        },
+        () => refetchMenu()
+      )
+      .subscribe()
 
     return () => {
       channel.unsubscribe()

@@ -1461,6 +1461,9 @@ async def add_language(request: Request, clerk_user_id: str = Depends(require_au
             items_failed = len(items_to_translate)
             categories_failed = len(categories_to_translate)
 
+    # Mark translations as complete - this fires a single UPDATE event for the public menu to listen to
+    supabase.table('restaurant_languages').update({"translations_complete": True}).eq('restaurant_id', restaurant['id']).eq('language_code', code).execute()
+
     logger.info(f"Language {name} added successfully. Translated {items_translated}/{len(all_menu_items)} items, {categories_translated}/{len(all_categories)} categories, {restaurant_description_translated} restaurant description, {ui_translations_added} UI elements")
 
     return JSONResponse({
