@@ -143,6 +143,15 @@ Output format:
         api_elapsed = time.time() - start
         logger.info(f"✅ Gemini API responded in {api_elapsed:.2f}s")
 
+        # Log finish reason and response text for debugging
+        if response.candidates:
+            finish_reason = response.candidates[0].finish_reason
+            logger.info(f"Finish reason: {finish_reason}")
+        logger.info(f"Response text (first 500 chars): {repr(response.text[:500]) if response.text else 'EMPTY'}")
+
+        if not response.text:
+            raise ValueError(f"Gemini returned empty response. Finish reason: {finish_reason if response.candidates else 'unknown'}")
+
         # Time JSON parsing
         parse_start = time.time()
         result = json.loads(response.text)
