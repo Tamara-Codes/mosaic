@@ -40,7 +40,10 @@ Respond with ONLY valid JSON in this exact format:
             prompt,
             generation_config={"temperature": 0.3}
         )
-        result = json.loads(response.text)
+        text = response.text.strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1].rsplit("```", 1)[0]
+        result = json.loads(text)
         logger.debug(f"Gemini translation successful: '{name_hr}' -> '{result.get('name')}'")
         return result
     except Exception as e:
@@ -75,7 +78,10 @@ Respond with ONLY valid JSON in this exact format:
             prompt,
             generation_config={"temperature": 0.3}
         )
-        result = json.loads(response.text)
+        text = response.text.strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1].rsplit("```", 1)[0]
+        result = json.loads(text)
         logger.debug(f"Gemini translation successful: '{name}' -> '{result.get('name')}'")
         return result
     except Exception as e:
@@ -154,7 +160,11 @@ Output format:
 
         # Time JSON parsing
         parse_start = time.time()
-        result = json.loads(response.text)
+        response_text = response.text.strip()
+        if response_text.startswith("```"):
+            response_text = response_text.split("\n", 1)[1]  # remove ```json line
+            response_text = response_text.rsplit("```", 1)[0]  # remove closing ```
+        result = json.loads(response_text)
         parse_elapsed = time.time() - parse_start
 
         total_elapsed = time.time() - start
