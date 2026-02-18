@@ -159,6 +159,7 @@ export default function MenuPage() {
   }, [restaurantSlug, updateUITranslations])
 
   useEffect(() => {
+    console.log('🔍 PublicMenuPage effect ran, restaurant id:', menuData?.restaurant?.id)
     if (!menuData?.restaurant?.id) return
 
     const restaurantId = menuData.restaurant.id
@@ -176,6 +177,8 @@ export default function MenuPage() {
         .catch(err => console.error('❌ Failed to refetch menu:', err))
     }
 
+    console.log('🔌 Setting up language listener for restaurant:', restaurantId)
+
     const channel = supabase
       .channel(`menu-lang-updates-${restaurantId}`)
       .on(
@@ -187,6 +190,7 @@ export default function MenuPage() {
           filter: `restaurant_id=eq.${restaurantId}`
         },
         (payload) => {
+          console.log('🎉 restaurant_languages UPDATE received:', payload)
           if (payload.new?.translations_complete === true) {
             refetchMenu()
           }
@@ -202,7 +206,9 @@ export default function MenuPage() {
         },
         () => refetchMenu()
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('📡 Language listener status:', status)
+      })
 
     return () => {
       channel.unsubscribe()
