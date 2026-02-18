@@ -162,38 +162,35 @@ export default function MenuPage() {
     if (!menuData?.restaurant?.id) return
 
     const restaurantId = menuData.restaurant.id
-    const channelName = `menu-updates-${restaurantId}`
-    console.log('🔌 Setting up broadcast listener for restaurant:', restaurantId)
+
+    const refetchMenu = () => {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+      fetch(`${apiBaseUrl}/api/v1/menu/${restaurantSlug}`)
+        .then(res => res.json())
+        .then(data => {
+          setMenuData(data)
+          if (data.ui_translations) {
+            updateUITranslations(data.ui_translations)
+          }
+        })
+        .catch(err => console.error('❌ Failed to refetch menu:', err))
+    }
 
     const channel = supabase
-      .channel(channelName, {
-        config: {
-          broadcast: { self: true, ack: false }
-        }
-      })
-      .on('broadcast', { event: 'menu_changed' }, (payload) => {
-        console.log('🎉 Menu change broadcast received!', payload)
-
-        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
-        fetch(`${apiBaseUrl}/api/v1/menu/${restaurantSlug}`)
-          .then(res => res.json())
-          .then(data => {
-            console.log('✅ Menu data refetched after broadcast')
-            setMenuData(data)
-
-            if (data.ui_translations) {
-              updateUITranslations(data.ui_translations)
-              console.log('✅ UI translations updated after broadcast')
-            }
-          })
-          .catch(err => console.error('❌ Failed to refetch menu:', err))
-      })
-      .subscribe((status) => {
-        console.log('📡 Broadcast channel status:', status)
-      })
+      .channel(`menu-lang-updates-${restaurantId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'restaurant_languages',
+          filter: `restaurant_id=eq.${restaurantId}`
+        },
+        () => refetchMenu()
+      )
+      .subscribe()
 
     return () => {
-      console.log('🔌 Cleaning up broadcast listener')
       channel.unsubscribe()
     }
   }, [menuData?.restaurant?.id, restaurantSlug, updateUITranslations])
