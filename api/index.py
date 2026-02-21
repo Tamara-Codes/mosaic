@@ -11,7 +11,7 @@ api_dir = Path(__file__).parent
 sys.path.insert(0, str(api_dir))
 
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Header, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 import json
@@ -45,6 +45,14 @@ from services.email_service import send_vip_form_email
 from services.language_service import get_all_languages, get_restaurant_languages, add_restaurant_language, remove_restaurant_language
 from services.image_generator import generate_food_image
 from services.chatbot_agent import process_chat_message
+from services.whatsapp import (
+    verify_webhook as whatsapp_verify_webhook,
+    parse_incoming_message,
+    send_whatsapp_message,
+    lookup_restaurant_by_whatsapp,
+    get_conversation_history,
+    update_conversation_history,
+)
 
 # SECURITY: Import security middleware
 from middleware.security_headers import SecurityHeadersMiddleware
@@ -345,7 +353,8 @@ async def get_restaurant_info(clerk_user_id: str = Depends(require_auth), author
         "phone": restaurant['phone'],
         "email": restaurant['email'],
         "theme_identifier": restaurant['theme_identifier'],
-        "ai_image_prompt": restaurant.get('ai_image_prompt', '')
+        "ai_image_prompt": restaurant.get('ai_image_prompt', ''),
+        "whatsapp_phone": restaurant.get('whatsapp_phone', '')
     })
 
 @app.post("/api/v1/restaurant-info")
@@ -357,6 +366,7 @@ async def save_restaurant_info(
     email: Optional[str] = Form(None),
     theme_identifier: Optional[str] = Form(None),
     ai_image_prompt: Optional[str] = Form(None),
+    whatsapp_phone: Optional[str] = Form(None),
     clerk_user_id: str = Depends(require_auth)
 ):
     """Save or update restaurant information"""
@@ -412,6 +422,9 @@ async def save_restaurant_info(
 
         if ai_image_prompt is not None:
             update_data["ai_image_prompt"] = ai_image_prompt
+
+        if whatsapp_phone is not None:
+            update_data["whatsapp_phone"] = whatsapp_phone
 
         # Update existing
         result = supabase.table('restaurants').update(update_data).eq('id', restaurant['id']).execute()
@@ -1594,6 +1607,62 @@ async def submit_contact_form(
             status_code=500,
             detail="Greška pri slanju zahtjeva. Molimo pokušajte kasnije."
         )
+
+# WhatsApp Webhook Endpoints
+@app.get("/api/v1/whatsapp/webhook")
+async def whatsapp_webhook_verify(request: Request):
+    """Verification endpoint for Meta WhatsApp webhook setup"""
+    mode = request.query_params.get("hub.mode")
+    token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge")
+
+    result = whatsapp_verify_webhook(mode, token, challenge)
+    if result is not None:
+        return PlainTextResponse(content=result, status_code=200)
+    raise HTTPException(status_code=403, detail="Verification failed")
+
+
+@app.post("/api/v1/whatsapp/webhook")
+async def whatsapp_webhook_incoming(request: Request):
+    """Receive incoming WhatsApp messages and reply via the chatbot agent"""
+    payload = await request.json()
+
+    parsed = parse_incoming_message(payload)
+    if not parsed:
+        # Not a text message or status update — acknowledge anyway
+        return JSONResponse({"status": "ignored"})
+
+    phone, message_text = parsed
+    logger.info("WhatsApp message from %s: %s", phone, message_text[:80])
+
+    # Find which restaurant this phone number belongs to
+    restaurant = lookup_restaurant_by_whatsapp(phone)
+    if not restaurant:
+        await send_whatsapp_message(phone, "Vaš broj nije povezan s nijednim restoranom. Povežite ga u postavkama dashboarda.")
+        return JSONResponse({"status": "no_restaurant"})
+
+    # Get cached conversation history for this phone
+    conversation_history = get_conversation_history(phone)
+
+    try:
+        result = await process_chat_message(
+            message=message_text,
+            restaurant_slug=restaurant["slug"],
+            conversation_history=conversation_history,
+        )
+        ai_response = result["response"]
+    except Exception:
+        logger.exception("Chatbot error for WhatsApp user %s", phone)
+        ai_response = "Došlo je do greške. Pokušajte ponovo."
+
+    # Update conversation cache
+    update_conversation_history(phone, message_text, ai_response)
+
+    # Send reply back via WhatsApp
+    await send_whatsapp_message(phone, ai_response)
+
+    return JSONResponse({"status": "ok"})
+
 
 # Chatbot Endpoint
 @app.post("/api/v1/chatbot/message")

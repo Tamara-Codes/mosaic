@@ -25,6 +25,7 @@ export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [aiImagePrompt, setAiImagePrompt] = useState('')
+  const [whatsappPhone, setWhatsappPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [passwordLoading, setPasswordLoading] = useState(false)
 
@@ -42,6 +43,7 @@ export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
       setPhone(info.phone || '')
       setEmail(info.email || '')
       setAiImagePrompt(info.ai_image_prompt || '')
+      setWhatsappPhone(info.whatsapp_phone || '')
     } catch (error: any) {
       if (error?.response?.status === 404) {
         const errorMessage = error?.response?.data?.detail || 'Restaurant not found'
@@ -72,6 +74,7 @@ export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
       formData.append('phone', phone)
       formData.append('email', email)
       formData.append('ai_image_prompt', aiImagePrompt)
+      formData.append('whatsapp_phone', whatsappPhone)
       await apiClient.post('/restaurant-info', formData)
       toast.success('Informacije o restoranu su spremljene')
       // Notify parent that restaurant was created/updated
@@ -194,6 +197,18 @@ export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
                 placeholder="restaurant@example.com"
               />
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="whatsappPhone">WhatsApp broj</Label>
+            <Input
+              id="whatsappPhone"
+              value={whatsappPhone}
+              onChange={(e) => setWhatsappPhone(e.target.value)}
+              placeholder="+385 XX XXX XXXX"
+            />
+            <p className="text-sm text-muted-foreground">
+              Broj za WhatsApp chatbot integraciju. Poruke s ovog broja će biti obrađene od strane AI asistenta.
+            </p>
           </div>
           <Button onClick={handleSaveRestaurantInfo} disabled={loading}>
             {loading ? 'Spremanje...' : 'Spremi Informacije'}
