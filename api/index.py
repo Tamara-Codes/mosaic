@@ -49,6 +49,7 @@ from services.whatsapp import (
     verify_webhook as whatsapp_verify_webhook,
     parse_incoming_message,
     send_whatsapp_message,
+    send_whatsapp_template,
     lookup_restaurant_by_whatsapp,
     get_conversation_history,
     update_conversation_history,
@@ -430,6 +431,12 @@ async def save_restaurant_info(
         result = supabase.table('restaurants').update(update_data).eq('id', restaurant['id']).execute()
         if not result.data:
             raise HTTPException(status_code=500, detail="Failed to update restaurant")
+
+        # Send WhatsApp welcome template if phone number was added/changed
+        if whatsapp_phone and whatsapp_phone != restaurant.get('whatsapp_phone'):
+            phone_digits = whatsapp_phone.lstrip('+')
+            await send_whatsapp_template(phone_digits, "welcome_connect")
+
         return JSONResponse(result.data[0])
     else:
         # This should never happen - restaurant should exist at this point

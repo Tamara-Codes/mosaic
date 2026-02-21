@@ -83,6 +83,32 @@ async def send_whatsapp_message(to: str, message: str) -> bool:
         return False
 
 
+async def send_whatsapp_template(to: str, template_name: str, language_code: str = "hr") -> bool:
+    """Send a template message via the WhatsApp Cloud API (for initiating conversations)."""
+    headers = {
+        "Authorization": f"Bearer {WHATSAPP_ACCESS_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    body = {
+        "messaging_product": "whatsapp",
+        "to": to,
+        "type": "template",
+        "template": {
+            "name": template_name,
+            "language": {"code": language_code},
+        },
+    }
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(GRAPH_API_URL, json=body, headers=headers, timeout=15)
+            resp.raise_for_status()
+            logger.info("WhatsApp template '%s' sent to %s", template_name, to)
+            return True
+    except httpx.HTTPError:
+        logger.exception("Failed to send WhatsApp template to %s", to)
+        return False
+
+
 def lookup_restaurant_by_whatsapp(phone: str) -> Optional[dict]:
     """
     Find a restaurant whose whatsapp_phone matches the given number.
