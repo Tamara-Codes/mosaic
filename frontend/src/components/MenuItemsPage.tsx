@@ -81,6 +81,10 @@ export function MenuItemsPage() {
   const [languageToRemove, setLanguageToRemove] = useState<{code: string, name: string} | null>(null)
   const [showRemoveLanguageConfirm, setShowRemoveLanguageConfirm] = useState(false)
   const [availableLanguages, setAvailableLanguages] = useState<Language[]>([])
+  const [langMgmtToAdd, setLangMgmtToAdd] = useState<string[]>([])
+  const [langMgmtToRemove, setLangMgmtToRemove] = useState<string[]>([])
+  const [langMgmtProcessing, setLangMgmtProcessing] = useState(false)
+  const [showBulkRemoveConfirm, setShowBulkRemoveConfirm] = useState(false)
 
   // Category reordering state (used in edit categories dialog)
   const [draggedCategory, setDraggedCategory] = useState<number | null>(null)
@@ -267,6 +271,81 @@ export function MenuItemsPage() {
   }
 
   // Translation handlers
+  const broadcastMenuChange = async () => {
+    if (broadcastChannelRef.current) {
+      try {
+        await broadcastChannelRef.current.send({
+          type: 'broadcast',
+          event: 'menu_changed',
+          payload: { timestamp: Date.now(), restaurantId }
+        })
+      } catch (error) {
+        console.error('Failed to broadcast:', error)
+      }
+    }
+  }
+
+  const handleBulkAddLanguages = async () => {
+    if (langMgmtToAdd.length === 0) return
+    setLangMgmtProcessing(true)
+    let added = 0
+    for (const code of langMgmtToAdd) {
+      const lang = availableLanguages.find(l => l.code === code)
+      if (!lang) continue
+      try {
+        await apiClient.post('/languages/add', { code: lang.code, name: lang.name })
+        added++
+      } catch (error: any) {
+        const errorMsg = error?.response?.data?.detail || `Greška pri dodavanju ${lang.name}`
+        toast.error(errorMsg)
+      }
+    }
+    if (added > 0) {
+      toast.success(`Dodano ${added} jezik${added === 1 ? '' : added < 5 ? 'a' : 'a'}`)
+      loadItems(false)
+      broadcastMenuChange()
+    }
+    setLangMgmtToAdd([])
+    setLangMgmtProcessing(false)
+  }
+
+  const handleBulkRemoveLanguages = async () => {
+    if (langMgmtToRemove.length === 0) return
+    setLangMgmtProcessing(true)
+    let removed = 0
+    try {
+      const response = await apiClient.delete(`/languages/remove`, { data: { language_codes: langMgmtToRemove } })
+      removed = response.data?.removed?.length ?? langMgmtToRemove.length
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.detail || `Greška pri uklanjanju jezika`
+      toast.error(errorMsg)
+    }
+    if (removed > 0) {
+      toast.success(`Uklonjeno ${removed} jezik${removed === 1 ? '' : removed < 5 ? 'a' : 'a'}`)
+      loadItems(false)
+      broadcastMenuChange()
+    }
+    setLangMgmtToRemove([])
+    setShowBulkRemoveConfirm(false)
+    setLangMgmtProcessing(false)
+  }
+
+  const getCroatianName = (code: string): string => {
+    const names: Record<string, string> = {
+      'hr': 'Hrvatski', 'en': 'Engleski', 'de': 'Njemački', 'it': 'Talijanski',
+      'fr': 'Francuski', 'es': 'Španjolski', 'sl': 'Slovenski', 'cs': 'Češki',
+      'pl': 'Poljski', 'hu': 'Mađarski', 'zh': 'Kineski', 'sq': 'Albanski',
+      'ar': 'Arapski', 'by': 'Bjeloruski', 'bs': 'Bosanski', 'bg': 'Bugarski',
+      'da': 'Danski', 'et': 'Estonski', 'fi': 'Finski', 'el': 'Grčki',
+      'ga': 'Irski', 'is': 'Islandski', 'ja': 'Japanski', 'ko': 'Korejski',
+      'lv': 'Latvijski', 'lt': 'Litavski', 'mk': 'Makedonski', 'mt': 'Malteški',
+      'nl': 'Nizozemski', 'no': 'Norveški', 'pt': 'Portugalski', 'ro': 'Rumunjski',
+      'ru': 'Ruski', 'sk': 'Slovački', 'sr': 'Srpski', 'sv': 'Švedski',
+      'tr': 'Turski', 'uk': 'Ukrajinski',
+    }
+    return names[code] || code.toUpperCase()
+  }
+
   const getLanguageFlag = (code: string) => {
     const flagMap: Record<string, string> = {
       'en': 'gb',
@@ -1159,94 +1238,148 @@ export function MenuItemsPage() {
       </Dialog>
 
       {/* Language Management Dialog */}
-      <Dialog open={showLanguageManagementDialog} onOpenChange={setShowLanguageManagementDialog}>
+      <Dialog open={showLanguageManagementDialog} onOpenChange={(open) => {
+        setShowLanguageManagementDialog(open)
+        if (!open) { setLangMgmtToAdd([]); setLangMgmtToRemove([]) }
+      }}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader className="mb-4">
+          <DialogHeader className="mb-2">
             <DialogTitle className="flex items-center gap-2 text-xl">
               <Languages className="h-5 w-5" />
               Upravljanje jezicima
             </DialogTitle>
             <DialogDescription className="text-sm">
-              Omogućite ili onemogućite jezike za vaš restoran.
+              Dodajte ili uklonite jezike za vaš restoran. Možete odabrati više jezika odjednom.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-5 gap-3">
-              {availableLanguages.map((lang) => {
-                const isActive = languages.some(l => l.code === lang.code)
-                return (
-                  <div
-                    key={lang.code}
-                    className={`
-                      relative flex flex-col items-center gap-2 p-3 rounded-lg border transition-all cursor-pointer group
-                      ${isActive
-                        ? 'border-blue-200 bg-blue-50/50 hover:bg-blue-100/50 hover:border-blue-300'
-                        : 'border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300'
-                      }
-                    `}
-                    onClick={async () => {
-                      if (isActive) {
-                        // Remove language - show confirmation dialog
-                        setLanguageToRemove(lang)
-                        setShowRemoveLanguageConfirm(true)
-                      } else {
-                        // Add language
-                        const loadingToast = toast.loading(`Dodajem ${lang.name} i prevodim sve stavke...`)
-                        try {
-                          const response = await apiClient.post('/languages/add', {
-                            code: lang.code,
-                            name: lang.name
-                          })
-                          toast.dismiss(loadingToast)
-                          const data = response.data
-                          toast.success(
-                            `${lang.name} dodan! ✓\n` +
-                            `Prevedeno ${data.items_translated} stavki i ${data.categories_translated} kategorija`,
-                            { duration: 5000 }
-                          )
-                          loadItems(false)
-
-                          // Broadcast menu change
-                          if (broadcastChannelRef.current) {
-                            try {
-                              await broadcastChannelRef.current.send({
-                                type: 'broadcast',
-                                event: 'menu_changed',
-                                payload: { timestamp: Date.now(), restaurantId }
-                              })
-                              console.log('✅ Broadcast sent')
-                            } catch (error) {
-                              console.error('Failed to broadcast:', error)
-                            }
-                          } else {
-                            console.warn('[BROADCAST] No channel available to send broadcast')
-                          }
-                        } catch (error: any) {
-                          toast.dismiss(loadingToast)
-                          const errorMsg = error?.response?.data?.detail || 'Greška pri dodavanju'
-                          toast.error(errorMsg)
-                        }
-                      }
-                    }}
-                  >
-                    {isActive && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                        <CheckCircle2 className="w-3 h-3 text-white" />
-                      </div>
+          <div className="space-y-6">
+            {/* Active Languages Section */}
+            {languages.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Aktivni jezici ({languages.length})
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button" variant="ghost" size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => setLangMgmtToRemove(languages.map(l => l.code))}
+                    >
+                      Odaberi sve
+                    </Button>
+                    <Button
+                      type="button" variant="ghost" size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => setLangMgmtToRemove([])}
+                    >
+                      Poništi
+                    </Button>
+                    {langMgmtToRemove.length > 0 && (
+                      <Button
+                        type="button" variant="destructive" size="sm"
+                        className="h-7 text-xs gap-1"
+                        onClick={() => setShowBulkRemoveConfirm(true)}
+                        disabled={langMgmtProcessing}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Ukloni odabrane ({langMgmtToRemove.length})
+                      </Button>
                     )}
-                    <img
-                      src={getLanguageFlag(lang.code)}
-                      alt={lang.code}
-                      className="w-12 h-8 object-cover rounded border"
-                    />
-                    <div className="text-center">
-                      <div className="text-xs font-medium">{lang.name}</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  {languages.map((lang) => {
+                    const isSelected = langMgmtToRemove.includes(lang.code)
+                    return (
+                      <div
+                        key={lang.code}
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 cursor-pointer transition-all
+                          ${isSelected
+                            ? 'border-primary bg-primary/10'
+                            : 'border-blue-200 bg-blue-50/50 hover:border-blue-300'
+                          }`}
+                        onClick={() => setLangMgmtToRemove(prev =>
+                          isSelected ? prev.filter(c => c !== lang.code) : [...prev, lang.code]
+                        )}
+                      >
+                        <img src={getLanguageFlag(lang.code)} alt={lang.code} className="w-10 h-7 object-cover rounded border" />
+                        <span className="text-xs font-medium text-center leading-tight">{getCroatianName(lang.code)}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Divider */}
+            {languages.length > 0 && availableLanguages.filter(l => !languages.some(al => al.code === l.code)).length > 0 && (
+              <div className="border-t" />
+            )}
+
+            {/* Add Languages Section */}
+            {(() => {
+              const inactiveLangs = availableLanguages.filter(l => !languages.some(al => al.code === l.code))
+              if (inactiveLangs.length === 0) return null
+              return (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button" variant="ghost" size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => setLangMgmtToAdd(inactiveLangs.map(l => l.code))}
+                      >
+                        Odaberi sve
+                      </Button>
+                      <Button
+                        type="button" variant="ghost" size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => setLangMgmtToAdd([])}
+                      >
+                        Poništi
+                      </Button>
+                      {langMgmtToAdd.length > 0 && (
+                        <Button
+                          type="button" size="sm"
+                          className="h-7 text-xs gap-1"
+                          onClick={handleBulkAddLanguages}
+                          disabled={langMgmtProcessing}
+                        >
+                          {langMgmtProcessing
+                            ? <Loader2 className="h-3 w-3 animate-spin" />
+                            : <Sparkles className="h-3 w-3" />
+                          }
+                          Dodaj odabrane ({langMgmtToAdd.length})
+                        </Button>
+                      )}
                     </div>
                   </div>
-                )
-              })}
-            </div>
+                  <div className="grid grid-cols-5 gap-2">
+                    {inactiveLangs.map((lang) => {
+                      const isSelected = langMgmtToAdd.includes(lang.code)
+                      return (
+                        <div
+                          key={lang.code}
+                          className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 cursor-pointer transition-all
+                            ${isSelected
+                              ? 'border-primary bg-primary/10'
+                              : 'border-gray-200 bg-white hover:border-gray-300'
+                            }`}
+                          onClick={() => setLangMgmtToAdd(prev =>
+                            isSelected ? prev.filter(c => c !== lang.code) : [...prev, lang.code]
+                          )}
+                        >
+                          <img src={getLanguageFlag(lang.code)} alt={lang.code} className="w-10 h-7 object-cover rounded border" />
+                          <span className="text-xs font-medium text-center leading-tight">{getCroatianName(lang.code)}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
 
           <DialogFooter className="mt-4">
@@ -1257,7 +1390,29 @@ export function MenuItemsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Remove Language Confirmation Dialog */}
+      {/* Bulk Remove Confirmation */}
+      <ConfirmDialog
+        open={showBulkRemoveConfirm}
+        onOpenChange={setShowBulkRemoveConfirm}
+        title={`Ukloniti ${langMgmtToRemove.length} jezik${langMgmtToRemove.length === 1 ? '' : 'a'}?`}
+        description={
+          <div className="space-y-2">
+            <p>
+              Jeste li sigurni da želite ukloniti <strong>{langMgmtToRemove.length}</strong> jezik{langMgmtToRemove.length === 1 ? '' : 'a'}?
+            </p>
+            <p className="text-destructive font-semibold">
+              ⚠️ Svi prijevodi za te jezike će biti trajno obrisani!
+            </p>
+            <p className="text-sm text-muted-foreground">Ova akcija se ne može poništiti.</p>
+          </div>
+        }
+        onConfirm={handleBulkRemoveLanguages}
+        confirmText="Da, ukloni"
+        cancelText="Odustani"
+        variant="destructive"
+      />
+
+      {/* Single Remove Language Confirmation Dialog (kept for legacy use) */}
       <ConfirmDialog
         open={showRemoveLanguageConfirm}
         onOpenChange={setShowRemoveLanguageConfirm}
@@ -1283,20 +1438,7 @@ export function MenuItemsPage() {
               loadItems(false)
               setShowRemoveLanguageConfirm(false)
               setLanguageToRemove(null)
-
-              // Broadcast menu change
-              if (broadcastChannelRef.current) {
-                try {
-                  await broadcastChannelRef.current.send({
-                    type: 'broadcast',
-                    event: 'menu_changed',
-                    payload: { timestamp: Date.now(), restaurantId }
-                  })
-                  console.log('✅ Broadcast sent')
-                } catch (error) {
-                  console.error('Failed to broadcast:', error)
-                }
-              }
+              broadcastMenuChange()
             } catch (error: any) {
               const errorMsg = error?.response?.data?.detail || 'Greška pri uklanjanju'
               toast.error(errorMsg)

@@ -30,7 +30,7 @@ export function NavMain({
             const isActive = currentView === item.action
             return (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton 
+                <SidebarMenuButton
                   tooltip={item.title}
                   onClick={item.onClick}
                   asChild={!item.onClick}
@@ -38,8 +38,8 @@ export function NavMain({
                   className={cn(
                     "group relative flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
                     "hover:bg-gray-50/50 hover:text-foreground",
-                    isActive 
-                      ? "bg-gray-50/80 text-primary font-semibold" 
+                    isActive
+                      ? "bg-[#18181b] text-white font-semibold"
                       : "text-sidebar-foreground"
                   )}
                 >
@@ -48,26 +48,20 @@ export function NavMain({
                       {item.icon && (
                         <item.icon className={cn(
                           "h-5 w-5 shrink-0 transition-colors",
-                          isActive ? "text-primary" : "text-sidebar-foreground group-hover:text-foreground"
+                          isActive ? "text-orange-500" : "text-sidebar-foreground group-hover:text-foreground"
                         )} />
                       )}
                       <span className="flex-1">{item.title}</span>
-                      {isActive && (
-                        <div className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
-                      )}
                     </>
                   ) : (
                     <a href={item.url} className="flex w-full items-center gap-3">
                       {item.icon && (
                         <item.icon className={cn(
                           "h-5 w-5 shrink-0 transition-colors",
-                          isActive ? "text-primary" : "text-sidebar-foreground group-hover:text-foreground"
+                          isActive ? "text-orange-500" : "text-sidebar-foreground group-hover:text-foreground"
                         )} />
                       )}
                       <span className="flex-1">{item.title}</span>
-                      {isActive && (
-                        <div className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
-                      )}
                     </a>
                   )}
                 </SidebarMenuButton>

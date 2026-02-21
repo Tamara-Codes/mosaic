@@ -3,11 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { Building2, Lock, Sparkles } from 'lucide-react'
+import { Building2 } from 'lucide-react'
 import { useApiClient } from '@/lib/apiHelpers'
-import { useUser } from '@clerk/clerk-react'
 
 interface SettingsPageProps {
   onRestaurantCreated?: () => void
@@ -15,19 +13,13 @@ interface SettingsPageProps {
 
 export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
   const apiClient = useApiClient()
-  const { user } = useUser()
   const [restaurantName, setRestaurantName] = useState('Restaurant Menu')
   const [restaurantDescription, setRestaurantDescription] = useState('')
   const [address, setAddress] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [aiImagePrompt, setAiImagePrompt] = useState('')
   const [whatsappPhone, setWhatsappPhone] = useState('')
   const [loading, setLoading] = useState(false)
-  const [passwordLoading, setPasswordLoading] = useState(false)
 
   useEffect(() => {
     loadRestaurantInfo()
@@ -42,7 +34,6 @@ export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
       setAddress(info.address || '')
       setPhone(info.phone || '')
       setEmail(info.email || '')
-      setAiImagePrompt(info.ai_image_prompt || '')
       setWhatsappPhone(info.whatsapp_phone || '')
     } catch (error: any) {
       if (error?.response?.status === 404) {
@@ -73,7 +64,6 @@ export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
       formData.append('address', address)
       formData.append('phone', phone)
       formData.append('email', email)
-      formData.append('ai_image_prompt', aiImagePrompt)
       formData.append('whatsapp_phone', whatsappPhone)
       await apiClient.post('/restaurant-info', formData)
       toast.success('Informacije o restoranu su spremljene')
@@ -86,52 +76,6 @@ export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
       toast.error('Greška pri spremanju informacija')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleChangePassword = async () => {
-    if (!user) {
-      toast.error('Korisnik nije prijavljen')
-      return
-    }
-
-    if (newPassword !== confirmPassword) {
-      toast.error('Lozinke se ne podudaraju')
-      return
-    }
-    
-    if (newPassword.length < 8) {
-      toast.error('Lozinka mora imati najmanje 8 znakova')
-      return
-    }
-
-    setPasswordLoading(true)
-    try {
-      // Use Clerk's updatePassword method
-      await user.updatePassword({
-        currentPassword: currentPassword,
-        newPassword: newPassword,
-        signOutOfOtherSessions: false,
-      })
-      
-      toast.success('Lozinka je promijenjena')
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
-    } catch (error: any) {
-      console.error('Failed to change password:', error)
-      
-      // Handle specific Clerk errors
-      if (error.errors) {
-        const errorMessage = error.errors[0]?.message || 'Greška pri promjeni lozinke'
-        toast.error(errorMessage)
-      } else if (error.message) {
-        toast.error(error.message)
-      } else {
-        toast.error('Greška pri promjeni lozinke. Provjerite da li je trenutna lozinka ispravna.')
-      }
-    } finally {
-      setPasswordLoading(false)
     }
   }
 
@@ -212,85 +156,6 @@ export function SettingsPage({ onRestaurantCreated }: SettingsPageProps = {}) {
           </div>
           <Button onClick={handleSaveRestaurantInfo} disabled={loading}>
             {loading ? 'Spremanje...' : 'Spremi Informacije'}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* AI Image Generation Settings */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5" />
-            <CardTitle>AI Generiranje Slika</CardTitle>
-          </div>
-          <CardDescription>
-            Zadani stil za AI generirane slike jela
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="aiImagePrompt">Zadani stil fotografije</Label>
-            <Textarea
-              id="aiImagePrompt"
-              value={aiImagePrompt}
-              onChange={(e) => setAiImagePrompt(e.target.value)}
-              placeholder="npr. Profesionalna food fotografija, bijeli tanjur, rustikalni drveni stol, mekano prirodno osvjetljenje..."
-              rows={3}
-            />
-            <p className="text-sm text-muted-foreground">
-              Ovaj stil se primjenjuje na sve AI generirane slike. Ostavite prazno za zadani stil.
-            </p>
-          </div>
-          <Button onClick={handleSaveRestaurantInfo} disabled={loading}>
-            {loading ? 'Spremanje...' : 'Spremi Postavke'}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Admin Settings */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Lock className="h-5 w-5" />
-            <CardTitle>Admin Postavke</CardTitle>
-          </div>
-          <CardDescription>
-            Promijenite lozinku za pristup admin panelu
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="currentPassword">Trenutna Lozinka</Label>
-            <Input
-              id="currentPassword"
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Unesite trenutnu lozinku"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="newPassword">Nova Lozinka</Label>
-            <Input
-              id="newPassword"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Unesite novu lozinku"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Potvrdi Novu Lozinku</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Potvrdite novu lozinku"
-            />
-          </div>
-          <Button onClick={handleChangePassword} disabled={passwordLoading}>
-            {passwordLoading ? 'Promjena...' : 'Promijeni Lozinku'}
           </Button>
         </CardContent>
       </Card>

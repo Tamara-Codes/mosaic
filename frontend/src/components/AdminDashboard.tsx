@@ -7,6 +7,9 @@ import { SiteHeader } from '@/components/site-header'
 import { MenuItemsPage } from './MenuItemsPage'
 import { SettingsPage } from './SettingsPage'
 import { QRCodePage } from './QRCodePage'
+import { DailySpecialPage } from './DailySpecialPage'
+import { AISettingsPage } from './AISettingsPage'
+import { FeedbackPage } from './FeedbackPage'
 import { ChatbotPanel } from './ChatbotPanel'
 import { useApiClient } from '@/lib/apiHelpers'
 import { toast } from 'sonner'
@@ -17,7 +20,7 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardProps) {
   const location = useLocation()
-  const [currentView, setCurrentView] = useState<'menu-items' | 'qr' | 'settings'>('menu-items')
+  const [currentView, setCurrentView] = useState<'menu-items' | 'daily-special' | 'ai-settings' | 'qr' | 'settings' | 'feedback'>('menu-items')
   const [hasRestaurant, setHasRestaurant] = useState<boolean | null>(null) // null = checking
   const { signOut } = useAuth()
   const navigate = useNavigate()
@@ -52,7 +55,7 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
     checkRestaurant()
   }, [])
 
-  const handleViewChange = (view: 'menu-items' | 'qr' | 'settings') => {
+  const handleViewChange = (view: 'menu-items' | 'daily-special' | 'ai-settings' | 'qr' | 'settings' | 'feedback') => {
     setCurrentView(view)
   }
 
@@ -128,10 +131,16 @@ export function AdminDashboard({ onViewChange: _onViewChange }: AdminDashboardPr
     switch (currentView) {
       case 'menu-items':
         return hasRestaurant ? <MenuItemsPage /> : null
+      case 'daily-special':
+        return hasRestaurant ? <DailySpecialPage /> : null
+      case 'ai-settings':
+        return hasRestaurant ? <AISettingsPage /> : null
       case 'qr':
         return hasRestaurant ? <QRCodePage /> : null
       case 'settings':
         return hasRestaurant ? <SettingsPage onRestaurantCreated={handleRestaurantCreated} /> : null
+      case 'feedback':
+        return hasRestaurant ? <FeedbackPage /> : null
       default:
         return hasRestaurant ? <MenuItemsPage /> : null
     }

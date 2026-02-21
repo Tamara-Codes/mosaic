@@ -10,7 +10,7 @@ from pathlib import Path
 api_dir = Path(__file__).parent
 sys.path.insert(0, str(api_dir))
 
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Header, Request
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Header, Request, Body
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
@@ -355,7 +355,8 @@ async def get_restaurant_info(clerk_user_id: str = Depends(require_auth), author
         "email": restaurant['email'],
         "theme_identifier": restaurant['theme_identifier'],
         "ai_image_prompt": restaurant.get('ai_image_prompt', ''),
-        "whatsapp_phone": restaurant.get('whatsapp_phone', '')
+        "whatsapp_phone": restaurant.get('whatsapp_phone', ''),
+        "chatbot_system_prompt": restaurant.get('chatbot_system_prompt', '')
     })
 
 @app.post("/api/v1/restaurant-info")
@@ -368,6 +369,7 @@ async def save_restaurant_info(
     theme_identifier: Optional[str] = Form(None),
     ai_image_prompt: Optional[str] = Form(None),
     whatsapp_phone: Optional[str] = Form(None),
+    chatbot_system_prompt: Optional[str] = Form(None),
     clerk_user_id: str = Depends(require_auth)
 ):
     """Save or update restaurant information"""
@@ -427,6 +429,9 @@ async def save_restaurant_info(
         if whatsapp_phone is not None:
             update_data["whatsapp_phone"] = whatsapp_phone
 
+        if chatbot_system_prompt is not None:
+            update_data["chatbot_system_prompt"] = chatbot_system_prompt
+
         # Update existing
         result = supabase.table('restaurants').update(update_data).eq('id', restaurant['id']).execute()
         if not result.data:
@@ -445,6 +450,144 @@ async def save_restaurant_info(
             status_code=404,
             detail=f"No restaurant found for your account. Please contact administrator to create a restaurant for email: {email or 'your email'}"
         )
+
+# Promotion Endpoints
+@app.get("/api/v1/promotion")
+async def get_promotion(clerk_user_id: str = Depends(require_auth)):
+    """Get promotion for authenticated user's restaurant"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+
+    supabase = get_supabase_client()
+    result = supabase.table('promotions').select('*').eq('restaurant_id', restaurant['id']).limit(1).execute()
+
+    if not result.data:
+        return JSONResponse(None)
+
+    promotion = result.data[0]
+    # If linked to a menu item, fetch the item details
+    if promotion.get('menu_item_id'):
+        item_result = supabase.table('menu_items').select('*').eq('id', promotion['menu_item_id']).execute()
+        if item_result.data:
+            item = item_result.data[0]
+            if item.get('image_path'):
+                from utils.storage_utils import get_image_url as get_img_url
+                item['image_path'] = get_img_url(item['image_path'])
+            promotion['menu_item'] = item
+
+    return JSONResponse(promotion)
+
+
+@app.post("/api/v1/promotion")
+async def upsert_promotion(
+    request: Request,
+    clerk_user_id: str = Depends(require_auth)
+):
+    """Create or update promotion for authenticated user's restaurant"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+
+    body = await request.json()
+    supabase = get_supabase_client()
+
+    promotion_data = {
+        "restaurant_id": restaurant['id'],
+        "title": body.get("title", "Dnevna ponuda"),
+        "menu_item_id": body.get("menu_item_id"),
+        "custom_name": body.get("custom_name"),
+        "custom_description": body.get("custom_description"),
+        "custom_price": body.get("custom_price"),
+        "image_url": body.get("image_url"),
+        "is_active": body.get("is_active", False),
+    }
+
+    # Check if promotion already exists for this restaurant
+    existing = supabase.table('promotions').select('id').eq('restaurant_id', restaurant['id']).execute()
+
+    if existing.data:
+        # Update existing
+        result = supabase.table('promotions').update(promotion_data).eq('id', existing.data[0]['id']).execute()
+    else:
+        # Insert new
+        result = supabase.table('promotions').insert(promotion_data).execute()
+
+    if not result.data:
+        raise HTTPException(status_code=500, detail="Failed to save promotion")
+
+    return JSONResponse(result.data[0])
+
+
+@app.post("/api/v1/promotion/upload-image")
+async def upload_promotion_image(
+    image: UploadFile = File(...),
+    clerk_user_id: str = Depends(require_auth)
+):
+    """Upload an image for a promotion"""
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+
+    # Validate file
+    MAX_IMAGE_SIZE = 5 * 1024 * 1024
+    content = await image.read()
+    if len(content) > MAX_IMAGE_SIZE:
+        raise HTTPException(status_code=413, detail="Image too large. Max 5MB.")
+    await image.seek(0)
+
+    allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+    if image.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Invalid file type. Allowed: JPEG, PNG, WebP")
+
+    import uuid as uuid_mod
+    from utils.storage_utils import get_supabase_storage, BUCKET_NAME
+
+    file_name = f"{uuid_mod.uuid4()}.png"
+    file_path = f"{restaurant['id']}/promotions/{file_name}"
+
+    storage = get_supabase_storage()
+    storage.from_(BUCKET_NAME).upload(
+        path=file_path,
+        file=content,
+        file_options={"content-type": image.content_type, "upsert": "false"}
+    )
+    public_url = storage.from_(BUCKET_NAME).get_public_url(file_path)
+
+    return JSONResponse({"success": True, "image_url": public_url})
+
+
+@app.get("/api/v1/menu/{restaurant_slug}/promotion")
+async def get_public_promotion(restaurant_slug: str):
+    """Public endpoint to get active promotion for a restaurant"""
+    supabase = get_supabase_anon_client()
+
+    # Get restaurant by slug
+    restaurant_result = supabase.table('restaurants').select('id').eq('slug', restaurant_slug).execute()
+    if not restaurant_result.data:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+
+    restaurant_id = restaurant_result.data[0]['id']
+
+    # Get active promotion
+    result = supabase.table('promotions').select('*').eq('restaurant_id', restaurant_id).eq('is_active', True).limit(1).execute()
+
+    if not result.data:
+        return JSONResponse(None)
+
+    promotion = result.data[0]
+
+    # If linked to a menu item, fetch details
+    if promotion.get('menu_item_id'):
+        item_result = supabase.table('menu_items').select('*').eq('id', promotion['menu_item_id']).execute()
+        if item_result.data:
+            item = item_result.data[0]
+            if item.get('image_path'):
+                item['image_path'] = get_image_url(item['image_path'])
+            promotion['menu_item'] = item
+
+    return JSONResponse(promotion)
+
 
 # AI Image Generation Endpoint
 @app.post("/api/v1/generate-image")
@@ -1497,6 +1640,46 @@ async def add_language(request: Request, clerk_user_id: str = Depends(require_au
         "restaurant_description_translated": restaurant_description_translated
     })
 
+@app.delete("/api/v1/languages/remove")
+async def bulk_remove_languages(language_codes: List[str] = Body(..., embed=True), clerk_user_id: str = Depends(require_auth)):
+    """Remove multiple supported languages and delete all their translations"""
+    if not language_codes:
+        raise HTTPException(status_code=400, detail="No language codes provided")
+
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+
+    current_langs = get_restaurant_languages(restaurant['id'])
+    valid_entries = [l for l in current_langs if l['code'] in language_codes]
+    valid_codes = [l['code'] for l in valid_entries]
+
+    if not valid_codes:
+        raise HTTPException(status_code=404, detail="None of the provided languages are active for this restaurant")
+
+    supabase = get_supabase_client()
+
+    menu_items_result = supabase.table('menu_items').select('id').eq('restaurant_id', restaurant['id']).execute()
+    menu_item_ids = [item['id'] for item in menu_items_result.data]
+
+    if menu_item_ids:
+        supabase.table('translations').delete().in_('menu_item_id', menu_item_ids).in_('language_code', valid_codes).execute()
+
+    categories_result = supabase.table('categories').select('id').eq('restaurant_id', restaurant['id']).execute()
+    category_ids = [cat['id'] for cat in categories_result.data]
+
+    if category_ids:
+        supabase.table('category_translations').delete().in_('category_id', category_ids).in_('language_code', valid_codes).execute()
+
+    supabase.table('restaurant_translations').delete().eq('restaurant_id', restaurant['id']).in_('language_code', valid_codes).execute()
+    supabase.table('ui_translations').delete().eq('restaurant_id', restaurant['id']).in_('language_code', valid_codes).execute()
+    supabase.table('restaurant_languages').delete().eq('restaurant_id', restaurant['id']).in_('language_code', valid_codes).execute()
+
+    return JSONResponse({
+        "message": f"Removed {len(valid_codes)} language(s) successfully",
+        "removed": valid_codes
+    })
+
 @app.delete("/api/v1/languages/remove/{language_code}")
 async def remove_language(language_code: str, clerk_user_id: str = Depends(require_auth)):
     """Remove a supported language and delete all translations for it"""
@@ -1669,6 +1852,55 @@ async def whatsapp_webhook_incoming(request: Request):
     await send_whatsapp_message(phone, ai_response)
 
     return JSONResponse({"status": "ok"})
+
+
+# Customer Feedback Endpoints
+@app.post("/api/v1/feedback/{restaurant_slug}")
+async def submit_feedback(restaurant_slug: str, request: Request):
+    """Public endpoint to submit customer feedback for a restaurant"""
+    logger.info(f"Feedback submission received for slug: {restaurant_slug}")
+    body = await request.json()
+    logger.info(f"Feedback payload: food_rating={body.get('food_rating')}, overall_rating={body.get('overall_rating')}, has_comment={bool(body.get('comment'))}")
+
+    anon_supabase = get_supabase_anon_client()
+    restaurant_result = anon_supabase.table('restaurants').select('id').eq('slug', restaurant_slug).execute()
+    if not restaurant_result.data:
+        logger.warning(f"Feedback rejected: restaurant not found for slug '{restaurant_slug}'")
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+
+    restaurant_id = restaurant_result.data[0]['id']
+    logger.info(f"Inserting feedback for restaurant_id: {restaurant_id}")
+
+    supabase = get_supabase_client()
+    try:
+        result = supabase.table('customer_feedback').insert({
+            "restaurant_id": restaurant_id,
+            "food_rating": body.get("food_rating"),
+            "overall_rating": body.get("overall_rating"),
+            "comment": body.get("comment") or None,
+        }).execute()
+        logger.info(f"Feedback inserted successfully: {result.data}")
+    except Exception as e:
+        logger.error(f"Failed to insert feedback for restaurant_id {restaurant_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save feedback")
+
+    return JSONResponse({"success": True})
+
+
+@app.get("/api/v1/feedback")
+async def get_feedback(clerk_user_id: str = Depends(require_auth)):
+    """Get feedback for authenticated user's restaurant"""
+    logger.info(f"Fetching feedback for clerk_user_id: {clerk_user_id}")
+    restaurant = await get_restaurant_by_clerk_user(clerk_user_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+
+    supabase = get_supabase_client()
+    result = supabase.table('customer_feedback').select('*') \
+        .eq('restaurant_id', restaurant['id']) \
+        .order('created_at', desc=True).execute()
+    logger.info(f"Returning {len(result.data)} feedback entries for restaurant '{restaurant['name']}'")
+    return JSONResponse(result.data)
 
 
 # Chatbot Endpoint

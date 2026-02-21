@@ -6,15 +6,18 @@ import { useState, useEffect } from "react"
 import { useApiClient } from "@/lib/apiHelpers"
 
 interface SiteHeaderProps {
-  currentView?: 'dashboard' | 'menu-items' | 'categories' | 'qr' | 'settings'
+  currentView?: 'dashboard' | 'menu-items' | 'categories' | 'daily-special' | 'ai-settings' | 'qr' | 'settings' | 'feedback'
 }
 
 const viewTitles: Record<string, string> = {
   dashboard: 'Analitika',
   'menu-items': 'Jelovnik',
   categories: 'Kategorije',
+  'daily-special': 'Dnevna ponuda',
+  'ai-settings': 'Ferros AI',
   qr: 'QR Kod',
-  settings: 'Postavke'
+  settings: 'Postavke',
+  feedback: 'Recenzije',
 }
 
 export function SiteHeader({ currentView = 'menu-items' }: SiteHeaderProps) {
@@ -57,10 +60,10 @@ export function SiteHeader({ currentView = 'menu-items' }: SiteHeaderProps) {
         <h1 className="flex-1 text-base font-medium">{title}</h1>
         <div className="flex items-center gap-2">
           <Button
-            variant="outline"
             size="sm"
             onClick={handlePreviewClick}
             disabled={!restaurantSlug}
+            className="bg-orange-500 text-white hover:bg-orange-600 border-none"
           >
             <Eye className="w-4 h-4 mr-2" />
             Pregled Menija

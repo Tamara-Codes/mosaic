@@ -30,7 +30,7 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'hero.subtitle.line1': 'AI prevodi na <span class="text-orange-400 font-normal">100+ jezika</span> i generira profesionalne <span class="text-orange-400 font-normal">fotografije jela</span>.',
     'hero.subtitle.line2': '<span class="text-orange-400 font-normal">Unikatan dizajn</span> kreiran za Vaš restoran, bez generičkih šablona.',
     'hero.subtitle.line3': 'Upravljajte ponudom u stvarnom vremenu – od promjene cijena do micanja jela - preko <span class="text-orange-400 font-normal">WhatsAppa</span>.',
-    'hero.cta.vip': 'Postani osnivački partner',
+    'hero.cta.vip': 'Postani VIP partner',
     'hero.cta.demo': 'Pogledaj Ferros u akciji',
     
     // Features Section
@@ -62,21 +62,21 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'benefits.contactless.desc': 'Uključeni premium QR držači. Gosti skeniraju vlastitim mobitelom – higijenski i bez masnih papira.',
     
     // Contact Section
-    'contact.badge': 'Osnivački program',
+    'contact.badge': 'VIP program',
     'contact.title': 'Postanite',
-    'contact.title.vip': 'Osnivački partner',
+    'contact.title.vip': 'VIP partner',
     'contact.subtitle': 'Pomozite nam oblikovati budućnost digitalnih jelovnika.',
     'contact.intro': 'Tražimo 5 restorana koji će nam pomoći u razvoju Ferrosa. Vaš feedback oblikuje proizvod, a vi dobivate',
-    'contact.intro.vip': 'osnivačke benefite',
+    'contact.intro.vip': 'VIP benefite',
     'contact.intro.colon': ':',
-    'contact.benefit1.title': 'Ključ u ruke',
-    'contact.benefit1.desc': 'Pošaljite nam PDF ili sliku svog cjenika, mi unosimo sve stavke i opise.',
-    'contact.benefit2.title': 'Bez troškova postavljanja',
-    'contact.benefit2.desc': 'Troškovi početnog postavljanja su u potpunosti ukinuti za osnivačke partnere.',
+    'contact.benefit1.title': 'Besplatan e-jelovnik na godinu dana',
+    'contact.benefit1.desc': 'Vaš digitalni jelovnik je potpuno besplatan prvu godinu. Bez skrivenih troškova.',
+    'contact.benefit2.title': 'Ključ u ruke',
+    'contact.benefit2.desc': 'Pošaljite nam PDF ili sliku svog cjenika, mi unosimo sve stavke i opise.',
     'contact.benefit3.title': 'Vaš feedback oblikuje proizvod',
     'contact.benefit3.desc': 'Vaše ideje i prijedlozi direktno utječu na razvoj. Vi ste naši suradnici, ne samo korisnici.',
     'contact.benefit4.title': 'Vaš logo na našoj web stranici',
-    'contact.benefit4.desc': 'Iskazujemo zahvalnost prikazivanjem vašeg logotipa kao osnivačkog partnera.',
+    'contact.benefit4.desc': 'Iskazujemo zahvalnost prikazivanjem vašeg logotipa kao VIP partnera.',
     'contact.spots': 'mjesta preostalo',
     
     // FAQ Section
@@ -120,7 +120,7 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'seo.description': 'QR jelovnik koji automatski prevodi na 100+ jezika. Mijenjajte cijene, sakrijte nedostupna jela, istaknite alergene — instant, bez tiskanja. Besplatno postavljanje za restorane.',
     
     // Contact Form
-    'form.title': 'Prijavi se kao osnivački partner',
+    'form.title': 'Prijavi se kao VIP partner',
     'form.restaurant_name': 'Ime restorana',
     'form.restaurant_name.placeholder': 'Ime restorana',
     'form.restaurant_name.error': 'Ime restorana mora imati barem 2 slova.',
@@ -152,7 +152,7 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'hero.subtitle.line1': 'AI translates to <span class="text-orange-400 font-normal">100+ languages</span> and generates professional <span class="text-orange-400 font-normal">food photos</span>.',
     'hero.subtitle.line2': '<span class="text-orange-400 font-normal">Unique design</span> created for your restaurant, without generic templates.',
     'hero.subtitle.line3': 'Manage your menu in real-time – from changing prices to removing items – via <span class="text-orange-400 font-normal">WhatsApp</span>.',
-    'hero.cta.vip': 'Become a Founding Partner',
+    'hero.cta.vip': 'Become a VIP Partner',
     'hero.cta.demo': 'See Ferros in action',
     
     // Features Section
@@ -184,21 +184,21 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'benefits.contactless.desc': 'Premium QR holders included. Guests scan with their own phones – hygienic and without greasy papers.',
     
     // Contact Section
-    'contact.badge': 'Founding Partner Program',
+    'contact.badge': 'VIP Partner Program',
     'contact.title': 'Become a',
-    'contact.title.vip': 'Founding Partner',
+    'contact.title.vip': 'VIP Partner',
     'contact.subtitle': 'Help us shape the future of digital menus.',
     'contact.intro': 'We\'re looking for 5 restaurants to help us develop Ferros. Your feedback shapes the product, and you get',
-    'contact.intro.vip': 'founding partner benefits',
+    'contact.intro.vip': 'VIP partner benefits',
     'contact.intro.colon': ':',
-    'contact.benefit1.title': 'Turnkey setup',
-    'contact.benefit1.desc': 'Send us a PDF or image of your menu, we enter all items and descriptions.',
-    'contact.benefit2.title': 'No setup costs',
-    'contact.benefit2.desc': 'Initial setup costs are completely waived for founding partners.',
+    'contact.benefit1.title': 'Free e-menu for 1 year',
+    'contact.benefit1.desc': 'Your digital menu is completely free for the first year. No hidden costs.',
+    'contact.benefit2.title': 'Turnkey setup',
+    'contact.benefit2.desc': 'Send us a PDF or image of your menu, we enter all items and descriptions.',
     'contact.benefit3.title': 'Your feedback shapes the product',
     'contact.benefit3.desc': 'Your ideas and suggestions directly influence development. You\'re our collaborators, not just users.',
     'contact.benefit4.title': 'Your logo on our website',
-    'contact.benefit4.desc': 'We show our appreciation by displaying your logo as a founding partner.',
+    'contact.benefit4.desc': 'We show our appreciation by displaying your logo as a VIP partner.',
     'contact.spots': 'spots remaining',
     
     // FAQ Section
@@ -242,7 +242,7 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'seo.description': 'QR menu that automatically translates to 100+ languages. Change prices, hide unavailable dishes, highlight allergens — instantly, without printing. Free setup for restaurants.',
     
     // Contact Form
-    'form.title': 'Apply as a founding partner',
+    'form.title': 'Apply as a VIP partner',
     'form.restaurant_name': 'Restaurant name',
     'form.restaurant_name.placeholder': 'Restaurant name',
     'form.restaurant_name.error': 'Restaurant name must be at least 2 characters.',

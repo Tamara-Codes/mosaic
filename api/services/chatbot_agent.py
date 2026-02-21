@@ -472,12 +472,19 @@ async def process_chat_message(
         restaurant = restaurant_result.data[0]
         restaurant_id = restaurant['id']
         logger.info(f"[CHATBOT] 🏪 Restaurant: {restaurant['name']} (id: {restaurant_id}, slug: {restaurant_slug})")
-        
+
         # Build message history
         messages = []
-        
+
+        # Build system prompt with optional custom instructions
+        system_prompt = SYSTEM_PROMPT
+        custom_prompt = restaurant.get('chatbot_system_prompt', '').strip()
+        if custom_prompt:
+            system_prompt += f"\n\nDODATNE UPUTE OD VLASNIKA RESTORANA:\n{custom_prompt}"
+            logger.info(f"[CHATBOT] 📝 Using custom system prompt ({len(custom_prompt)} chars)")
+
         # Add system context
-        messages.append(SystemMessage(content=SYSTEM_PROMPT))
+        messages.append(SystemMessage(content=system_prompt))
         
         # Add conversation history if provided
         history_count = len(conversation_history) if conversation_history else 0

@@ -62,6 +62,23 @@ interface MenuData {
   }>
 }
 
+interface Promotion {
+  id: string
+  title: string
+  menu_item_id: string | null
+  custom_name: string | null
+  custom_description: string | null
+  custom_price: number | null
+  image_url: string | null
+  is_active: boolean
+  menu_item?: {
+    name_hr: string
+    description_hr?: string
+    price: number
+    image_path?: string
+  }
+}
+
 export default function MenuPage() {
   const { restaurantSlug } = useParams<{ restaurantSlug: string }>()
   const { language, t, updateUITranslations } = useLanguage()
@@ -71,6 +88,13 @@ export default function MenuPage() {
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
   const [zoomedImage, setZoomedImage] = useState<string | null>(null)
   const [selectedType, setSelectedType] = useState<'food' | 'drink'>('food')
+  const [promotion, setPromotion] = useState<Promotion | null>(null)
+  const [showPromotion, setShowPromotion] = useState(false)
+  const [foodRating, setFoodRating] = useState<boolean | null>(null)
+  const [overallRating, setOverallRating] = useState<boolean | null>(null)
+  const [feedbackComment, setFeedbackComment] = useState('')
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
 
   const getDisplayName = (slug: string) => {
     return slug
@@ -148,6 +172,24 @@ export default function MenuPage() {
           updateUITranslations(data.ui_translations)
         }
 
+        // Fetch promotion
+        try {
+          const promoResponse = await fetch(`${apiBaseUrl}/api/v1/menu/${restaurantSlug}/promotion`)
+          if (promoResponse.ok) {
+            const promoData = await promoResponse.json()
+            if (promoData && promoData.is_active) {
+              setPromotion(promoData)
+              // Show only if not dismissed this session
+              const dismissKey = `promo_dismissed_${restaurantSlug}`
+              if (!sessionStorage.getItem(dismissKey)) {
+                setShowPromotion(true)
+              }
+            }
+          }
+        } catch {
+          // Promotion fetch is non-critical
+        }
+
         setLoading(false)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load menu')
@@ -165,10 +207,12 @@ export default function MenuPage() {
     const restaurantId = menuData.restaurant.id
 
     const refetchMenu = () => {
+      console.log('🔄 refetchMenu called')
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
       fetch(`${apiBaseUrl}/api/v1/menu/${restaurantSlug}`)
         .then(res => res.json())
         .then(data => {
+          console.log('✅ refetchMenu got data, ui_translations langs:', data.ui_translations?.map((t: {language_code: string}) => t.language_code))
           setMenuData(data)
           if (data.ui_translations) {
             updateUITranslations(data.ui_translations)
@@ -191,9 +235,7 @@ export default function MenuPage() {
         },
         (payload) => {
           console.log('🎉 restaurant_languages UPDATE received:', payload)
-          if (payload.new?.translations_complete === true) {
-            refetchMenu()
-          }
+          refetchMenu()
         }
       )
       .on(
@@ -323,6 +365,32 @@ export default function MenuPage() {
     return icons
   }
 
+  const handleFeedbackSubmit = async () => {
+    if (!restaurantSlug) return
+    setFeedbackSubmitting(true)
+    try {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+      const res = await fetch(`${apiBaseUrl}/api/v1/feedback/${restaurantSlug}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          food_rating: foodRating,
+          overall_rating: overallRating,
+          comment: feedbackComment.trim() || null,
+        }),
+      })
+      if (res.ok) {
+        setFeedbackSubmitted(true)
+      } else {
+        console.error('Feedback submit failed:', res.status, await res.text())
+      }
+    } catch (err) {
+      console.error('Feedback submit error:', err)
+    } finally {
+      setFeedbackSubmitting(false)
+    }
+  }
+
   // Prepare menu items for structured data
   const menuItemsForSEO = menu_items.slice(0, 10).map(item => ({
     name: getTranslatedText(item, 'name', item.name_hr),
@@ -348,6 +416,15 @@ export default function MenuPage() {
           <div className="absolute top-4 left-4">
             <LanguageSelector availableLanguages={availableLanguages} />
           </div>
+          {promotion && (
+            <button
+              onClick={() => setShowPromotion(true)}
+              className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#8b6f47] text-white text-xs font-medium shadow-sm hover:bg-[#7a6040] transition-colors"
+            >
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/80 animate-pulse" />
+              {promotion.title}
+            </button>
+          )}
 
           <div className="mb-8">
             <img
@@ -498,6 +575,101 @@ export default function MenuPage() {
         )}
       </main>
 
+      {/* Feedback Section */}
+      <section className="max-w-4xl mx-auto px-12 py-16 border-t border-[#d4c4a8] mt-16">
+        <div className="max-w-md mx-auto text-center">
+          {feedbackSubmitted ? (
+            <div className="py-8">
+              <p className="font-serif text-2xl text-[#2c2416] mb-2">Hvala!</p>
+              <p className="text-[#5c5043]">Vaša povratna informacija je primljena.</p>
+            </div>
+          ) : (
+            <>
+              <h2 className="font-serif text-2xl text-[#2c2416] mb-8 tracking-wide">
+                Ostavite povratnu informaciju
+              </h2>
+
+              <div className="space-y-6 mb-8">
+                {/* Food rating */}
+                <div className="flex items-center justify-between">
+                  <span className="font-serif text-lg text-[#5c5043]">Hrana</span>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setFoodRating(foodRating === true ? null : true)}
+                      className={`w-11 h-11 rounded-full border-2 text-xl transition-all ${
+                        foodRating === true
+                          ? 'border-[#8b6f47] bg-[#8b6f47] text-white scale-110'
+                          : 'border-[#d4c4a8] text-[#5c5043] hover:border-[#8b6f47]'
+                      }`}
+                      aria-label="Thumbs up food"
+                    >
+                      👍
+                    </button>
+                    <button
+                      onClick={() => setFoodRating(foodRating === false ? null : false)}
+                      className={`w-11 h-11 rounded-full border-2 text-xl transition-all ${
+                        foodRating === false
+                          ? 'border-[#8b6f47] bg-[#8b6f47] text-white scale-110'
+                          : 'border-[#d4c4a8] text-[#5c5043] hover:border-[#8b6f47]'
+                      }`}
+                      aria-label="Thumbs down food"
+                    >
+                      👎
+                    </button>
+                  </div>
+                </div>
+
+                {/* Overall rating */}
+                <div className="flex items-center justify-between">
+                  <span className="font-serif text-lg text-[#5c5043]">Iskustvo</span>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setOverallRating(overallRating === true ? null : true)}
+                      className={`w-11 h-11 rounded-full border-2 text-xl transition-all ${
+                        overallRating === true
+                          ? 'border-[#8b6f47] bg-[#8b6f47] text-white scale-110'
+                          : 'border-[#d4c4a8] text-[#5c5043] hover:border-[#8b6f47]'
+                      }`}
+                      aria-label="Thumbs up experience"
+                    >
+                      👍
+                    </button>
+                    <button
+                      onClick={() => setOverallRating(overallRating === false ? null : false)}
+                      className={`w-11 h-11 rounded-full border-2 text-xl transition-all ${
+                        overallRating === false
+                          ? 'border-[#8b6f47] bg-[#8b6f47] text-white scale-110'
+                          : 'border-[#d4c4a8] text-[#5c5043] hover:border-[#8b6f47]'
+                      }`}
+                      aria-label="Thumbs down experience"
+                    >
+                      👎
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <textarea
+                value={feedbackComment}
+                onChange={e => setFeedbackComment(e.target.value)}
+                placeholder="Komentar (opcionalno)"
+                maxLength={500}
+                rows={3}
+                className="w-full border border-[#d4c4a8] rounded-lg px-4 py-3 font-serif text-[#2c2416] placeholder-[#a89880] bg-white resize-none focus:outline-none focus:border-[#8b6f47] mb-6 text-sm"
+              />
+
+              <button
+                onClick={handleFeedbackSubmit}
+                disabled={feedbackSubmitting || (foodRating === null && overallRating === null && !feedbackComment.trim())}
+                className="w-full py-3 rounded-lg bg-[#8b6f47] text-white font-serif text-lg tracking-wide hover:bg-[#7a6040] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {feedbackSubmitting ? 'Slanje...' : 'Pošalji'}
+              </button>
+            </>
+          )}
+        </div>
+      </section>
+
       <footer className="border-t border-[#d4c4a8] bg-white mt-24">
         <div className="max-w-4xl mx-auto px-12 py-8 text-center">
           <p className="font-serif text-2xl text-[#2c2416] mb-2">
@@ -531,6 +703,67 @@ export default function MenuPage() {
               >
                 ×
               </button>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Promotion Pop-up */}
+      {showPromotion && promotion && (() => {
+        const promoName = promotion.menu_item?.name_hr || promotion.custom_name
+        const promoDesc = promotion.menu_item?.description_hr || promotion.custom_description
+        const promoPrice = promotion.menu_item?.price ?? promotion.custom_price
+        const promoImage = promotion.menu_item?.image_path || promotion.image_url
+
+        if (!promoName) return null
+
+        const handleDismiss = () => {
+          setShowPromotion(false)
+          sessionStorage.setItem(`promo_dismissed_${restaurantSlug}`, '1')
+        }
+
+        return (
+          <div
+            className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={handleDismiss}
+          >
+            <div
+              className="w-full max-w-md mx-auto bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-400"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {promoImage && (
+                <div className="w-full h-48 overflow-hidden">
+                  <img
+                    src={promoImage}
+                    alt={promoName}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="p-6 text-center">
+                <p className="text-sm font-medium text-[#8b6f47] uppercase tracking-wider mb-2">
+                  {promotion.title}
+                </p>
+                <h3 className="font-serif text-2xl text-[#2c2416] mb-2">
+                  {promoName}
+                </h3>
+                {promoDesc && (
+                  <p className="text-[#5c5043] text-sm mb-3">
+                    {promoDesc}
+                  </p>
+                )}
+                {promoPrice != null && (
+                  <p className="font-serif text-xl text-[#8b6f47] mb-6">
+                    €{Number(promoPrice).toFixed(2)}
+                  </p>
+                )}
+                <button
+                  onClick={handleDismiss}
+                  className="w-full py-3 rounded-lg bg-[#8b6f47] text-white font-medium hover:bg-[#7a6040] transition-colors"
+                >
+                  Pogledaj jelovnik
+                </button>
+              </div>
             </div>
           </div>
         )

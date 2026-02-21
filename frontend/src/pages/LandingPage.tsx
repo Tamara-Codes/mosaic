@@ -8,15 +8,13 @@ import { BorderBeam } from '@/components/magicui/border-beam'
 import { Pointer } from '@/components/magicui/pointer'
 import { ShimmerButton } from '@/components/magicui/shimmer-button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { Globe, Zap, Utensils, Rocket, Sparkles, Smartphone, Facebook, Twitter, Linkedin, X, Languages, ScanLine, MessageSquare } from 'lucide-react'
+import { Globe, Zap, Utensils, Rocket, Sparkles, Smartphone, Facebook, Twitter, Linkedin } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import LanguageSelector from '@/components/LanguageSelector'
 
 export function LandingPage() {
   const { language, t } = useLanguage()
   const [openItems, setOpenItems] = useState<Set<number>>(new Set())
-  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false)
 
   // Remove padding from root element for full-width landing page
   useEffect(() => {
@@ -173,13 +171,6 @@ export function LandingPage() {
                       {t('hero.cta.vip')}
                     </ShimmerButton>
                   </a>
-                  <Button 
-                    size="lg" 
-                    className="w-auto sm:w-auto bg-orange-400/10 hover:bg-orange-400/15 text-orange-300 border border-orange-400/20 px-6 sm:px-8 !h-auto py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full"
-                    onClick={() => setIsDemoModalOpen(true)}
-                  >
-                    {t('hero.cta.demo')}
-                  </Button>
                 </div>
               </div>
             </div>
@@ -556,21 +547,6 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="pt-8 pb-20 lg:pt-8 lg:pb-20 bg-[#18181b]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-center">
-            <Button 
-              size="lg" 
-              className="bg-orange-400/10 hover:bg-orange-400/15 text-orange-300 border border-orange-400/20 px-8 !h-auto py-4 text-lg font-semibold rounded-full"
-              onClick={() => setIsDemoModalOpen(true)}
-            >
-              {t('hero.cta.demo')}
-            </Button>
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="bg-[#18181b] border-t border-white/10 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -626,101 +602,6 @@ export function LandingPage() {
       </footer>
     </div>
 
-    {/* Demo Modal */}
-    <Dialog open={isDemoModalOpen} onOpenChange={setIsDemoModalOpen} maxWidth="max-w-7xl">
-      <DialogContent 
-        className="max-w-6xl w-full bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border-orange-500/30 p-0 overflow-hidden shadow-2xl rounded-2xl"
-      >
-        <div className="relative">
-          <button
-            onClick={() => setIsDemoModalOpen(false)}
-            className="absolute right-6 top-6 z-10 w-10 h-10 rounded-full bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/50 hover:border-orange-500/50 flex items-center justify-center transition-all text-zinc-400 hover:text-white backdrop-blur-sm"
-          >
-            <X className="h-5 w-5" />
-            <span className="sr-only">Close</span>
-          </button>
-
-          <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr]">
-            {/* Left side - Video placeholder */}
-            <div className="relative bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 p-8 lg:p-12 flex items-center justify-center border-r border-orange-500/10">
-              <div className="relative w-full max-w-lg">
-                <div className="relative aspect-video bg-gradient-to-br from-zinc-800/50 via-zinc-900/80 to-zinc-950 rounded-xl border-2 border-orange-500/30 overflow-hidden shadow-[0_0_50px_rgba(249,115,22,0.15)]">
-                  {/* Video placeholder content */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <button className="group relative w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-[0_0_30px_rgba(249,115,22,0.4)] hover:shadow-[0_0_40px_rgba(249,115,22,0.6)] transition-all hover:scale-110">
-                        <svg className="w-10 h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z"/>
-                        </svg>
-                        <div className="absolute inset-0 rounded-full bg-orange-400/20 animate-ping opacity-75"></div>
-                      </button>
-                      <p className="text-zinc-400 text-sm font-medium">{t('modal.video.placeholder')}</p>
-                    </div>
-                  </div>
-                  
-                  {/* Decorative gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/50 via-transparent to-transparent pointer-events-none"></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right side - Text content */}
-            <div className="p-10 lg:p-14 flex flex-col justify-center bg-gradient-to-br from-zinc-900 to-zinc-950">
-              <div className="mb-6">
-                <div className="inline-block px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/30 mb-6">
-                  <span className="text-orange-400 text-sm font-semibold">{t('modal.badge')}</span>
-                </div>
-                
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                  {t('modal.title')}
-                </h2>
-              </div>
-
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center">
-                    <Languages className="w-5 h-5 text-orange-400" />
-                  </div>
-                  <p className="text-base text-zinc-300 leading-relaxed">
-                    {t('modal.text1')}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center">
-                    <ScanLine className="w-5 h-5 text-orange-400" />
-                  </div>
-                  <p className="text-base text-zinc-300 leading-relaxed">
-                    {t('modal.text2')}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center">
-                    <MessageSquare className="w-5 h-5 text-orange-400" />
-                  </div>
-                  <p className="text-base text-zinc-300 leading-relaxed">
-                    {t('modal.text3')} <span className="text-orange-400 font-semibold">{t('modal.text3.ai')}</span>{t('modal.text3.rest')}
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-4 flex justify-center">
-                <a href="#contact" onClick={() => setIsDemoModalOpen(false)}>
-                  <ShimmerButton
-                    background="rgba(249, 115, 22, 1)"
-                    shimmerColor="#fff"
-                    className="w-full sm:w-auto px-8 py-4 text-lg font-semibold shadow-2xl"
-                  >
-                    {t('hero.cta.vip')}
-                  </ShimmerButton>
-                </a>
-              </div>
-            </div>
-          </div>
-          
-          <BorderBeam duration={8} size={100} colorFrom="#f97316" colorTo="#fb923c" />
-        </div>
-      </DialogContent>
-    </Dialog>
     </>
   )
 }

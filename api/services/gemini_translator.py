@@ -1,14 +1,17 @@
 """
 Gemini AI translation service for restaurant menu items
 """
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from api.core.config import GEMINI_API_KEY
 import json
 import logging
 
 logger = logging.getLogger(__name__)
 
-genai.configure(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+MODEL = 'gemini-2.5-flash-lite'
 
 def translate_menu_item(name_hr: str, description_hr: str, target_language: str, language_name: str) -> dict:
     """
@@ -23,8 +26,6 @@ def translate_menu_item(name_hr: str, description_hr: str, target_language: str,
     Returns:
         Dictionary with 'name' and 'description' keys containing translations
     """
-    model = genai.GenerativeModel('gemini-2.5-flash-lite')
-
     prompt = f"""Translate the following restaurant menu item from Croatian to {language_name}.
 Keep the translation natural and appetizing for a restaurant menu.
 
@@ -36,9 +37,10 @@ Respond with ONLY valid JSON in this exact format:
 
     try:
         logger.debug(f"Calling Gemini API to translate item '{name_hr}' to {language_name}")
-        response = model.generate_content(
-            prompt,
-            generation_config={"temperature": 0.3}
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.3)
         )
         text = response.text.strip()
         if text.startswith("```"):
@@ -62,8 +64,6 @@ def translate_category(name: str, target_language: str, language_name: str) -> d
     Returns:
         Dictionary with 'name' key containing the translation
     """
-    model = genai.GenerativeModel('gemini-2.5-flash-lite')
-
     prompt = f"""Translate the following restaurant menu category name from Croatian to {language_name}.
 Keep the translation natural and appropriate for a restaurant menu category.
 
@@ -74,9 +74,10 @@ Respond with ONLY valid JSON in this exact format:
 
     try:
         logger.debug(f"Calling Gemini API to translate category '{name}' to {language_name}")
-        response = model.generate_content(
-            prompt,
-            generation_config={"temperature": 0.3}
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.3)
         )
         text = response.text.strip()
         if text.startswith("```"):
@@ -93,8 +94,6 @@ def translate_batch(items: list, categories: list, target_language: str, languag
     """
     Translate all menu items, categories, restaurant description, and UI texts in a single API call.
     """
-    model = genai.GenerativeModel('gemini-2.5-flash-lite')  # Using 2.5-flash-lite for better speed
-
     try:
         count_msg = f"{len(items)} items, {len(categories)} categories"
         if restaurant_description:
@@ -141,9 +140,10 @@ Output format:
         start = time.time()
         logger.info(f"⏳ Sending request to Gemini API...")
 
-        response = model.generate_content(
-            prompt,
-            generation_config={"temperature": 0.2}
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.2)
         )
 
         api_elapsed = time.time() - start

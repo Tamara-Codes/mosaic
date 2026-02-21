@@ -4,6 +4,9 @@ import {
   QrCodeIcon,
   SettingsIcon,
   LogOut,
+  Sparkles,
+  Bot,
+  MessageSquareIcon,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -17,7 +20,7 @@ import {
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   currentView?: string
-  onViewChange?: (view: 'menu-items' | 'qr' | 'settings') => void
+  onViewChange?: (view: 'menu-items' | 'daily-special' | 'ai-settings' | 'qr' | 'settings' | 'feedback') => void
   onLogout?: () => void
 }
 
@@ -54,8 +57,26 @@ const data = {
       icon: UtensilsIcon,
       action: "menu-items",
     },
+    {
+      title: "Dnevna ponuda",
+      url: "#",
+      icon: Sparkles,
+      action: "daily-special",
+    },
+    {
+      title: "Ferros AI",
+      url: "#",
+      icon: Bot,
+      action: "ai-settings",
+    },
+    {
+      title: "Recenzije",
+      url: "#",
+      icon: MessageSquareIcon,
+      action: "feedback",
+    },
   ],
-  navSettings: [
+  navSecondary: [
     {
       title: "QR Kod",
       url: "#",
@@ -74,7 +95,7 @@ const data = {
 export function AppSidebar({ currentView, onViewChange, onLogout, ...props }: AppSidebarProps) {
   const handleNavClick = (action: string) => {
     if (onViewChange) {
-      onViewChange(action as any)
+      onViewChange(action as 'menu-items' | 'daily-special' | 'ai-settings' | 'qr' | 'settings' | 'feedback')
     }
   }
 
@@ -83,17 +104,17 @@ export function AppSidebar({ currentView, onViewChange, onLogout, ...props }: Ap
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <RestaurantLogo />
       </SidebarHeader>
-      <SidebarContent className="px-3 py-4">
-        <NavMain 
+      <SidebarContent className="px-3 py-4 flex flex-col">
+        <NavMain
           items={data.navMain.map(item => ({
             ...item,
             onClick: () => handleNavClick(item.action),
           }))}
           currentView={currentView}
         />
-        <div className="mt-8">
-          <NavMain 
-            items={data.navSettings.map(item => ({
+        <div className="mt-8 pt-4 border-t border-sidebar-border">
+          <NavMain
+            items={data.navSecondary.map(item => ({
               ...item,
               onClick: () => handleNavClick(item.action),
             }))}
@@ -103,15 +124,14 @@ export function AppSidebar({ currentView, onViewChange, onLogout, ...props }: Ap
           <div className="mt-16 flex justify-center">
             <button
               onClick={() => {
-                // Trigger chatbot panel open via custom event
                 window.dispatchEvent(new CustomEvent('openChatbot'))
               }}
               className="flex items-center justify-center p-2 rounded-lg hover:bg-gray-50/50 transition-colors"
               aria-label="Open Ferros AI"
             >
-              <img 
-                src="/ferros-logo.png" 
-                alt="Ferros AI" 
+              <img
+                src="/ferros-logo.png"
+                alt="Ferros AI"
                 className="w-32 h-32 object-contain"
               />
             </button>
