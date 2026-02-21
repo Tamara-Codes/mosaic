@@ -81,5 +81,10 @@ export interface Analytics {
     spicy: number
   }
   total_categories: number
+  total_views: number
+  views_last_30_days: number
+  language_breakdown: Record<string, number>
+  device_breakdown: Record<string, number>
+  daily_views: Record<string, number>
 }
 

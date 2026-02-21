@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase, getImageUrl } from '../lib/supabase'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -95,6 +95,21 @@ export default function MenuPage() {
   const [feedbackComment, setFeedbackComment] = useState('')
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
+  const prevLanguageRef = useRef<string | null>(null)
+
+  const trackEvent = (eventType: 'scan' | 'language_switch', languageCode: string) => {
+    if (!restaurantSlug) return
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+    fetch(`${apiBaseUrl}/api/v1/track/${restaurantSlug}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event_type: eventType,
+        language_code: languageCode,
+        referrer: document.referrer || null,
+      }),
+    }).catch(() => {/* non-critical */})
+  }
 
   const getDisplayName = (slug: string) => {
     return slug
@@ -199,6 +214,26 @@ export default function MenuPage() {
 
     fetchMenu()
   }, [restaurantSlug, updateUITranslations])
+
+  // Fire scan event once per session when menu data is ready
+  useEffect(() => {
+    if (!menuData || !restaurantSlug) return
+    const sessionKey = `tracked_${restaurantSlug}`
+    if (sessionStorage.getItem(sessionKey)) return
+    sessionStorage.setItem(sessionKey, '1')
+    prevLanguageRef.current = language
+    trackEvent('scan', language)
+  }, [menuData, restaurantSlug])
+
+  // Track language switches after initial scan
+  useEffect(() => {
+    if (!menuData || !restaurantSlug) return
+    const sessionKey = `tracked_${restaurantSlug}`
+    if (!sessionStorage.getItem(sessionKey)) return  // wait until initial scan is recorded
+    if (prevLanguageRef.current === null || prevLanguageRef.current === language) return
+    trackEvent('language_switch', language)
+    prevLanguageRef.current = language
+  }, [language, menuData, restaurantSlug])
 
   useEffect(() => {
     console.log('🔍 PublicMenuPage effect ran, restaurant id:', menuData?.restaurant?.id)

@@ -1367,13 +1367,50 @@ async def get_analytics(clerk_user_id: str = Depends(require_auth)):
         "spicy": len([item for item in all_items if item.get('is_spicy', False)]),
     }
     
+    # Menu view analytics
+    from datetime import datetime, timedelta, timezone
+    now = datetime.now(timezone.utc)
+    thirty_days_ago = (now - timedelta(days=30)).isoformat()
+
+    views_result = supabase.table('menu_views') \
+        .select('language_code,device_type,event_type,created_at') \
+        .eq('restaurant_id', restaurant['id']) \
+        .eq('event_type', 'scan') \
+        .execute()
+    all_views = views_result.data or []
+
+    views_30d = [v for v in all_views if v['created_at'] >= thirty_days_ago]
+
+    # Language breakdown (all time)
+    language_counts: dict = {}
+    for v in all_views:
+        lang = v['language_code']
+        language_counts[lang] = language_counts.get(lang, 0) + 1
+
+    # Device breakdown (all time)
+    device_counts: dict = {}
+    for v in all_views:
+        dev = v['device_type']
+        device_counts[dev] = device_counts.get(dev, 0) + 1
+
+    # Daily views for last 30 days
+    daily_views: dict = {}
+    for v in views_30d:
+        day = v['created_at'][:10]  # YYYY-MM-DD
+        daily_views[day] = daily_views.get(day, 0) + 1
+
     return JSONResponse({
         "total_items": total_items,
         "available_items": available_items,
         "unavailable_items": unavailable_items,
         "categories": categories,
         "allergen_counts": allergen_counts,
-        "total_categories": len(categories)
+        "total_categories": len(categories),
+        "total_views": len(all_views),
+        "views_last_30_days": len(views_30d),
+        "language_breakdown": language_counts,
+        "device_breakdown": device_counts,
+        "daily_views": daily_views,
     })
 
 # QR Code Endpoint
@@ -1403,6 +1440,44 @@ async def generate_qr_code_api(clerk_user_id: str = Depends(require_auth)):
         "qr_code": img_str,
         "menu_url": menu_url
     })
+
+# Menu View Tracking Endpoint
+@app.post("/api/v1/track/{restaurant_slug}")
+async def track_menu_view(restaurant_slug: str, request: Request):
+    """Public endpoint to track menu views and language switches"""
+    body = await request.json()
+
+    anon_supabase = get_supabase_anon_client()
+    restaurant_result = anon_supabase.table('restaurants').select('id').eq('slug', restaurant_slug).execute()
+    if not restaurant_result.data:
+        raise HTTPException(status_code=404, detail="Restoran nije pronađen")
+
+    restaurant_id = restaurant_result.data[0]['id']
+
+    # Parse device type from User-Agent
+    user_agent = request.headers.get('user-agent', '').lower()
+    if any(kw in user_agent for kw in ['ipad', 'tablet', 'kindle']):
+        device_type = 'tablet'
+    elif any(kw in user_agent for kw in ['mobile', 'android', 'iphone', 'ipod', 'blackberry', 'windows phone']):
+        device_type = 'mobile'
+    else:
+        device_type = 'desktop'
+
+    language_code = body.get('language_code', 'hr')
+    event_type = body.get('event_type', 'scan')
+    referrer = body.get('referrer') or None
+
+    service_supabase = get_supabase_client()
+    service_supabase.table('menu_views').insert({
+        "restaurant_id": restaurant_id,
+        "language_code": language_code,
+        "device_type": device_type,
+        "event_type": event_type,
+        "referrer": referrer,
+    }).execute()
+
+    return JSONResponse({"success": True})
+
 
 # Supported Languages Endpoints
 @app.get("/api/v1/available-languages")
