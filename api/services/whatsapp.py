@@ -5,6 +5,7 @@ Handles webhook verification, incoming messages, and sending replies.
 import hashlib
 import hmac
 import logging
+from datetime import datetime, timezone
 from typing import Optional, Tuple
 
 import httpx
@@ -16,8 +17,6 @@ logger = logging.getLogger(__name__)
 
 GRAPH_API_URL = f"https://graph.facebook.com/v21.0/{WHATSAPP_PHONE_NUMBER_ID}/messages"
 
-# In-memory conversation history keyed by phone number (last 5 exchanges)
-_conversation_cache: dict[str, list[dict[str, str]]] = {}
 MAX_HISTORY = 5
 
 
@@ -148,14 +147,36 @@ def lookup_restaurant_by_whatsapp(phone: str) -> Optional[dict]:
 
 
 def get_conversation_history(phone: str) -> list[dict[str, str]]:
-    """Return the cached conversation history for a phone number."""
-    return _conversation_cache.get(phone, [])
+    """Return conversation history for a phone number from Supabase."""
+    try:
+        supabase = get_supabase_client()
+        result = supabase.table("whatsapp_conversations").select("messages").eq("phone", phone).execute()
+        if result.data:
+            return result.data[0]["messages"]
+        return []
+    except Exception:
+        logger.exception("Failed to get conversation history for %s", phone)
+        return []
 
 
 def update_conversation_history(phone: str, user_message: str, assistant_message: str) -> None:
-    """Append a user/assistant exchange and keep only the last MAX_HISTORY exchanges."""
-    history = _conversation_cache.get(phone, [])
-    history.append({"role": "user", "content": user_message})
-    history.append({"role": "assistant", "content": assistant_message})
-    # Keep last MAX_HISTORY * 2 messages (each exchange = 2 messages)
-    _conversation_cache[phone] = history[-(MAX_HISTORY * 2):]
+    """Append a user/assistant exchange to Supabase, keeping only the last MAX_HISTORY exchanges."""
+    try:
+        supabase = get_supabase_client()
+        result = supabase.table("whatsapp_conversations").select("messages").eq("phone", phone).execute()
+        history = result.data[0]["messages"] if result.data else []
+
+        history.append({"role": "user", "content": user_message})
+        history.append({"role": "assistant", "content": assistant_message})
+        history = history[-(MAX_HISTORY * 2):]
+
+        supabase.table("whatsapp_conversations").upsert(
+            {
+                "phone": phone,
+                "messages": history,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            },
+            on_conflict="phone",
+        ).execute()
+    except Exception:
+        logger.exception("Failed to update conversation history for %s", phone)
