@@ -2,12 +2,14 @@
 WhatsApp Business API integration service.
 Handles webhook verification, incoming messages, and sending replies.
 """
+import hashlib
+import hmac
 import logging
 from typing import Optional, Tuple
 
 import httpx
 
-from core.config import WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_VERIFY_TOKEN
+from core.config import WHATSAPP_ACCESS_TOKEN, WHATSAPP_APP_SECRET, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_VERIFY_TOKEN
 from core.supabase_client import get_supabase_client
 
 logger = logging.getLogger(__name__)
@@ -17,6 +19,21 @@ GRAPH_API_URL = f"https://graph.facebook.com/v21.0/{WHATSAPP_PHONE_NUMBER_ID}/me
 # In-memory conversation history keyed by phone number (last 5 exchanges)
 _conversation_cache: dict[str, list[dict[str, str]]] = {}
 MAX_HISTORY = 5
+
+
+def verify_payload_signature(body: bytes, signature_header: Optional[str]) -> bool:
+    """
+    Verify that an incoming webhook POST was signed by Meta using WHATSAPP_APP_SECRET.
+    The X-Hub-Signature-256 header format is: sha256=<hex_digest>
+    """
+    if not WHATSAPP_APP_SECRET:
+        logger.warning("WHATSAPP_APP_SECRET not set — skipping signature verification")
+        return False
+    if not signature_header or not signature_header.startswith("sha256="):
+        return False
+    expected = hmac.new(WHATSAPP_APP_SECRET.encode(), body, hashlib.sha256).hexdigest()
+    provided = signature_header[len("sha256="):]
+    return hmac.compare_digest(expected, provided)
 
 
 def verify_webhook(mode: Optional[str], token: Optional[str], challenge: Optional[str]) -> Optional[str]:

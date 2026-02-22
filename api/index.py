@@ -46,6 +46,7 @@ from services.language_service import get_all_languages, get_restaurant_language
 from services.image_generator import generate_food_image
 from services.chatbot_agent import process_chat_message
 from services.whatsapp import (
+    verify_payload_signature as whatsapp_verify_signature,
     verify_webhook as whatsapp_verify_webhook,
     parse_incoming_message,
     send_whatsapp_message,
@@ -1202,9 +1203,10 @@ async def update_translation(
     translation_result = supabase.table('translations').select('*, menu_items!inner(restaurant_id)').eq('id', translation_id).execute()
     if not translation_result.data:
         raise HTTPException(status_code=404, detail="Translation not found")
-    
-    # Check restaurant_id through join
-    # Note: Supabase join syntax may vary, this is a simplified check
+
+    if translation_result.data[0]['menu_items']['restaurant_id'] != restaurant['id']:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
     update_data = {}
     if name is not None:
         update_data["name"] = name
@@ -1227,6 +1229,14 @@ async def delete_translation(translation_id: str, clerk_user_id: str = Depends(r
         raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
+
+    translation_result = supabase.table('translations').select('*, menu_items!inner(restaurant_id)').eq('id', translation_id).execute()
+    if not translation_result.data:
+        raise HTTPException(status_code=404, detail="Translation not found")
+
+    if translation_result.data[0]['menu_items']['restaurant_id'] != restaurant['id']:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
     supabase.table('translations').delete().eq('id', translation_id).execute()
     return JSONResponse({"message": "Translation deleted"})
 
@@ -1306,6 +1316,14 @@ async def update_category_translation(
         raise HTTPException(status_code=404, detail="Restoran nije pronađen")
     
     supabase = get_supabase_client()
+
+    ct_result = supabase.table('category_translations').select('*, categories!inner(restaurant_id)').eq('id', translation_id).execute()
+    if not ct_result.data:
+        raise HTTPException(status_code=404, detail="Translation not found")
+
+    if ct_result.data[0]['categories']['restaurant_id'] != restaurant['id']:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
     result = supabase.table('category_translations').update({"name": name}).eq('id', translation_id).execute()
     return JSONResponse(result.data[0] if result.data else {"message": "Translation updated"})
 
@@ -1317,6 +1335,14 @@ async def delete_category_translation(translation_id: str, clerk_user_id: str = 
         raise HTTPException(status_code=404, detail="Restoran nije pronađen")
 
     supabase = get_supabase_client()
+
+    ct_result = supabase.table('category_translations').select('*, categories!inner(restaurant_id)').eq('id', translation_id).execute()
+    if not ct_result.data:
+        raise HTTPException(status_code=404, detail="Translation not found")
+
+    if ct_result.data[0]['categories']['restaurant_id'] != restaurant['id']:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
     supabase.table('category_translations').delete().eq('id', translation_id).execute()
     return JSONResponse({"message": "Category translation deleted"})
 
@@ -1827,8 +1853,21 @@ async def submit_contact_form(
             )
         
         # Validate file if provided
+        ALLOWED_MIME_TYPES = {
+            "application/pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/gif",
+        }
         menu_file_data = None
         if menu:
+            if menu.content_type not in ALLOWED_MIME_TYPES:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid file type. Only PDF, DOCX, and images (JPEG, PNG, WebP, GIF) are allowed."
+                )
             # Read file content
             contents = await menu.read()
             if len(contents) > 10 * 1024 * 1024:  # 10MB limit
@@ -1839,7 +1878,7 @@ async def submit_contact_form(
             menu_file_data = {
                 "filename": menu.filename,
                 "content": contents,
-                "content_type": menu.content_type or "application/octet-stream"
+                "content_type": menu.content_type
             }
             logger.info(f"Menu file received: {menu.filename} ({len(contents)} bytes)")
         
@@ -1890,6 +1929,11 @@ async def whatsapp_webhook_verify(request: Request):
 @app.post("/api/v1/whatsapp/webhook")
 async def whatsapp_webhook_incoming(request: Request):
     """Receive incoming WhatsApp messages and reply via the chatbot agent"""
+    body = await request.body()
+    signature = request.headers.get("X-Hub-Signature-256")
+    if not whatsapp_verify_signature(body, signature):
+        raise HTTPException(status_code=401, detail="Invalid signature")
+
     payload = await request.json()
 
     parsed = parse_incoming_message(payload)
