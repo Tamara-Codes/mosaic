@@ -73,7 +73,7 @@ app = FastAPI(
 app.add_middleware(SecurityHeadersMiddleware)
 
 # SECURITY: Add rate limiting middleware
-app.add_middleware(RateLimiterMiddleware, default_limit=100, default_window=60)
+app.add_middleware(RateLimiterMiddleware)
 
 # CORS middleware
 # SECURITY: Restricted headers and exposed headers for better security
