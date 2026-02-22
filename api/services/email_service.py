@@ -94,8 +94,8 @@ async def send_notification_email(
 
 async def send_vip_form_email(
     restaurant_name: str,
-    mobile: str,
-    location: str,
+    email: str,
+    mobile: Optional[str] = None,
     menu_file: Optional[Dict] = None
 ) -> Tuple[bool, Optional[str]]:
     """
@@ -103,8 +103,8 @@ async def send_vip_form_email(
 
     Args:
         restaurant_name: Name of the restaurant
-        mobile: Mobile phone number
-        location: Location (city)
+        email: Email address
+        mobile: Mobile phone number (optional)
         menu_file: Optional dict with 'filename', 'content', and 'content_type' for menu file
 
     Returns:
@@ -130,8 +130,8 @@ async def send_vip_form_email(
 
                     <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
                         <p><strong>Ime restorana:</strong> {restaurant_name}</p>
-                        <p><strong>Broj mobitela:</strong> <a href="tel:{mobile}">{mobile}</a></p>
-                        <p><strong>Lokacija:</strong> {location}</p>
+                        <p><strong>Email:</strong> <a href="mailto:{email}">{email}</a></p>
+                        {f'<p><strong>Broj mobitela:</strong> <a href="tel:{mobile}">{mobile}</a></p>' if mobile else ''}
                         {f'<p><strong>Jelovnik:</strong> {menu_file["filename"]} (priloženo)</p>' if menu_file else '<p><strong>Jelovnik:</strong> Nije priložen</p>'}
                     </div>
 

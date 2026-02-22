@@ -1827,8 +1827,8 @@ async def remove_language(language_code: str, clerk_user_id: str = Depends(requi
 @app.post("/api/v1/contact")
 async def submit_contact_form(
     restaurantName: str = Form(...),
-    mobile: str = Form(...),
-    location: str = Form(...),
+    email: str = Form(...),
+    mobile: Optional[str] = Form(None),
     menu: Optional[UploadFile] = File(None)
 ):
     """
@@ -1841,8 +1841,8 @@ async def submit_contact_form(
         try:
             vip_data = VIPFormRequest(
                 restaurantName=restaurantName,
+                email=email,
                 mobile=mobile,
-                location=location
             )
         except Exception as e:
             # Return generic error to avoid information disclosure
@@ -1885,8 +1885,8 @@ async def submit_contact_form(
         # Send email with optional attachment
         success, error_message = await send_vip_form_email(
             restaurant_name=vip_data.restaurantName,
+            email=vip_data.email,
             mobile=vip_data.mobile,
-            location=vip_data.location,
             menu_file=menu_file_data
         )
         

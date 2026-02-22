@@ -1,7 +1,8 @@
 """
 Pydantic schemas for VIP form validation
 """
-from pydantic import BaseModel, Field, validator
+from typing import Optional
+from pydantic import BaseModel, Field, validator, EmailStr
 import re
 
 
@@ -14,36 +15,30 @@ class VIPFormRequest(BaseModel):
         description="Restaurant name",
         example="Restoran Primus"
     )
-    mobile: str = Field(
+    email: EmailStr = Field(
         ...,
-        min_length=8,
+        description="Email address",
+        example="restoran@primjer.hr"
+    )
+    mobile: Optional[str] = Field(
+        None,
         max_length=20,
-        description="Mobile phone number",
+        description="Mobile phone number (optional)",
         example="+385 91 123 4567"
     )
-    location: str = Field(
-        ...,
-        min_length=2,
-        max_length=100,
-        description="Location (city)",
-        example="Zagreb"
-    )
-    
+
     @validator('restaurantName')
     def validate_restaurant_name(cls, v):
         """Validate restaurant name"""
         return v.strip()
-    
-    @validator('mobile')
+
+    @validator('mobile', pre=True)
     def validate_mobile(cls, v):
-        """Validate mobile number"""
-        # Allow digits, spaces, +, -, (, )
+        """Validate mobile number if provided"""
+        if not v:
+            return None
+        v = v.strip()
         if not re.match(r'^[\d\s\+\-\(\)]+$', v):
             raise ValueError('Mobile number contains invalid characters')
-        return v.strip()
-    
-    @validator('location')
-    def validate_location(cls, v):
-        """Validate location"""
-        return v.strip()
+        return v
 
