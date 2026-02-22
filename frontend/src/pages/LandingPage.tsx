@@ -547,6 +547,21 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Questions Section */}
+      <section className="py-16 bg-[#18181b]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-zinc-400 text-base">
+            {t('questions.subtitle')}{' '}
+            <a
+              href="mailto:info@ferros.menu"
+              className="text-orange-400 hover:text-orange-300 font-medium transition-colors"
+            >
+              info@ferros.menu
+            </a>
+          </p>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="bg-[#18181b] border-t border-white/10 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

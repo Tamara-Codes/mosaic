@@ -120,16 +120,20 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'seo.description': 'QR jelovnik koji automatski prevodi na 100+ jezika. Mijenjajte cijene, sakrijte nedostupna jela, istaknite alergene — instant, bez tiskanja. Besplatno postavljanje za restorane.',
     
     // Contact Form
+    // Questions Section
+    'questions.title': 'Imate pitanja?',
+    'questions.subtitle': 'Za sve upite slobodno nam se javite na',
+
+    // Contact Form
     'form.title': 'Prijavi se kao VIP partner',
     'form.restaurant_name': 'Ime restorana',
     'form.restaurant_name.placeholder': 'Ime restorana',
     'form.restaurant_name.error': 'Ime restorana mora imati barem 2 slova.',
-    'form.mobile': 'Vaš broj mobitela',
+    'form.email': 'Email adresa',
+    'form.email.placeholder': 'restoran@primjer.hr',
+    'form.email.error': 'Unesite valjanu email adresu.',
+    'form.mobile': 'Vaš broj mobitela (opcionalno)',
     'form.mobile.placeholder': '091 123 4567',
-    'form.mobile.error': 'Unesite valjan broj mobitela.',
-    'form.location': 'Lokacija',
-    'form.location.placeholder': 'Grad',
-    'form.location.error': 'Unesite lokaciju (grad).',
     'form.menu': 'Jelovnik (opcionalno)',
     'form.menu.upload': 'Kliknite za upload',
     'form.menu.drag': 'ili povucite datoteku',
@@ -241,17 +245,20 @@ const LANDING_TRANSLATIONS: Record<string, Record<string, string>> = {
     'seo.title': 'QR menu',
     'seo.description': 'QR menu that automatically translates to 100+ languages. Change prices, hide unavailable dishes, highlight allergens — instantly, without printing. Free setup for restaurants.',
     
+    // Questions Section
+    'questions.title': 'Have questions?',
+    'questions.subtitle': 'For any inquiries, feel free to reach us at',
+
     // Contact Form
     'form.title': 'Apply as a VIP partner',
     'form.restaurant_name': 'Restaurant name',
     'form.restaurant_name.placeholder': 'Restaurant name',
     'form.restaurant_name.error': 'Restaurant name must be at least 2 characters.',
-    'form.mobile': 'Your mobile number',
+    'form.email': 'Email address',
+    'form.email.placeholder': 'restaurant@example.com',
+    'form.email.error': 'Please enter a valid email address.',
+    'form.mobile': 'Your mobile number (optional)',
     'form.mobile.placeholder': '+1 234 567 8900',
-    'form.mobile.error': 'Please enter a valid mobile number.',
-    'form.location': 'Location',
-    'form.location.placeholder': 'City',
-    'form.location.error': 'Please enter a location (city).',
     'form.menu': 'Menu (optional)',
     'form.menu.upload': 'Click to upload',
     'form.menu.drag': 'or drag and drop',

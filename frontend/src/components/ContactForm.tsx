@@ -25,12 +25,10 @@ export function ContactForm() {
     restaurantName: z.string().min(2, {
       message: t('form.restaurant_name.error'),
     }),
-    mobile: z.string().min(8, {
-      message: t('form.mobile.error'),
+    email: z.string().email({
+      message: t('form.email.error'),
     }),
-    location: z.string().min(2, {
-      message: t('form.location.error'),
-    }),
+    mobile: z.string().optional(),
     menu: z.instanceof(File).optional(),
   }), [t, language])
   
@@ -38,8 +36,8 @@ export function ContactForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       restaurantName: "",
+      email: "",
       mobile: "",
-      location: "",
       menu: undefined,
     },
   })
@@ -51,8 +49,10 @@ export function ContactForm() {
       // Create FormData for the API
       const formData = new FormData()
       formData.append('restaurantName', values.restaurantName)
-      formData.append('mobile', values.mobile)
-      formData.append('location', values.location)
+      formData.append('email', values.email)
+      if (values.mobile) {
+        formData.append('mobile', values.mobile)
+      }
       
       // Add menu file if provided
       if (selectedFile) {
@@ -110,15 +110,15 @@ export function ContactForm() {
           />
           <FormField
             control={form.control}
-            name="mobile"
+            name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-zinc-300">{t('form.mobile')}</FormLabel>
+                <FormLabel className="text-zinc-300">{t('form.email')}</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="tel"
-                    placeholder={t('form.mobile.placeholder')} 
-                    {...field} 
+                  <Input
+                    type="email"
+                    placeholder={t('form.email.placeholder')}
+                    {...field}
                     className="bg-black/50 border-white/10 text-white placeholder:text-zinc-600 focus:border-orange-500/50 focus:ring-orange-500/20"
                   />
                 </FormControl>
@@ -128,14 +128,15 @@ export function ContactForm() {
           />
           <FormField
             control={form.control}
-            name="location"
+            name="mobile"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-zinc-300">{t('form.location')}</FormLabel>
+                <FormLabel className="text-zinc-300">{t('form.mobile')}</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder={t('form.location.placeholder')} 
-                    {...field} 
+                  <Input
+                    type="tel"
+                    placeholder={t('form.mobile.placeholder')}
+                    {...field}
                     className="bg-black/50 border-white/10 text-white placeholder:text-zinc-600 focus:border-orange-500/50 focus:ring-orange-500/20"
                   />
                 </FormControl>
