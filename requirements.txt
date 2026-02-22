@@ -17,4 +17,5 @@ langchain-google-genai==4.0.0
 langchain-core==1.1.2
 PyYAML==6.0.2
 upstash-redis==1.1.0
+email-validator==2.2.0
 
